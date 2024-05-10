@@ -1,4 +1,8 @@
+// 统一的请求发送
 import axios from "axios";
+// import sysConfig from '@/config/index'
+
+
 //创建axios实例
 const request = axios.create({
     baseURL: "/api", // 公共地址

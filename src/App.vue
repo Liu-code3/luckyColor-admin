@@ -1,5 +1,16 @@
 <script setup>
+import { ref } from "vue"
+import {loginApi} from "@/api/index"
 
+const ruleForm = ref({
+  adminName: "admin",
+  pwd: "123456"
+})
+
+const submitForm= async()=>{
+    let res = await loginApi(ruleForm.value);
+    console.log(res,'2222222222222222222');
+}
 </script>
 
 <template>
