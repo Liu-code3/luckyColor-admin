@@ -5,18 +5,25 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { resolve } from 'path'
-export const r = (...args) => resolve(__dirname, '.', ...args)
+import UnoCSS from 'unocss/vite'
 
-export default defineConfig(({ command, mode }) => {
+export const r = (...args: string[]) => resolve(__dirname, '.', ...args)
+
+
+export default defineConfig(({ mode }) => {
   const envConfig = loadEnv(mode, './')
   const alias = {
     '~': `${resolve(__dirname, './')}`,
     '@/': `${resolve(__dirname, 'src')}/`,
   }
+  // 环境变量在被加载后总是被当作字符串处理。这是因为环境变量本质上是通过操作系统或 Node.js 的环境接口来存储和管理，而这些接口只支持字符串类型。
+  // 所有这里需要手动转换为number类型
+  const port = Number(envConfig.VITE_PORT) || 3000  // 如果转换失败，使用默认端口 3000
 
   return {
     plugins: [
       vue(),
+      UnoCSS(),
       AutoImport({
         imports: [
           'vue',
@@ -33,13 +40,11 @@ export default defineConfig(({ command, mode }) => {
       Components({
         resolvers: [NaiveUiResolver()],
         dirs: [r('src/components')],
-        dts: false,
-        resolvers: []
+        dts: false
       }),
-      
     ],
     server: {
-      port: envConfig.VITE_PORT,
+      port,
       proxy: {
         // 代理
         '/api': {
