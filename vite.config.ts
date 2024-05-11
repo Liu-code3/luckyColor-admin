@@ -8,7 +8,7 @@ import { resolve } from 'path'
 const r = (...args: string[]) => resolve(__dirname, '.', ...args)
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd())
+  const env = loadEnv(mode, './')
   const alias = {
     '~': `${resolve(__dirname, './')}`,
     '@/': `${resolve(__dirname, 'src')}/`,
