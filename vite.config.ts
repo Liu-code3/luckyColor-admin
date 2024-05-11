@@ -63,5 +63,6 @@ export default defineConfig(({ mode }) => {
       __VUE_I18N_LEGACY_API__: true,
       __VUE_I18N_PROD_DEVTOOLS__: true,
     },
+  
   }
 })

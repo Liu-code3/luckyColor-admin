@@ -87,3 +87,5 @@ const DEFAULT_CONFIG = {
 		SNOWY_SYS_DEFAULT_PASSWORD: '123456'
 	}
 }
+
+export default DEFAULT_CONFIG
