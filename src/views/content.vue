@@ -8,7 +8,7 @@ const ruleForm = ref({
 })
 
 const submitForm= async()=>{
-    let res = await loginApi(ruleForm.value);
+    let res = await loginApi(ruleForm);
     console.log(res,'2222222222222222222');
 }
 </script>

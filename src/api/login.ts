@@ -1,12 +1,7 @@
 import service from "../utils/request";
 
-interface A {
-    username: string,
-    password: string,
-}
-
 // 登录示例
-export const loginApi = (data: A) => service({
+export const loginApi = <T extends object>(data: T) => service({
     url: "/admin/login",
     method: "POST",
     data,
