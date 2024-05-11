@@ -8,6 +8,8 @@ import {
     NButton
   } from 'naive-ui'
 
+import 'virtual:uno.css'
+
   const naive = create({
     components: [NButton]
   })
