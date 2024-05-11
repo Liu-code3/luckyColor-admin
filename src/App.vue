@@ -1,55 +1,10 @@
-<script setup>
-import { ref } from "vue"
-import {loginApi} from "@/api/index"
-
-const ruleForm = ref({
-  adminName: "admin",
-  pwd: "123456"
-})
-
-const submitForm= async()=>{
-    let res = await loginApi(ruleForm.value);
-    console.log(res,'2222222222222222222');
-}
-</script>
-
 <template>
-    <n-space>
-        <n-button @click="submitForm" >Default</n-button>
-        <n-button type="tertiary">
-            Tertiary
-        </n-button>
-        <n-button type="primary">
-            Primary
-        </n-button>
-        <n-button type="info">
-            Info
-        </n-button>
-        <n-button type="success">
-            Success
-        </n-button>
-        <n-button type="warning">
-            Warning
-        </n-button>
-        <n-button type="error">
-            Error
-        </n-button>
-    </n-space>
-</template>
-
-<style scoped>
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-    filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+    <div>
+      <router-view></router-view>
+    </div>
+  </template>
+  <script setup lang="ts">
+  
+  </script>
+  
+ 

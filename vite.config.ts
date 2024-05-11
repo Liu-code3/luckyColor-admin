@@ -1,19 +1,18 @@
-// vite.config.ts
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, ConfigEnv, UserConfigExport } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { resolve } from 'path'
-export const r = (...args) => resolve(__dirname, '.', ...args)
 
-export default defineConfig(({ command, mode }) => {
-  const envConfig = loadEnv(mode, './')
+const r = (...args: string[]) => resolve(__dirname, '.', ...args)
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd())
   const alias = {
     '~': `${resolve(__dirname, './')}`,
     '@/': `${resolve(__dirname, 'src')}/`,
   }
-
   return {
     plugins: [
       vue(),
@@ -34,16 +33,13 @@ export default defineConfig(({ command, mode }) => {
         resolvers: [NaiveUiResolver()],
         dirs: [r('src/components')],
         dts: false,
-        resolvers: []
       }),
-      
     ],
     server: {
-      port: envConfig.VITE_PORT,
+      port: parseInt(env.VITE_PORT),
       proxy: {
-        // 代理
         '/api': {
-          target: envConfig.VITE_API_BASEURL,
+          target: env.VITE_API_BASEURL,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },
@@ -52,7 +48,6 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias,
     },
-    // 解决警告You are running the esm-bundler build of vue-i18n.
     define: {
       __VUE_I18N_FULL_INSTALL__: true,
       __VUE_I18N_LEGACY_API__: true,
