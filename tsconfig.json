@@ -25,5 +25,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/mock/**/*.ts", "shims-vue.d.ts"]
+  "include": [
+    "src/**/*.ts", 
+    "src/**/*.d.ts", 
+    "src/**/*.tsx", 
+    "src/**/*.vue", 
+    "src/mock/**/*.ts", 
+    "shims-vue.d.ts",
+    "./auto-imports.d.ts"
+  ]
 }

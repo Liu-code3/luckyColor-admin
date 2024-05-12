@@ -25,8 +25,22 @@ export default defineConfig(({ mode }) => {
       vue(),
       UnoCSS(),
       AutoImport({
+        // targets to transform
+        include: [
+          /\.[tj]sx?$/, 
+          /\.vue$/, 
+          /\.vue\?vue/, 
+          /\.md$/,
+        ],
         imports: [
           'vue',
+          'pinia',
+          {
+            'vue-router' : [
+              'useRouter',
+              'useRoute'
+            ]
+          },
           {
             'naive-ui': [
               'useDialog',
@@ -36,6 +50,12 @@ export default defineConfig(({ mode }) => {
             ],
           },
         ],
+        eslintrc: {
+          enabled: false, // Default `false`
+          filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
+          globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
+        },
+        dts: './auto-imports.d.ts'
       }),
       Components({
         resolvers: [NaiveUiResolver()],
