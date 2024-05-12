@@ -8,7 +8,10 @@ const routes:Array<RouteRecordRaw> = [
     {
         path: "/login",
         name: "login",
-        component: () => import("../views/content.vue")
+        component: () => import("../views/content.vue"),
+        meta: {
+            keepAlive: true, // 设置需要缓存的组件
+          },
     }
 ]
 
