@@ -3,23 +3,17 @@
     <!-- 缓存组件-->
     <router-view v-slot="{ Component }">
       <keep-alive>
-        <component
-          :is="Component"
-          v-if="$route.meta.keepAlive"
-          :key="$route.path"
-        />
+        <component :is="Component" v-if="$route.meta.keepAlive" :key="$route.path" />
       </keep-alive>
     </router-view>
- 
+
     <router-view v-slot="{ Component }">
       <component :is="Component" v-if="!$route.meta.keepAlive" :key="$route.path" />
     </router-view>
   </div>
 </template>
 
-  <script setup lang="ts">
-import { onActivated, onDeactivated } from "vue";
-import { useRoute } from 'vue-router'
+<script setup lang="ts">
 let $route = useRoute()
 
 onActivated(() => {
