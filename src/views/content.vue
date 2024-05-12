@@ -35,7 +35,6 @@ const submitForm= async()=>{
             Error
         </n-button>
     </n-space>
-    <input type="text">
 </template>
 
 <style scoped>
