@@ -1,7 +1,0 @@
-.vscode
-build/*.js
-src/assets
-public
-dist
-node_modules
-pnpm-lock.yaml
