@@ -3,10 +3,12 @@ import axios, { AxiosError } from 'axios'
 import sysConfig from '@/config/index'
 import tool from '@/utils/tool'
 import { createDiscreteApi } from 'naive-ui'
+import { ref } from 'vue'
 //为Naive UI组件创建离散的API
 const { message } = createDiscreteApi(['message'])
 
 // 以下这些code需要重新登录
+const reloadCodes: number[] = [401, 1011007, 1011008]
 const errorCodeMap: { [key: number]: string } = {
   400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
   401: '用户没有权限（令牌、用户名、密码错误）。',
@@ -21,6 +23,8 @@ const errorCodeMap: { [key: number]: string } = {
   504: '网关超时。',
 }
 
+// 定义一个重新登录弹出窗的变量
+const loginBack = ref(false)
 
 // 创建 axios 实例
 const service = axios.create({
@@ -47,15 +51,31 @@ service.interceptors.request.use(
   }
 )
 
+// 保持重新登录Modal的唯一性
+const error = () => {
+  loginBack.value = true
+  console.log('登录已失效， 请重新登录')
+  loginBack.value = false
+
+  window.location.reload()
+}
+
 //响应拦截
 service.interceptors.response.use(
   (res) => {
     const code = res.data.code
     const data = res.data
 
+    if (reloadCodes.includes(code)) {
+      if (!loginBack.value) {
+        error()
+      }
+      return Promise.reject(res)
+    }
+
     if (code !== 200) {
-        const customErrorMessage = res.config.data.msg
-        message.error(customErrorMessage || data.msg)
+      const customErrorMessage = res.config.data.msg
+      message.error(customErrorMessage || data.msg)
       return Promise.reject(res)
     } else {
       //请求成功
