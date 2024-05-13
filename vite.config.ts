@@ -1,14 +1,13 @@
 // vite.config.ts
+import { resolve } from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import { resolve } from 'path'
 import UnoCSS from 'unocss/vite'
 
 export const r = (...args: string[]) => resolve(__dirname, '.', ...args)
-
 
 export default defineConfig(({ mode }) => {
   const envConfig = loadEnv(mode, './')
@@ -18,7 +17,7 @@ export default defineConfig(({ mode }) => {
   }
   // 环境变量在被加载后总是被当作字符串处理。这是因为环境变量本质上是通过操作系统或 Node.js 的环境接口来存储和管理，而这些接口只支持字符串类型。
   // 所有这里需要手动转换为number类型
-  const port = Number(envConfig.VITE_PORT) || 3000  // 如果转换失败，使用默认端口 3000
+  const port = Number(envConfig.VITE_PORT) || 3000 // 如果转换失败，使用默认端口 3000
 
   return {
     plugins: [
@@ -27,19 +26,19 @@ export default defineConfig(({ mode }) => {
       AutoImport({
         // targets to transform
         include: [
-          /\.[tj]sx?$/, 
-          /\.vue$/, 
-          /\.vue\?vue/, 
+          /\.[tj]sx?$/,
+          /\.vue$/,
+          /\.vue\?vue/,
           /\.md$/,
         ],
         imports: [
           'vue',
           'pinia',
           {
-            'vue-router' : [
+            'vue-router': [
               'useRouter',
-              'useRoute'
-            ]
+              'useRoute',
+            ],
           },
           {
             'naive-ui': [
@@ -50,17 +49,12 @@ export default defineConfig(({ mode }) => {
             ],
           },
         ],
-        eslintrc: {
-          enabled: false, // Default `false`
-          filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
-          globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
-        },
-        dts: './auto-imports.d.ts'
+        dts: './auto-imports.d.ts',
       }),
       Components({
         resolvers: [NaiveUiResolver()],
         dirs: [r('src/components')],
-        dts: false
+        dts: false,
       }),
     ],
     server: {
@@ -70,7 +64,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: envConfig.VITE_API_BASEURL,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: path => path.replace(/^\/api/, ''),
         },
       },
     },
@@ -83,6 +77,6 @@ export default defineConfig(({ mode }) => {
       __VUE_I18N_LEGACY_API__: true,
       __VUE_I18N_PROD_DEVTOOLS__: true,
     },
-  
+
   }
 })

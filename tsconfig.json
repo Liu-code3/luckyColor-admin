@@ -1,36 +1,36 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "types": ["vite/client"],
+    "jsx": "preserve",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
+    "useDefineForClassFields": true,
     "baseUrl": ".",
-    /* vscode中使用 @ 引入文件 更好的提示*/
+    "module": "ESNext",
+    /* Bundler mode */
+    "moduleResolution": "node",
+    /* vscode中使用 @ 引入文件 更好的提示 */
     "paths": {
       "@/*": ["./src/*"]
     },
-    /* Bundler mode */
-    "moduleResolution": "node",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "preserve",
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true,
 
     /* Linting */
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": [
-    "src/**/*.ts", 
-    "src/**/*.d.ts", 
-    "src/**/*.tsx", 
-    "src/**/*.vue", 
-    "src/mock/**/*.ts", 
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/mock/**/*.ts",
     "shims-vue.d.ts",
     "./auto-imports.d.ts"
   ]
