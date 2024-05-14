@@ -6,6 +6,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import UnoCSS from 'unocss/vite';
+import { viteMockServe } from 'vite-plugin-mock';
 
 export const r = (...args: string[]) => resolve(__dirname, '.', ...args);
 
@@ -37,8 +38,8 @@ export default defineConfig(({ mode }) => {
           {
             'vue-router': [
               'useRouter',
-              'useRoute',
-            ],
+              'useRoute'
+            ]
           },
           {
             'naive-ui': [
@@ -55,6 +56,11 @@ export default defineConfig(({ mode }) => {
         resolvers: [NaiveUiResolver()],
         dirs: [r('src/components')],
         dts: false
+      }),
+      viteMockServe({
+        watchFiles: true, // 监视 mockPath文件夹内文件的修改
+        enable: mode === 'development', // 开发环境下启用
+        logger: true // 是否在控制台显示请求日志
       })
     ],
     server: {
@@ -63,8 +69,9 @@ export default defineConfig(({ mode }) => {
         // 代理
         '/api': {
           target: envConfig.VITE_API_BASEURL,
+          // 修改请求头中的host为目标地址的host
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/api/, '')
+          rewrite: path => path.replace(/\^api/, '')
         }
       }
     },

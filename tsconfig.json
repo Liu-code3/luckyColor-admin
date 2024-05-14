@@ -30,7 +30,8 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "src/mock/**/*.ts",
+    "mock/**/*.ts",
+    "mock/**/*.d.ts",
     "shims-vue.d.ts",
     "./auto-imports.d.ts"
   ]
