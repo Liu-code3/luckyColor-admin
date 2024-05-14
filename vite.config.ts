@@ -37,8 +37,8 @@ export default defineConfig(({ mode }) => {
           {
             'vue-router': [
               'useRouter',
-              'useRoute'
-            ]
+              'useRoute',
+            ],
           },
           {
             'naive-ui': [
