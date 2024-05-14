@@ -1,24 +1,24 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router';
 
-const routes: Array<RouteRecordRaw> = [
+export const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/login',
+    redirect: '/login'
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/content.vue'),
+    component: () => import('../views/login.vue'),
     meta: {
-      keepAlive: true, // 设置需要缓存的组件
-    },
-  },
-]
+      keepAlive: true // 设置需要缓存的组件
+    }
+  }
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-})
+  routes
+});
 
-export default router
+export default router;

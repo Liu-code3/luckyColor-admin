@@ -1,10 +1,9 @@
 // 统一的请求发送
-import axios, { AxiosError } from 'axios'
-import sysConfig from '@/config/index'
-import tool from '@/utils/tool'
-import { createDiscreteApi } from 'naive-ui'
-//为Naive UI组件创建离散的API
-const { message } = createDiscreteApi(['message'])
+import type { AxiosError } from 'axios';
+import axios from 'axios';
+import sysConfig from '@/config/index';
+import tool from '@/utils/tool';
+import { message } from '@/utils/message';
 
 // 以下这些code需要重新登录
 const errorCodeMap: { [key: number]: string } = {
@@ -18,63 +17,63 @@ const errorCodeMap: { [key: number]: string } = {
   500: '服务器发生错误，请检查服务器。',
   502: '网关错误。',
   503: '服务不可用，服务器暂时过载或维护。',
-  504: '网关超时。',
-}
-
+  504: '网关超时。'
+};
 
 // 创建 axios 实例
 const service = axios.create({
   baseURL: '/api', // api base_url
-  timeout: sysConfig.TIMEOUT, // 请求超时时间
-})
+  timeout: sysConfig.TIMEOUT // 请求超时时间
+});
 
 // HTTP request 拦截器
 service.interceptors.request.use(
   (config) => {
-    const token = tool.data.get('TOKEN')
-    if (token) {
-      config.headers[sysConfig.TOKEN_NAME] = sysConfig.TOKEN_PREFIX + token
-    }
+    const token = tool.data.get('TOKEN');
+    if (token)
+      config.headers[sysConfig.TOKEN_NAME] = sysConfig.TOKEN_PREFIX + token;
+
     if (!sysConfig.REQUEST_CACHE && config.method === 'get') {
-      config.params = config.params || {}
-      config.params._ = new Date().getTime()
+      config.params = config.params || {};
+      config.params._ = new Date().getTime();
     }
-    Object.assign(config.headers, sysConfig.HEADERS)
-    return config
+    Object.assign(config.headers, sysConfig.HEADERS);
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-//响应拦截
+// 响应拦截
 service.interceptors.response.use(
   (res) => {
-    const code = res.data.code
-    const data = res.data
+    const code = res.data.code;
+    const data = res.data;
 
     if (code !== 200) {
-        const customErrorMessage = res.config.data.msg
-        message.error(customErrorMessage || data.msg)
-      return Promise.reject(res)
-    } else {
-      //请求成功
-      message.success(data.msg)
-      return Promise.resolve(res.data)
+      const customErrorMessage = res.config.data.msg;
+      message.error(customErrorMessage || data.msg);
+      return Promise.reject(res);
+    }
+    else {
+      // 请求成功
+      message.success(data.msg);
+      return Promise.resolve(res.data);
     }
   },
   (error) => {
     if (error) {
-      handlerError(error)
-      return Promise.reject(error)
+      handlerError(error);
+      return Promise.reject(error);
     }
   }
-)
+);
 
 function handlerError(error: AxiosError) {
-  const status = error.response && error.response.status
-  const description = status && errorCodeMap[status]
-  message.error(description + '请求错误', { duration: 3000 })
+  const status = error.response && error.response.status;
+  const description = status && errorCodeMap[status];
+  message.error(`${description}请求错误`, { duration: 3000 });
 }
 
-export default service
+export default service;
