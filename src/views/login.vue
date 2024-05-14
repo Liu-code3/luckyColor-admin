@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { loginApi } from '@/api/index'
+import { ref } from 'vue';
+import { loginApi } from '@/api/index';
 
 const ruleForm = ref({
   adminName: 'admin',
-  pwd: '123456',
-})
+  pwd: '123456'
+});
 
 const submitForm: () => Promise<void> = async () => {
-  const res = await loginApi(ruleForm.value)
-  console.log(res, '222222222222222222')
-}
+  const res = await loginApi(ruleForm.value);
+  console.log(res, '222222222222222222');
+};
 </script>
 
 <template>
