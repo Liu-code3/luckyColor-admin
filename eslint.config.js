@@ -1,7 +1,23 @@
 import antfu from '@antfu/eslint-config';
 
 export default antfu({
-  ignores: ['.vscode', '**/.vscode/**', 'build/*.js', 'build/*.js/**', 'src/assets', 'src/assets/**', 'public', '**/public/**', 'dist', '**/dist/**', 'node_modules', '**/node_modules/**', 'pnpm-lock.yaml', '**/pnpm-lock.yaml/**'],
+  ignores: [
+    '.vscode',
+    '**/.vscode/**',
+    'build/*.js',
+    'build/*.js/**',
+    'src/assets',
+    'src/assets/**',
+    'public',
+    '**/public/**',
+    'dist',
+    '**/dist/**',
+    'node_modules',
+    '**/node_modules/**',
+    'pnpm-lock.yaml',
+    '**/pnpm-lock.yaml/**',
+    '**/*.d.ts'
+  ],
   formatters: true,
   unocss: true,
   vue: true,

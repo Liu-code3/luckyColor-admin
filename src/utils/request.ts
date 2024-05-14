@@ -7,6 +7,7 @@ import { message } from '@/utils/message';
 
 // 以下这些code需要重新登录
 const errorCodeMap: { [key: number]: string } = {
+  200: '请求成功',
   400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
   401: '用户没有权限（令牌、用户名、密码错误）。',
   403: '用户得到授权，但是访问是被禁止的。',
@@ -58,7 +59,8 @@ service.interceptors.response.use(
     }
     else {
       // 请求成功
-      message.success(data.msg);
+      const msg = data.msg || '请求成功';
+      message.success(msg);
       return Promise.resolve(res.data);
     }
   },
@@ -73,7 +75,7 @@ service.interceptors.response.use(
 function handlerError(error: AxiosError) {
   const status = error.response && error.response.status;
   const description = status && errorCodeMap[status];
-  message.error(`${description}请求错误`, { duration: 3000 });
+  message.error(`${description}`, { duration: 3000 });
 }
 
 export default service;
