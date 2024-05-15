@@ -7,9 +7,9 @@ const ruleForm = ref({
   pwd: '123456',
 })
 
-const submitForm: () => Promise<void> = async () => {
+const submitForm = async () => {
   const res = await loginApi(ruleForm.value)
-  console.log(res, '222222222222222222')
+    console.log(res, '222222222222222222')
 }
 </script>
 
