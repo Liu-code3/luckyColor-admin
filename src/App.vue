@@ -23,7 +23,6 @@ function getKeepAliveComponents(): string[] | '' {
 <template>
   <div>
     <!-- 缓存组件 -->
-    <!-- 缓存组件 -->
     <router-view v-slot="{ Component }">
       <keep-alive :include="getKeepAliveComponents()">
         <component :is="Component" />

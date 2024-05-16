@@ -2,11 +2,16 @@
 import { resolve } from 'node:path';
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import VueJSX from '@vitejs/plugin-vue-jsx';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import UnoCSS from 'unocss/vite';
 import { viteMockServe } from 'vite-plugin-mock';
+
+// 以下icon图标的引入也需要使用 unplugin-vue-components/vite
+import Icons from 'unplugin-icons/vite';
+import IconsResolver from 'unplugin-icons/resolver';
 
 export const r = (...args: string[]) => resolve(__dirname, '.', ...args);
 
@@ -23,6 +28,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
+      VueJSX(),
       UnoCSS(),
       AutoImport({
         // targets to transform
@@ -39,9 +45,7 @@ export default defineConfig(({ mode }) => {
             'vue-router': [
               'useRouter',
               'useRoute'
-            ]
-          },
-          {
+            ],
             'naive-ui': [
               'useDialog',
               'useMessage',
@@ -50,10 +54,18 @@ export default defineConfig(({ mode }) => {
             ]
           }
         ],
-        dts: './auto-imports.d.ts'
+        dts: r('src/auto-imports.d.ts')
       }),
       Components({
-        resolvers: [NaiveUiResolver()],
+        resolvers: [
+          NaiveUiResolver(),
+          IconsResolver({
+            // prefix: 'icon', // 自动引入的Icon组件统一前缀，默认为 i，设置 '' 为不需要前缀
+            // {prefix}-{collection}-{icon} 使用组件解析器时，您必须遵循名称转换才能正确推断图标。
+            // alias: { park: 'icon-park' } 集合的别名
+            // enabledCollections: ['ep'] // 这是可选的，默认启用 Iconify 支持的所有集合['mdi']
+          })
+        ],
         dirs: [r('src/components')],
         dts: false
       }),
@@ -61,6 +73,13 @@ export default defineConfig(({ mode }) => {
         watchFiles: true, // 监视 mockPath文件夹内文件的修改
         enable: mode === 'development', // 开发环境下启用
         logger: true // 是否在控制台显示请求日志
+      }),
+      Icons({
+        // scale: 1, // 缩放
+        autoInstall: true,
+        compiler: 'vue3' // 编译方式
+        // defaultClass: '', // 默认类型
+        // defaultStyle: '' // 默认样式
       })
     ],
     server: {
