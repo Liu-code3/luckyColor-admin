@@ -41,20 +41,16 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
       }
     }
     else {
-      console.log(errors);
+      // console.log(errors);
     }
   });
 };
-
-function handleConfirm(value: string) {
-  console.log(value);
-}
 </script>
 
 <template>
   <div class="login_background">
     <div class="login_function">
-      <n-color-picker @complete="handleConfirm" />
+      <n-color-picker />
     </div>
 
     <div class="login_main">
