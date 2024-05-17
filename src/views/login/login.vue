@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { loginApi ,menuListApi} from '@/api/index';
+import { loginApi, menuListApi } from '@/api/index';
 import { FormInst } from 'naive-ui'
 import tool from '@/utils/tool';
-import {useRouter} from "vue-router"
+import { useRouter } from "vue-router"
 
 const router = useRouter()
 const formRef = ref<FormInst | null>(null)
@@ -31,19 +31,15 @@ const handleValidateClick = (e: MouseEvent) => {
         if (!errors) {
 
             const res = await loginApi(formValue.value);
-            const  {code,data,}=res.data
-            if(code===200){
-                console.log('0000000000');
-                
-               tool.data.set('TOKEN',data);
-               // 获取用户的菜单
-               const res = await menuListApi({token:data});
-            router.push('/index');
-
-               tool.data.set('MENU', res.data.data)
-
+            const { code, data, } = res.data
+            if (code === 200) {
+                tool.data.set('TOKEN', data);
+                // 获取用户的菜单
+                const res = await menuListApi({ token: data });
+                tool.data.set('MENU', res.data.data)
+                router.push('/index');
             }
-            
+
         } else {
             console.log(errors);
         }
@@ -157,8 +153,9 @@ const handleConfirm = (value: string) => {
         justify-content: center;
 
         .login-header {
-            width: 100% ;
+            width: 100%;
             text-align: left;
+
             div:nth-child(1) {
                 font-size: 48px;
                 color: #515a6e;
