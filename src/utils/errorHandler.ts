@@ -1,9 +1,5 @@
 import { notification } from '@/utils/message';
 
-interface ExtendedError extends Error {
-  code?: number; // 可选属性，用于HTTP错误代码
-}
-
 const errorMap: Record<string, string> = {
   InternalError: 'Javascript引擎内部错误',
   ReferenceError: '未找到对象',
@@ -11,21 +7,16 @@ const errorMap: Record<string, string> = {
   RangeError: '使用内置对象时，参数超范围',
   SyntaxError: '语法错误',
   EvalError: '错误的使用了Eval',
-  URIError: 'URI错误'
+  URIError: 'URI错误',
+  AggregateError: '表示同时发生的多个错误',
+  PromiseRejectionEvent: '未处理的 Promise 拒绝事件'
 };
 
-export default (error: Error | ExtendedError) => {
-  // 过滤HTTP请求错误
-  // 首先检查是否是 HTTP 错误
-  if ('code' in error && error.code) return;
-
-  const errorType = errorMap[error.name] || '未知错误';
-
-  nextTick(() => {
-    notification.error({
-      title: '应用错误',
-      content: errorType,
-      duration: 3000
-    });
+export default (error: unknown) => {
+  const errorName = error instanceof Error ? errorMap[error.message] : '未知错误';
+  notification.error({
+    title: '错误',
+    content: errorName,
+    duration: 5000
   });
 };
