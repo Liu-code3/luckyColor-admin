@@ -10,7 +10,7 @@ export default antfu(
       'dist/',
       'node_modules/',
       'pnpm-lock.yaml',
-      '*.d.ts'
+      '**/*.d.ts'
     ],
     formatters: true,
     unocss: true,
