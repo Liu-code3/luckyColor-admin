@@ -1,20 +1,22 @@
-import { createApp } from 'vue'
+import { createApp } from 'vue';
 import {
-  // create naive ui
-  create,
   // component
-  NButton
-} from 'naive-ui'
-import App from './App.vue'
-import router from './router'
+  NButton,
+  // create naive ui
+  create
+} from 'naive-ui';
+import { pinia } from './store';
+import App from './App.vue';
+import router from './router';
 
-import 'virtual:uno.css'
+import 'virtual:uno.css';
 
 const naive = create({
-  components: [NButton],
-})
+  components: [NButton]
+});
 
-const app = createApp(App)
-app.use(router)
-app.use(naive)
-app.mount('#app')
+const app = createApp(App);
+app.use(pinia);
+app.use(router);
+app.use(naive);
+app.mount('#app');
