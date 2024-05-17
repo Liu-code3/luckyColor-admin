@@ -20,9 +20,10 @@ export default {
           item: [
             'prime:bullseye',
             'prime:address-book',
-            'prime:desktop'
+            'prime:desktop',
+            'material-symbols:10k-outline-rounded'
           ]
-        },
+        }
       ]
     },
     // 需要单独引入的图标
