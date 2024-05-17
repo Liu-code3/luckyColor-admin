@@ -3,7 +3,9 @@ import { ref } from 'vue';
 import { loginApi ,menuListApi} from '@/api/index';
 import { FormInst } from 'naive-ui'
 import tool from '@/utils/tool';
+import {useRouter} from "vue-router"
 
+const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const formValue = ref({
     adminName: 'admin',
@@ -27,14 +29,19 @@ const handleValidateClick = (e: MouseEvent) => {
     e.preventDefault()
     formRef.value?.validate(async (errors) => {
         if (!errors) {
+
             const res = await loginApi(formValue.value);
             const  {code,data,}=res.data
             if(code===200){
+                console.log('0000000000');
+                
                tool.data.set('TOKEN',data);
                // 获取用户的菜单
                const res = await menuListApi({token:data});
-               console.log(res,'999999999');
+            router.push('/index');
+
                tool.data.set('MENU', res.data.data)
+
             }
             
         } else {

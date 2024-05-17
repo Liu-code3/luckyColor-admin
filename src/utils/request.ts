@@ -80,7 +80,7 @@ service.interceptors.response.use(
             // 请求成功
             const msg = data.msg || '请求成功';
             message.success(msg);
-            return Promise.resolve(res.data);
+            return Promise.resolve(res);
         }
     },
     (error) => {
