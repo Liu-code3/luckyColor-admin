@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { loginApi } from '@/api/index';
+import { loginApi ,menuListApi} from '@/api/index';
 import { FormInst } from 'naive-ui'
+import tool from '@/utils/tool';
 
 const formRef = ref<FormInst | null>(null)
-const message = useMessage()
 const formValue = ref({
     adminName: 'admin',
     password: '123456'
@@ -28,11 +28,17 @@ const handleValidateClick = (e: MouseEvent) => {
     formRef.value?.validate(async (errors) => {
         if (!errors) {
             const res = await loginApi(formValue.value);
-            console.log(res, '登录成功');
-            message.success('登录成功');
+            const  {code,data,}=res.data
+            if(code===200){
+               tool.data.set('TOKEN',data);
+               // 获取用户的菜单
+               const res = await menuListApi({token:data});
+               console.log(res,'999999999');
+               tool.data.set('MENU', res.data.data)
+            }
+            
         } else {
             console.log(errors);
-            message.error('表单无效');
         }
     })
 }
@@ -50,7 +56,7 @@ const handleConfirm = (value: string) => {
 
         <div class="login_main">
             <div class="login_config">
-                <img src="./Snipaste_2024-05-15_14-07-09.png" style="width: 100%;">
+                <img src="../../assets/imgage/Snipaste_2024-05-15_14-07-09.png" style="width: 100%;">
             </div>
             <div class="login-form">
                 <div class="login-header">

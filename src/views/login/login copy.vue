@@ -8,9 +8,7 @@ const ruleForm = ref({
     pwd: '123456'
 });
 
-const submitForm: () => Promise<void> = async () => {
-  
-};
+
 
 const formRef = ref<FormInst | null>(null)
 // const message = useMessage()
