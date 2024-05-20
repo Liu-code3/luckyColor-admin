@@ -47,8 +47,8 @@ const colorList = [
 
 type FnType = <T>(colorWeak: T) => void;
 const updateColorWeak: FnType = (colorWeak) => {
-  const app = document.body.querySelector('#app');
-  colorWeak ? app?.classList.add('colorWeak') : app?.classList.remove('colorWeak');
+  const app = document.body.querySelector('#app') as HTMLDivElement;
+  colorWeak ? app.classList.add('colorWeak') : app.classList.remove('colorWeak');
 };
 
 export { colorList, updateColorWeak };
