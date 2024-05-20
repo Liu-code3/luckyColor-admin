@@ -6,14 +6,25 @@ const menuList = [
     type: 1,
     path: '/main/analysis',
     key: 'main_analysis',
-    icon: 'pajamas:overview'
+    icon: 'pajamas:overview',
+    children: [
+      {
+        pid: 10,
+        id: 11,
+        title: '系统总览2',
+        type: 11,
+        path: '/main/analysis',
+        key: 'main_analysis',
+        icon: 'pajamas:overview'
+      }
+    ]
   },
   {
     pid: 1,
     id: 2,
     title: '核心技术',
     type: 2,
-    path: '/main/analysis/technology',
+    path: '/index',
     key: 'main_analysis_technology',
     icon: 'ri:coreos-fill'
   },
@@ -95,11 +106,11 @@ export default {
   url: '/api/mock/menuList',
   method: 'post',
   response: (req: Mockm.RequestHeaders) => {
-    const successInfo = { 
-        code: 200, 
-        data: menuList, 
-        msg: '获取菜单成功~'
-     };
+    const successInfo = {
+      code: 200,
+      data: menuList,
+      msg: '获取菜单成功~'
+    };
     const errInfo = { code: 0, msg: '获取菜单失败' };
     return req.body.token === '111111111111111' ? successInfo : errInfo;
   }

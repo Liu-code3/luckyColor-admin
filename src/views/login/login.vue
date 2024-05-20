@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { loginApi, menuListApi } from '@/api/index';

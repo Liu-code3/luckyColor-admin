@@ -1,32 +1,56 @@
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
+<script lang="ts" setup>
+import { useRouter } from 'vue-router';
+import tool from '@/utils/tool';
 
-const menuOptions = [
-  {
-    label: '且听风吟',
-    key: 'index'
-  }
+interface MenuItem {
+  pid: number;
+  id: number;
+  title: string;
+  type: number;
+  path: string;
+  key: string;
+  icon: string;
+  children?: MenuItem[];
+}
 
-];
+interface TransformedMenuItem {
+  label: string;
+  key: string;
+  icon: any;
+  children?: TransformedMenuItem[];
+}
 
-export default defineComponent({
-  setup() {
-    return {
-      inverted: ref(false),
-      menuOptions
+const menuData: MenuItem[] = tool.data.get('MENU') as MenuItem[];
+
+function transformMenuData(data: MenuItem[]): TransformedMenuItem[] {
+  return data.map((item) => {
+    const newItem: TransformedMenuItem = {
+      label: item.title,
+      key: item.path,
+      icon: tool.iconRender(item.icon)
     };
-  }
-});
+    if (item.children && item.children.length > 0)
+      newItem.children = transformMenuData(item.children);
+
+    return newItem;
+  });
+}
+
+const menuOptions: TransformedMenuItem[] = transformMenuData(menuData);
+
+const inverted = ref(false);
+const router = useRouter();
+
+function handleUpdateValue(key: string, item: string) {
+  console.log(item);
+
+  router.push(key);
+}
 </script>
 
 <template>
   <n-space vertical>
     <n-layout>
-      <n-layout-header :inverted="inverted" bordered>
-        <div class="h-8vh">
-          1
-        </div>
-      </n-layout-header>
       <n-layout has-sider>
         <n-layout-sider
           bordered
@@ -37,16 +61,20 @@ export default defineComponent({
           :native-scrollbar="false"
           :inverted="inverted"
         >
+          <div style="height: 60px; " />
+
           <n-menu
             :inverted="inverted"
             :collapsed-width="64"
             :collapsed-icon-size="22"
             :options="menuOptions"
             class="h-91vh"
+            @update:value="handleUpdateValue"
           />
         </n-layout-sider>
-        <n-layout-content content-style="padding: 24px;">
-          平山道
+        <n-layout-content>
+          <div style="height: 60px; " />
+          <router-view />
         </n-layout-content>
       </n-layout>
     </n-layout>
