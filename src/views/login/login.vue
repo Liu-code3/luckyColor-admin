@@ -37,7 +37,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
         tool.data.set('MENU', res.data.data);
-        router.push('/index');
+        router.push('/layout');
       }
     }
     else {
