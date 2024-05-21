@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
 import tool from '@/utils/tool';
+import { useIconRender } from '@/hooks/iconRender';
 
+const iconRender = useIconRender();
 interface MenuItem {
   pid: number;
   id: number;
@@ -27,7 +29,7 @@ function transformMenuData(data: MenuItem[]): TransformedMenuItem[] {
     const newItem: TransformedMenuItem = {
       label: item.title,
       key: item.path,
-      icon: tool.iconRender(item.icon)
+      icon: iconRender(item.icon)
     };
     if (item.children && item.children.length > 0)
       newItem.children = transformMenuData(item.children);
@@ -43,7 +45,6 @@ const router = useRouter();
 
 function handleUpdateValue(key: string, item: string) {
   console.log(item);
-  console.log(key);
   router.push(key);
 }
 </script>

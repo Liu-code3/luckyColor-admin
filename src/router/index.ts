@@ -60,7 +60,7 @@ function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
       path: item.path,
       name: item.name,
       meta: item.meta,
-      redirect: item.redirect,
+      // redirect: item.redirect,
       children: item.children ? filterAsyncRouter(item.children) : [],
       component: loadComponent(item.component)
     };
@@ -73,14 +73,25 @@ function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
 const modules = import.meta.glob('/src/views/**/**.vue');
 
 function loadComponent(component: string | undefined) {
-  if (!component)
+  // if (!component)
+  //   return () => import(/* @vite-ignore */ `/src/views/${component}/index.vue`);
+
+  // const path = component.includes('/')
+  //   ? `/src/views/${component}.vue`
+  //   : `/src/views/${component}/index.vue`;
+
+  // return modules[path] || (() => import(/* @vite-ignore */ path));
+
+  if (component) {
+    if (component.includes('/')) {
+      console.log('222222222');
+      return modules[`/src/views/${component}.vue`];
+    }
+    return modules[`/src/views/${component}/index.vue`];
+  }
+  else {
     return () => import(/* @vite-ignore */ `/src/views/${component}/index.vue`);
-
-  const path = component.includes('/')
-    ? `/src/views/${component}.vue`
-    : `/src/views/${component}/index.vue`;
-
-  return modules[path] || (() => import(/* @vite-ignore */ path));
+  }
 }
 
 export default router;
