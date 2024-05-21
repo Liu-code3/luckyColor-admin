@@ -1,10 +1,12 @@
-<script setup lang="ts">
+<script>
+export default {
 
+};
 </script>
 
 <template>
   <div>
-    11112222222222222222222222222222
+    222
   </div>
 </template>
 

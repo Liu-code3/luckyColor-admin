@@ -1,4 +1,10 @@
 // Interfaces for structured data handling
+// interface DictTree {
+//     [key: string]: DictItem[];
+// }
+
+import { Icon } from '@iconify/vue';
+
 interface DictItem {
   dictValue: string;
   dictLabel?: string;
@@ -6,12 +12,9 @@ interface DictItem {
   children?: DictItem[];
 }
 
-// interface DictTree {
-//     [key: string]: DictItem[];
-// }
-
 // Tool module
 const tool = {
+
   data: {
     set(table: string, settings: object): void {
       const _set = JSON.stringify(settings);
@@ -59,6 +62,10 @@ const tool = {
     if (!numStr.includes('.'))
       numStr += '.';
     return numStr.replace(/(\d)(?=(\d{3})+\.)/g, '$1,').replace(/\.$/, '');
+  },
+  iconRender(icon: string) {
+    // if(!icon) window.console.warn('需要传入图标名称~')
+    return () => h(Icon, { icon });
   },
   dictDataAll(): DictItem[] | null {
     return tool.data.get('DICT_TYPE_TREE_DATA') as DictItem[];
