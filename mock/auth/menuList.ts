@@ -6,18 +6,7 @@ const menuList = [
     type: 1,
     path: '/main/analysis',
     key: 'main_analysis',
-    icon: 'pajamas:overview',
-    children: [
-      {
-        pid: 10,
-        id: 11,
-        title: '系统总览2',
-        type: 11,
-        path: '/main/analysis',
-        key: 'main_analysis',
-        icon: 'pajamas:overview'
-      }
-    ]
+    icon: 'pajamas:overview'
   },
   {
     pid: 1,
