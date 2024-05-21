@@ -1,11 +1,11 @@
+// import config from '@/config';
+
 const routes = [
   {
-    path: '/login',
-    name: 'login',
-    component: () => import('../views/login/login.vue'),
-    meta: {
-      title: '登录页'
-    }
+    path: '/layout',
+    name: 'layout',
+    component: () => import('../layout/index.vue'),
+    children: []
   },
   {
     path: '/login',

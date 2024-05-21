@@ -4,7 +4,7 @@ const menuList = [
     id: 1,
     title: '系统总览',
     type: 1,
-    path: '/main/analysis',
+    path: '/layout/main',
     key: 'main_analysis',
     icon: 'pajamas:overview'
   },
@@ -13,9 +13,10 @@ const menuList = [
     id: 2,
     title: '核心技术',
     type: 2,
-    path: '/index',
+    path: '/layout/main/index',
     key: 'main_analysis_technology',
-    icon: 'ri:coreos-fill'
+    icon: 'ri:coreos-fill',
+    component: 'index/index'
   },
   {
     pid: 0,
@@ -33,7 +34,8 @@ const menuList = [
     type: 2,
     path: '/main/system/users',
     key: 'main_system_users',
-    icon: 'mdi:user'
+    icon: 'mdi:user',
+    component: 'sys/user'
   },
   {
     pid: 3,

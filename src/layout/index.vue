@@ -43,7 +43,7 @@ const router = useRouter();
 
 function handleUpdateValue(key: string, item: string) {
   console.log(item);
-
+  console.log(key);
   router.push(key);
 }
 </script>
