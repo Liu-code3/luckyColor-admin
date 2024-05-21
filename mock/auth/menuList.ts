@@ -5,7 +5,7 @@ const menuList = [
     title: '系统总览',
     type: 1,
     path: '/main',
-    // key: 'main_analysis',
+    key: 'main_analysis',
     icon: 'pajamas:overview',
     component: 'index'
   },

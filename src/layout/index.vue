@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
 
@@ -42,13 +42,10 @@ const menuOptions: TransformedMenuItem[] = transformMenuData(menuData);
 
 const inverted = ref(false);
 const router = useRouter();
-const route = useRoute();
 
 function handleUpdateValue(key: string, item: string) {
   console.log(item);
-  console.log(key);
   router.push(key);
-  console.log(route);
 }
 </script>
 
