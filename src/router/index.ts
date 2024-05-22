@@ -1,7 +1,13 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
 import systemRouter from './systemRouter';
 import tool from '@/utils/tool';
+import { notification } from '@/utils/message';
+
+// 进度条配置
+NProgress.configure({ showSpinner: false, speed: 500 });
 
 export const routes: Array<RouteRecordRaw> = [
   ...systemRouter
@@ -13,6 +19,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  NProgress.start();
   const token = tool.data.get('TOKEN');
   if (to.path === '/login') {
     if (token)
@@ -31,6 +38,18 @@ router.beforeEach((to, from, next) => {
   const menuRouter = filterAsyncRouter(apiMenu);
   menuRouter.forEach((route) => {
     router.addRoute('layout', route);
+  });
+});
+
+router.afterEach(() => {
+  NProgress.done();
+});
+
+router.onError((error) => {
+  NProgress.done();
+  notification.error({
+    title: '路由错误',
+    description: error.message
   });
 });
 
