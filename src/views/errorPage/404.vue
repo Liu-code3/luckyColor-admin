@@ -1,13 +1,12 @@
-<script setup lang="ts">
+<script>
+export default {
 
+};
 </script>
 
 <template>
-  <div>
-    系统管理
-  </div>
+  <div>404页面丢失</div>
 </template>
 
 <style lang="less" scoped>
-
 </style>

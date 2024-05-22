@@ -1,6 +1,6 @@
 const DEFAULT_CONFIG = {
   // 首页地址
-  DASHBOARD_URL: '/index',
+  DASHBOARD_URL: '/layout/main',
 
   // 接口地址
   API_URL: import.meta.env.VITE_API_BASEURL,

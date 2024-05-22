@@ -1,16 +1,30 @@
+// import config from '@/config';
+
 const routes = [
-            {
-                path: 'login',
-                name: 'login',
-                component: () => import('../views/content.vue'),
+  {
+    path: '/layout',
+    name: 'layout',
+    component: () => import('../layout/index.vue'),
+    children: []
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/login/login.vue'),
+    meta: {
+      title: '登录页'
+    }
+  },
+  {
+    path: '/403',
+    name: '403',
+    component: () => import('../views/errorPage/403.vue')
+  },
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('../views/errorPage/404.vue')
+  }
+];
 
-             
-            },
-            {
-                path: 'bbb',
-                name: 'bbb',
-                component: () => import('../views/bbb.vue'),
-            },
-        ]
-
-export default routes
+export default routes;

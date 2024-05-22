@@ -1,13 +1,12 @@
-<script setup lang="ts">
+<script>
+export default {
 
+};
 </script>
 
 <template>
-  <div>
-    系统管理
-  </div>
+  <div>403错误页面</div>
 </template>
 
 <style lang="less" scoped>
-
 </style>

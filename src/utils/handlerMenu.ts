@@ -1,19 +1,20 @@
-import { useIconRender } from '@/hooks/iconRender';
+// import { useIconRender } from '@/hooks/iconRender';
 
-const iconRender = useIconRender();
+// const iconRender = useIconRender();
 // 处理菜单数据
 export function handlMenuList(menuList: Mockm.MenuData[]) {
-  const arr = menuList.filter((item: Mockm.MenuData) => item.icon).map((item: Mockm.MenuData) => {
-    return {
-      ...item,
-      icon: iconRender(item.icon as string)
-    };
-  }) as App.GlobalMenuOption[];
+  // const arr = menuList.filter((item: Mockm.MenuData) => item.icon).map((item: Mockm.MenuData) => {
+  //   return {
+  //     ...item,
+  //     icon: iconRender(item.icon as string)
+  //   };
+  // }) as App.GlobalMenuOption[];
 
-  const parent = arr.filter(item => item.pid === 0);
-  const children = arr.filter(item => item.pid !== 0);
+  const parent = menuList.filter(item => item.pid === 0) as App.GlobalMenuOption[];
+  const children = menuList.filter(item => item.pid !== 0) as App.GlobalMenuOption[];
 
   dataToTree<App.GlobalMenuOption>(parent, children);
+
   function dataToTree<T extends App.GlobalMenuOption>(parent: T[], children: T[]) {
     parent.forEach((p: T, i: number) => {
       children.forEach((c: T) => {
