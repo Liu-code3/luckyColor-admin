@@ -1,13 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-// import NProgress from 'nprogress';
-import 'nprogress/nprogress.css';
 import systemRouter from './systemRouter';
 import tool from '@/utils/tool';
-// import { notification } from '@/utils/message';
-
-// 进度条配置
-// NProgress.configure({ showSpinner: false, speed: 500 });
 
 export const routes: Array<RouteRecordRaw> = [
   ...systemRouter
@@ -24,7 +18,6 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   console.log('Navigating to:', to.path);
   console.log('Current route:', router.currentRoute.value.path);
-  // NProgress.start();
   const token = tool.data.get('TOKEN');
 
   if (to.path === '/login') {
@@ -49,7 +42,8 @@ router.beforeEach((to, from, next) => {
   if (!isGetRouter.value) {
     const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
     const menuRouter = filterAsyncRouter(apiMenu);
-    menuRouter.forEach((route: RouteRecordRaw) => {
+    const menuRouters = flattenMenuList(menuRouter);
+    menuRouters.forEach((route: RouteRecordRaw) => {
       console.log(route);
       router.addRoute('layout', route);
     });
@@ -59,18 +53,6 @@ router.beforeEach((to, from, next) => {
     return false;
   }
 });
-
-// router.afterEach(() => {
-//   NProgress.done();
-// });
-
-// router.onError((error) => {
-//   NProgress.done();
-//   notification.error({
-//     title: '路由错误',
-//     description: error.message
-//   });
-// });
 
 interface MenuItem {
   path: string;
@@ -119,6 +101,18 @@ function loadComponent(component: string | undefined) {
   else {
     return () => import(`/src/views/${component}/index.vue`);
   }
+}
+
+// 递归扁平化多层级数组
+function flattenMenuList(menuList: any[]) {
+  return menuList.reduce((acc: any[], item: any) => {
+    // 将当前项添加到结果数组中
+    acc.push(item);
+    // 如果当前项有子项且是数组，则递归调用 flattenMenuList 函数处理子项
+    if (Array.isArray(item.children) && item.children.length > 0)
+      acc = acc.concat(flattenMenuList(item.children));
+    return acc;
+  }, []);
 }
 
 export default router;

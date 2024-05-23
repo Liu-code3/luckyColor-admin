@@ -7,7 +7,8 @@ const menuList = [
     path: '/main',
     key: 'main_analysis',
     icon: 'pajamas:overview',
-    component: 'layout/index'
+    component: 'sys'
+
   },
   {
     pid: 1,
@@ -27,7 +28,8 @@ const menuList = [
     path: '/main/system',
     key: 'main_system',
     icon: 'material-symbols:folder-managed-sharp',
-    component: 'layout/index'
+    component: 'sys'
+
   },
   {
     pid: 3,
