@@ -1,12 +1,13 @@
-<script>
-export default {
+<script setup lang="ts">
 
-};
 </script>
 
 <template>
-  <div>403错误页面</div>
+  <div>
+    <router-view />
+  </div>
 </template>
 
 <style lang="less" scoped>
+
 </style>

@@ -1,7 +1,13 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
+// import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
 import systemRouter from './systemRouter';
 import tool from '@/utils/tool';
+// import { notification } from '@/utils/message';
+
+// 进度条配置
+// NProgress.configure({ showSpinner: false, speed: 500 });
 
 export const routes: Array<RouteRecordRaw> = [
   ...systemRouter
@@ -18,6 +24,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   console.log('Navigating to:', to.path);
   console.log('Current route:', router.currentRoute.value.path);
+  // NProgress.start();
   const token = tool.data.get('TOKEN');
 
   if (to.path === '/login') {
@@ -52,6 +59,18 @@ router.beforeEach((to, from, next) => {
     return false;
   }
 });
+
+// router.afterEach(() => {
+//   NProgress.done();
+// });
+
+// router.onError((error) => {
+//   NProgress.done();
+//   notification.error({
+//     title: '路由错误',
+//     description: error.message
+//   });
+// });
 
 interface MenuItem {
   path: string;
