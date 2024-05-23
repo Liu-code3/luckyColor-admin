@@ -37,6 +37,7 @@ function transformMenuData(data: MenuItem[]): TransformedMenuItem[] {
     return newItem;
   });
 }
+console.log(transformMenuData(menuData), '菜单渲染');
 
 const menuOptions: TransformedMenuItem[] = transformMenuData(menuData);
 

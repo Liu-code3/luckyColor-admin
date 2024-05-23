@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    系统管理
+    首页
   </div>
 </template>
 

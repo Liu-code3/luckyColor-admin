@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    部门管理
+    用户管理
   </div>
 </template>
 

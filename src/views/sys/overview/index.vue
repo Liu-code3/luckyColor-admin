@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    <router-view />
+    核心技术
   </div>
 </template>
 
