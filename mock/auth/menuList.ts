@@ -7,7 +7,8 @@ const menuList = [
     path: '/main',
     key: 'main_analysis',
     icon: 'pajamas:overview',
-    component: 'index'
+    component: 'sys'
+
   },
   {
     pid: 1,
@@ -17,7 +18,7 @@ const menuList = [
     path: '/main/index',
     key: 'main_analysis_technology',
     icon: 'ri:coreos-fill',
-    component: 'index/index'
+    component: 'sys/overview/index'
   },
   {
     pid: 0,
@@ -28,6 +29,7 @@ const menuList = [
     key: 'main_system',
     icon: 'material-symbols:folder-managed-sharp',
     component: 'sys'
+
   },
   {
     pid: 3,

@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    首页
+    核心技术
   </div>
 </template>
 

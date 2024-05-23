@@ -1,20 +1,31 @@
-// import config from '@/config';
+import config from '@/config';
 
 const routes = [
   {
-    path: '/layout',
+    path: '/',
     name: 'layout',
-    component: () => import('../layout/index.vue'),
-    children: []
+    component: () => import('@/views/layout/index.vue'),
+    redirect: config.DASHBOARD_URL,
+    children: [
+      {
+        path: 'index',
+        name: 'index',
+        component: () => import('@/views/index/index.vue'),
+        meta: {
+          title: '首页'
+        }
+      }
+    ]
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/login/login.vue'),
+    component: () => import('@/views/login/login.vue'),
     meta: {
       title: '登录页'
     }
   },
+
   {
     path: '/:pathMatch(.*)*',
     hidden: true,
