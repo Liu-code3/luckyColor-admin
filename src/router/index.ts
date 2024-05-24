@@ -93,20 +93,9 @@ export function addRoutesWithMenu() {
 const modules = import.meta.glob('/src/views/**/**.vue');
 
 function loadComponent(component: string | undefined) {
-  // if (!component)
-  //   return () => import(/* @vite-ignore */ `/src/views/${component}/index.vue`);
-
-  // const path = component.includes('/')
-  //   ? `/src/views/${component}.vue`
-  //   : `/src/views/${component}/index.vue`;
-
-  // return modules[path] || (() => import(/* @vite-ignore */ path));
-
   if (component) {
-    if (component.includes('/')) {
-      console.log('222222222');
-      return modules[`/src/views/${component}.vue`];
-    }
+    if (component.includes('/')) return modules[`/src/views/${component}.vue`];
+
     return modules[`/src/views/${component}/index.vue`];
   }
   else {

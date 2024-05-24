@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    用户管理
+    核心技术
   </div>
 </template>
 
