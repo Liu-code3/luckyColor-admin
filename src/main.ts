@@ -5,7 +5,7 @@ import {
   // create naive ui
   create
 } from 'naive-ui';
-import { pinia } from './store';
+import store from './store';
 import App from './App.vue';
 import router from './router';
 import luckyColor from './luckyColor';
@@ -16,7 +16,7 @@ const naive = create({
 });
 
 const app = createApp(App);
-app.use(pinia);
+app.use(store);
 app.use(router);
 app.use(naive);
 app.use(luckyColor);
