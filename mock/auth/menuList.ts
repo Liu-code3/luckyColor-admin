@@ -2,6 +2,18 @@ const menuList = [
   {
     pid: 0,
     id: 1,
+    title: '首页',
+    type: 1,
+    path: '/index',
+    key: 'main_analysis',
+    icon: 'pajamas:overview',
+    component: 'sys'
+
+  },
+
+  {
+    pid: 0,
+    id: 2,
     title: '系统总览',
     type: 1,
     path: '/main',
@@ -11,8 +23,8 @@ const menuList = [
 
   },
   {
-    pid: 1,
-    id: 2,
+    pid: 2,
+    id: 3,
     title: '核心技术',
     type: 2,
     path: '/main/index',
@@ -22,7 +34,7 @@ const menuList = [
   },
   {
     pid: 0,
-    id: 3,
+    id: 4,
     title: '系统管理',
     type: 1,
     path: '/main/system',
@@ -32,8 +44,8 @@ const menuList = [
 
   },
   {
-    pid: 3,
-    id: 4,
+    pid: 4,
+    id: 5,
     title: '用户管理',
     type: 2,
     path: '/main/system/users',
@@ -42,8 +54,8 @@ const menuList = [
     component: 'sys/user'
   },
   {
-    pid: 3,
-    id: 5,
+    pid: 4,
+    id: 6,
     title: '部门管理',
     type: 2,
     path: '/main/system/department',
