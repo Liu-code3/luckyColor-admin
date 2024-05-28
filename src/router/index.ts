@@ -22,7 +22,7 @@ router.beforeEach((to, from, next) => {
   const token = tool.data.get('TOKEN');
   if (to.path === '/login') {
     if (token)
-      next({ path: '/layout' });
+      next({ path: '/' });
     else
       next();
   }
