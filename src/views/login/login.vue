@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { loginApi, menuListApi } from '@/api/index';
 import tool from '@/utils/tool';
 import { handlMenuList } from '@/utils/handlerMenu';
+import { addRoutesWithMenu } from '@/router';
 
 const router = useRouter();
 const formRef = ref<FormInst | null>(null);
@@ -37,6 +38,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
         tool.data.set('MENU', handlMenuList(res.data.data));
+        addRoutesWithMenu();
         router.push('/');
       }
     }
