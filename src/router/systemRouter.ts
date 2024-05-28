@@ -7,14 +7,7 @@ const routes = [
     component: () => import('@/views/layout/index.vue'),
     redirect: config.DASHBOARD_URL,
     children: [
-      {
-        path: 'index',
-        name: 'index',
-        component: () => import('@/views/index/index.vue'),
-        meta: {
-          title: '首页'
-        }
-      }
+
     ]
   },
   {

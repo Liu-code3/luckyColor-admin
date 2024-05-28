@@ -22,11 +22,13 @@ function getKeepAliveComponents(): string[] | '' {
 
 <template>
   <div>
-    <!-- 缓存组件 -->
-    <router-view v-slot="{ Component }">
-      <keep-alive :include="getKeepAliveComponents()">
-        <component :is="Component" />
-      </keep-alive>
-    </router-view>
+    <n-message-provider>
+      <!-- 缓存组件 -->
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="getKeepAliveComponents()">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
+    </n-message-provider>
   </div>
 </template>
