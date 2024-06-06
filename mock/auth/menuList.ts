@@ -90,7 +90,8 @@ const menuList = [
     type: 1,
     path: '/main/product',
     key: 'main_product',
-    icon: 'iconoir:commodity'
+    icon: 'iconoir:commodity',
+    component: 'goods'
   },
   {
     pid: 9,
@@ -99,7 +100,8 @@ const menuList = [
     type: 2,
     path: '/main/product/type',
     key: 'main_product_type',
-    icon: 'lucide:file-type'
+    icon: 'lucide:file-type',
+    component: 'goods/type'
   },
   {
     pid: 9,
@@ -108,7 +110,8 @@ const menuList = [
     type: 2,
     path: '/main/product/info',
     key: 'main_product_info',
-    icon: 'ep:info-filled'
+    icon: 'ep:info-filled',
+    component: 'goods/info'
   }
 ];
 

@@ -120,8 +120,6 @@ function defaultLoading() {
     defaultLabels.value = obj.key;
   }
   else {
-    console.log(menuOptions.value, 'fuckV');
-
     menuOptions.value.forEach((item, index) => {
       if (index === 0) {
         const exists = tabsList.value.some(v => v.key === item.key);
