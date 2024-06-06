@@ -1,0 +1,7 @@
+/*左右垂直居中*/
+
+.layout-abs-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

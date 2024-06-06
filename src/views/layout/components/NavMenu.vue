@@ -1,11 +1,9 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 
 </script>
 
 <template>
-  <div>
-    用户管理
-  </div>
+  <div />
 </template>
 
 <style lang="less" scoped>

@@ -4,7 +4,7 @@
 
 <template>
   <div>
-    用户管理
+    菜单管理
   </div>
 </template>
 
