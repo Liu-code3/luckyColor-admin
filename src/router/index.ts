@@ -17,7 +17,7 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _, next) => {
   start();
   const token = tool.data.get('TOKEN');
   if (to.path === '/login') {
@@ -90,7 +90,7 @@ export function addRoutesWithMenu() {
   });
 }
 
-const modules = import.meta.glob('/src/views/**/**.vue');
+const modules = import.meta.glob('/src/views/**/*.vue');
 
 function loadComponent(component: string | undefined) {
   if (component) {
