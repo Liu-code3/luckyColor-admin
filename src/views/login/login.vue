@@ -57,7 +57,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
 
     <div class="login_main">
       <div class="login_config">
-        <img src="../../assets/imgage/Snipaste_2024-05-15_14-07-09.png" style="width: 100%;">
+        <img src="../../assets/images/Snipaste_2024-05-15_14-07-09.png" style="width: 100%;">
       </div>
       <div class="login-form">
         <div class="login-header">

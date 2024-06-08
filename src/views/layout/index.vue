@@ -176,14 +176,17 @@ function signOut() {
         </n-layout-sider>
         <n-layout-content>
           <div class="layout-content-snowyHeader">
-            <div />
             <div class="layout-content-right">
               <Icon
-                class="cursor-pointer text-20px" color="#595959" icon="lets-icons:full-alt-light"
+                class="text-5"
+                icon="tabler:lock-filled"
+              />
+              <Icon
+                class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
                 @click="screenfullFn"
               />
               <Icon
-                class="mx-15px cursor-pointer text-20px" color="#595959" icon="mdi:circular-arrows"
+                class="cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
                 @click="refresh"
               />
               <n-dropdown :options="options" class="custom-dropdown" @select="xuanzhong">
@@ -234,11 +237,11 @@ function signOut() {
   background-color: #fff;
   border-bottom: solid #dcdfe6 1px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: right;
   padding: 0 20px;
   .n-button__border {
-    border: none !important;
+    border: none;
   }
 }
 

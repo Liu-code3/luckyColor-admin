@@ -47,7 +47,7 @@ function saveAsImg(type = 'jpg') {
     message.error('请先签名');
   }
   else {
-    const dataURL = signaturePad.value!.toDataURL('image/jpeg');
+    const dataURL = signaturePad.value!.toDataURL('images/jpeg');
     download(dataURL, `signature.${type}`);
   }
 }
