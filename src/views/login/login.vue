@@ -5,10 +5,11 @@ import { loginApi, menuListApi } from '@/api/index';
 import tool from '@/utils/tool';
 import { handlMenuList } from '@/utils/handlerMenu';
 import { addRoutesWithMenu } from '@/router';
+import { Encrypt } from '@/utils/crypto-md5';
 
 const router = useRouter();
 const formRef = ref<FormInst | null>(null);
-const formValue = ref({
+const formValue = reactive({
   adminName: 'admin',
   password: '123456'
 });
@@ -31,13 +32,15 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
   e.preventDefault();
   formRef.value?.validate(async (errors) => {
     if (!errors) {
-      const res = await loginApi(formValue.value);
+      const res = await loginApi(formValue);
       const { code, data } = res.data;
       if (code === 200) {
         tool.data.set('TOKEN', data);
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
         tool.data.set('MENU', handlMenuList(res.data.data));
+        const md5Password = Encrypt(formValue.password);
+        tool.data.set('lockPassword', md5Password);
         addRoutesWithMenu();
         router.push('/');
       }
@@ -57,7 +60,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
 
     <div class="login_main">
       <div class="login_config">
-        <img src="../../assets/images/Snipaste_2024-05-15_14-07-09.png" style="width: 100%;">
+        <img src="../../assets/images/Snipaste.png" style="width: 100%;">
       </div>
       <div class="login-form">
         <div class="login-header">
