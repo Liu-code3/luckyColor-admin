@@ -16,18 +16,27 @@ interface DictItem {
 const tool = {
 
   data: {
-    set(table: string, settings: object): void {
-      const _set = JSON.stringify(settings);
+    set<T>(table: string, settings: T): void {
+      let _set = '';
+      if (typeof settings === 'string') {
+        _set = settings;
+      }
+      else {
+        _set = JSON.stringify(settings);
+      }
       localStorage.setItem(table, _set);
     },
-    get(table: string): object | null {
+    get<T>(table: string): T | null {
       const data = localStorage.getItem(table);
-      try {
-        return JSON.parse(data ?? '');
+      if (data) {
+        if (isValidJSON(data)) {
+          return JSON.parse(data);
+        }
+        else {
+          return data as T; // 返回原始字符串
+        }
       }
-      catch (err) {
-        return null;
-      }
+      return null;
     },
     remove(table: string): void {
       localStorage.removeItem(table);
@@ -37,18 +46,27 @@ const tool = {
     }
   },
   session: {
-    set(table: string, settings: object): void {
-      const _set = JSON.stringify(settings);
+    set<T>(table: string, settings: T): void {
+      let _set = '';
+      if (typeof settings === 'string') {
+        _set = settings;
+      }
+      else {
+        _set = JSON.stringify(settings);
+      }
       sessionStorage.setItem(table, _set);
     },
-    get(table: string): object | null {
+    get<T>(table: string): T | null {
       const data = sessionStorage.getItem(table);
-      try {
-        return JSON.parse(data ?? '');
+      if (data) {
+        if (isValidJSON(data)) {
+          return JSON.parse(data);
+        }
+        else {
+          return data as T; // 返回原始字符串
+        }
       }
-      catch (err) {
-        return null;
-      }
+      return null;
     },
     remove(table: string): void {
       sessionStorage.removeItem(table);
@@ -126,6 +144,16 @@ function findNodeByValue(node: DictItem, value: string): DictItem | null {
       return result;
   }
   return null;
+}
+
+function isValidJSON(data: string): boolean {
+  try {
+    JSON.parse(data);
+    return true;
+  }
+  catch (err) {
+    return false;
+  }
 }
 
 export default tool;

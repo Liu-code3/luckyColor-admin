@@ -18,7 +18,6 @@ const routes = [
       title: '登录页'
     }
   },
-
   {
     path: '/:pathMatch(.*)*',
     hidden: true,

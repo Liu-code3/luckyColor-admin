@@ -5,9 +5,10 @@ import screenfull from 'screenfull';
 import { useMessage } from 'naive-ui';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
+import { useGlobalStore } from '@/store/layoutStore';
 
 const message = useMessage();
-
+const globalStore = useGlobalStore();
 const iconRender = useIconRender();
 const router = useRouter();
 interface MenuItem {
@@ -83,6 +84,11 @@ const options = ref([
     key: 'signOut'
   }
 ]);
+
+// 锁屏
+function JumpLock() {
+  globalStore.updateIsLock(true);
+}
 
 // 刷新
 function refresh() {
@@ -180,6 +186,7 @@ function signOut() {
               <Icon
                 class="text-5"
                 icon="tabler:lock-filled"
+                @click="JumpLock"
               />
               <Icon
                 class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
