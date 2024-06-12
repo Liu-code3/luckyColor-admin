@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { routes } from '@/router';
+import { useGlobalStore } from '@/store/layoutStore';
 
+const globalStore = useGlobalStore();
 onActivated(() => {
   // 1. 调用时机为首次挂载
   // 2. 以及每次从缓存中被重新插入时
@@ -23,6 +25,15 @@ function getKeepAliveComponents(): string[] | '' {
 <template>
   <div>
     <n-message-provider>
+      <transition
+        enter-active-class="animate__animated animate__bounceIn"
+        leave-active-class="animate__animated animate__bounceOut"
+      >
+        <lockScreen
+          v-if="globalStore.isLocked"
+          @unlock="globalStore.updateIsLock(false);"
+        />
+      </transition>
       <!-- 缓存组件 -->
       <router-view v-slot="{ Component }">
         <keep-alive :include="getKeepAliveComponents()">
