@@ -6,6 +6,7 @@ import { useMessage } from 'naive-ui';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
 import { useGlobalStore } from '@/store/layoutStore';
+import SwitchTheme from '@/views/layout/components/switchTheme.vue';
 
 const message = useMessage();
 const globalStore = useGlobalStore();
@@ -107,7 +108,7 @@ function tabSwitching(value: any) {
   router.push(value);
   defaultLabels.value = value;
   tool.data.set('LAST_VIEWS_PATH', { key: value });
-};
+}
 
 // 关闭标签
 function handleClose(name: string | number) {
@@ -162,64 +163,64 @@ function signOut() {
 
 <template>
   <n-space vertical>
-    <n-layout>
-      <n-layout has-sider>
-        <n-layout-sider
-          bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
-          :native-scrollbar="false" :inverted="inverted"
+    <n-layout has-sider>
+      <n-layout-sider
+        bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
+        :native-scrollbar="false" :inverted="inverted"
+        class="bg-pink"
+      >
+        <div class="logo-bar">
+          <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
+          <div class="pl-9px">
+            luckyColor admin
+          </div>
+        </div>
+
+        <n-menu
+          v-model:value="defaultLabels" :inverted="inverted" :collapsed-width="64" :collapsed-icon-size="22"
+          :options="menuOptions" class="h-91vh" @update:value="handleUpdateValue"
+        />
+      </n-layout-sider>
+      <n-layout-content>
+        <div class="layout-content-snowyHeader">
+          <div class="flex flex-row items-center">
+            <SwitchTheme />
+            <Icon
+              class="mx-3 text-5"
+              icon="tabler:lock-filled"
+              @click="JumpLock"
+            />
+            <Icon
+              class="cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
+              @click="screenfullFn"
+            />
+            <Icon
+              class="mx-3 cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+              @click="refresh"
+            />
+            <n-dropdown :options="options" class="custom-dropdown" @select="xuanzhong">
+              <n-button>
+                <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
+                <span class="ml-1 text-14px text-#606297">用户资料</span>
+              </n-button>
+            </n-dropdown>
+          </div>
+        </div>
+
+        <n-tabs
+          v-model:value="defaultLabels" default-value="oasis" type="card" closable @update:value="tabSwitching"
+          @close="handleClose"
         >
-          <div class="logo-bar">
-            <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
-            <div class="pl-9px">
-              luckyColor admin
-            </div>
-          </div>
-
-          <n-menu
-            v-model:value="defaultLabels" :inverted="inverted" :collapsed-width="64" :collapsed-icon-size="22"
-            :options="menuOptions" class="h-91vh" @update:value="handleUpdateValue"
-          />
-        </n-layout-sider>
-        <n-layout-content>
-          <div class="layout-content-snowyHeader">
-            <div class="layout-content-right">
-              <Icon
-                class="text-5"
-                icon="tabler:lock-filled"
-                @click="JumpLock"
-              />
-              <Icon
-                class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
-                @click="screenfullFn"
-              />
-              <Icon
-                class="cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
-                @click="refresh"
-              />
-              <n-dropdown :options="options" class="custom-dropdown" @select="xuanzhong">
-                <n-button>
-                  <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
-                  <span class="ml-4px text-14px text-#606297">用户资料</span>
-                </n-button>
-              </n-dropdown>
-            </div>
-          </div>
-
-          <n-tabs
-            v-model:value="defaultLabels" default-value="oasis" type="card" closable @update:value="tabSwitching"
-            @close="handleClose"
-          >
-            <template #prefix>
-              <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
-            </template>
-            <n-tab-pane v-for="item in tabsList" :key="item.key" :name="item.key" :tab="item.label" />
-            <template #suffix>
-              <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
-            </template>
-          </n-tabs>
-          <router-view />
-        </n-layout-content>
-      </n-layout>
+          <template #prefix>
+            <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
+          </template>
+          <n-tab-pane v-for="item in tabsList" :key="item.key" :name="item.key" :tab="item.label" />
+          <template #suffix>
+            <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
+          </template>
+        </n-tabs>
+        <router-view />
+      </n-layout-content>
     </n-layout>
   </n-space>
 </template>
@@ -241,7 +242,7 @@ function signOut() {
 
 .layout-content-snowyHeader {
   height: 60px;
-  background-color: #fff;
+  background-color: pink;
   border-bottom: solid #dcdfe6 1px;
   display: flex;
   align-items: center;
@@ -259,7 +260,7 @@ function signOut() {
 
 .n-tabs {
   height: 50px;
-  background-color: #fff;
+  background-color: pink;
   padding: 8px;
   border-bottom: solid #dcdfe6 1px;
 
@@ -293,6 +294,6 @@ function signOut() {
 }
 
 .n-layout-scroll-container {
-  background-color: #f6f8f9;
+  background-color: pink;
 }
 </style>
