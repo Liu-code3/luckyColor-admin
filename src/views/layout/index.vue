@@ -7,6 +7,7 @@ import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
 import { useGlobalStore } from '@/store/layoutStore';
 import SwitchTheme from '@/views/layout/components/switchTheme.vue';
+import { setCssVar } from '@/utils/setCssVar.ts';
 
 const message = useMessage();
 const globalStore = useGlobalStore();
@@ -35,6 +36,17 @@ interface TransformedMenuItem {
 interface Obj {
   [key: string]: string;
 }
+
+const switchModel: (model: boolean) => void = (model: boolean) => {
+  if (model) {
+    setCssVar('--theme-color', '#333');
+    setCssVar('--theme-background', '#eee');
+  }
+  else {
+    setCssVar('--theme-color', '#eee');
+    setCssVar('--theme-background', '#333');
+  }
+};
 
 // 路由菜单
 const menuData: MenuItem[] = tool.data.get('MENU') as MenuItem[];
@@ -167,7 +179,6 @@ function signOut() {
       <n-layout-sider
         bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
         :native-scrollbar="false" :inverted="inverted"
-        class="bg-pink"
       >
         <div class="logo-bar">
           <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
@@ -184,7 +195,7 @@ function signOut() {
       <n-layout-content>
         <div class="layout-content-snowyHeader">
           <div class="flex flex-row items-center">
-            <SwitchTheme />
+            <SwitchTheme @toggle-theme="switchModel" />
             <Icon
               class="mx-3 text-5"
               icon="tabler:lock-filled"
@@ -228,6 +239,8 @@ function signOut() {
 <style lang="less">
 .n-scrollbar-content {
   border-right: solid #dcdfe6 2px;
+  background-color: var(--theme-background);
+  transition: background-color 800ms;
 }
 
 .logo-bar {
@@ -242,7 +255,6 @@ function signOut() {
 
 .layout-content-snowyHeader {
   height: 60px;
-  background-color: pink;
   border-bottom: solid #dcdfe6 1px;
   display: flex;
   align-items: center;
@@ -260,7 +272,6 @@ function signOut() {
 
 .n-tabs {
   height: 50px;
-  background-color: pink;
   padding: 8px;
   border-bottom: solid #dcdfe6 1px;
 
@@ -294,6 +305,7 @@ function signOut() {
 }
 
 .n-layout-scroll-container {
-  background-color: pink;
+  background-color: var(--theme-background);
+  transition: background-color 800ms;
 }
 </style>
