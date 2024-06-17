@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import tool from '@/utils/tool.ts';
+
 const emits = defineEmits(['toggleTheme']);
 
-const checkedVal = ref(false);
+const localModel = tool.data.get('themeModel') || false;
+const checkedVal = ref(localModel);
 
 const toggleTheme: TFn.voidFn = () => {
-  emits('toggleTheme', checkedVal.value);
+  tool.data.set('themeModel', checkedVal.value);
+  emits('toggleTheme');
 };
 </script>
 

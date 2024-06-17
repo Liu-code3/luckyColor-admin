@@ -37,15 +37,30 @@ interface Obj {
   [key: string]: string;
 }
 
-const switchModel: (model: boolean) => void = (model: boolean) => {
-  if (model) {
-    setCssVar('--theme-color', '#333');
-    setCssVar('--theme-background', '#eee');
-  }
-  else {
-    setCssVar('--theme-color', '#eee');
-    setCssVar('--theme-background', '#333');
-  }
+const switchModel: TFn.voidFn = () => {
+  const localModel = tool.data.get('themeModel') || false;
+  const dartModel = [
+    {
+      prop: '--theme-color',
+      val: '#333'
+    },
+    {
+      prop: '--theme-background',
+      val: '#eee'
+    }
+  ].map(item => ({ ...item, dom: document.documentElement }));
+
+  const lightModel = [
+    {
+      prop: '--theme-color',
+      val: '#eee'
+    },
+    {
+      prop: '--theme-background',
+      val: '#333'
+    }
+  ].map(item => ({ ...item, dom: document.documentElement }));
+  localModel ? setCssVar(dartModel) : setCssVar(lightModel);
 };
 
 // 路由菜单
@@ -156,6 +171,8 @@ function defaultLoading() {
 
 onMounted(() => {
   defaultLoading();
+  // 主题模式
+  switchModel();
 });
 
 function xuanzhong(key: string | number) {
