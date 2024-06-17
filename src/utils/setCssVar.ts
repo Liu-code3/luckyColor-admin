@@ -1,7 +1,7 @@
 interface IPropertyObj {
   prop: string;
   val: string;
-  dom?: HTMLElement;
+  dom: HTMLElement;
 }
 
 type TSetCssVar = (propertyList: IPropertyObj[]) => void;

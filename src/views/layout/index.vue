@@ -38,7 +38,7 @@ interface Obj {
 }
 
 const switchModel: TFn.voidFn = () => {
-  const localModel = tool.data.get('themeModel') || false;
+  const localModel = tool.data.get('themeModel') ?? true;
   const dartModel = [
     {
       prop: '--theme-color',

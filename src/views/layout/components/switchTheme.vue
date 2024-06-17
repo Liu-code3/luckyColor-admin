@@ -3,7 +3,7 @@ import tool from '@/utils/tool.ts';
 
 const emits = defineEmits(['toggleTheme']);
 
-const localModel = tool.data.get('themeModel') || false;
+let localModel = tool.data.get('themeModel') ?? true;
 const checkedVal = ref(localModel);
 
 const toggleTheme: TFn.voidFn = () => {
