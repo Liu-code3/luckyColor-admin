@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { routes } from '@/router';
+import lockScreen from '@/components/lockScreen.vue';
 import { useGlobalStore } from '@/store/layoutStore';
 
 const globalStore = useGlobalStore();
