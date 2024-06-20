@@ -49,13 +49,13 @@ router.onError((error) => {
 interface MenuItem {
   path: string;
   name: string;
+  component: string;
   meta?: {
     type?: string;
     url?: string;
   };
   redirect?: string;
   children?: MenuItem[];
-  component?: string;
 }
 
 function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
@@ -85,22 +85,14 @@ function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
 export function addRoutesWithMenu() {
   const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
   const menuRouter = filterAsyncRouter(apiMenu);
-  menuRouter.forEach((route) => {
-    router.addRoute('layout', route);
-  });
+  menuRouter.forEach(route => router.addRoute('layout', route));
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
 
-function loadComponent(component: string | undefined) {
-  if (component) {
-    if (component.includes('/')) return modules[`/src/views/${component}.vue`];
-
-    return modules[`/src/views/${component}/index.vue`];
-  }
-  else {
-    return () => import(/* @vite-ignore */ `/src/views/${component}/index.vue`);
-  }
+function loadComponent(component: string) {
+  if (component.includes('/')) return modules[`/src/views/${component}.vue`];
+  return modules[`/src/views/${component}/index.vue`];
 }
 
 export default router;
