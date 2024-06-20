@@ -96,12 +96,12 @@ const menuList = [
   {
     pid: 9,
     id: 10,
-    title: '图片上传',
+    title: '富文本编辑器',
     type: 2,
     path: '/lComponent/upload',
-    key: 'main_product_type',
-    icon: 'lucide:file-type',
-    component: 'lComponent/upload'
+    key: 'lComponent_wang-editor',
+    icon: 'bi:file-earmark-richtext',
+    component: 'lComponent/wang-editor'
   }
   // {
   //   pid: 9,
