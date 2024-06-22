@@ -11,9 +11,9 @@ export function loginApi<T>(data: T) {
 
 // 获取用户的菜单
 export function menuListApi<T>(data: T) {
-    return service({
-      url: '/mock/menuList',
-      method: 'POST',
-      data
-    });
-  }
+  return service({
+    url: '/mock/menuList',
+    method: 'POST',
+    data
+  });
+}

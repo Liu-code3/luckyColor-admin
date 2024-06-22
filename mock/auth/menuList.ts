@@ -8,9 +8,7 @@ const menuList = [
     key: 'main_analysis',
     icon: 'pajamas:overview',
     component: 'index/index'
-
   },
-
   {
     pid: 0,
     id: 2,
@@ -102,6 +100,16 @@ const menuList = [
     key: 'icomponent_editor',
     icon: 'bi:file-earmark-richtext',
     component: 'icomponent/editor'
+  },
+  {
+    pid: 9,
+    id: 11,
+    title: '数据字典',
+    type: 2,
+    path: '/icomponent/dict',
+    key: 'icomponent_dict',
+    icon: 'arcticons:colordict',
+    component: 'icomponent/dict/index'
   }
 ];
 
