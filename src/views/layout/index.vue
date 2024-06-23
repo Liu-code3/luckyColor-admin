@@ -46,7 +46,7 @@ const switchModel: TFn.voidFn = () => {
     },
     {
       prop: '--theme-background',
-      val: '#eee'
+      val: '#fff'
     }
   ].map(item => ({ ...item, dom: document.documentElement }));
 
@@ -57,7 +57,7 @@ const switchModel: TFn.voidFn = () => {
     },
     {
       prop: '--theme-background',
-      val: '#333'
+      val: '#fff'
     }
   ].map(item => ({ ...item, dom: document.documentElement }));
   localModel ? setCssVar(dartModel) : setCssVar(lightModel);
@@ -205,8 +205,13 @@ function signOut() {
         </div>
 
         <n-menu
-          v-model:value="defaultLabels" :inverted="inverted" :collapsed-width="64" :collapsed-icon-size="22"
-          :options="menuOptions" class="h-91vh" @update:value="handleUpdateValue"
+          v-model:value="defaultLabels"
+          :inverted="inverted"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+          class="n-menu-height"
+          @update:value="handleUpdateValue"
         />
       </n-layout-sider>
       <n-layout-content>
@@ -247,7 +252,9 @@ function signOut() {
             <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
           </template>
         </n-tabs>
-        <router-view />
+        <div class="layout-content-main">
+          <router-view />
+        </div>
       </n-layout-content>
     </n-layout>
   </n-space>
@@ -287,6 +294,10 @@ function signOut() {
   align-items: center;
 }
 
+.n-menu-height {
+  height: calc(100vh - 61px);
+}
+
 .n-tabs {
   height: 50px;
   padding: 8px;
@@ -324,5 +335,14 @@ function signOut() {
 .n-layout-scroll-container {
   background-color: var(--theme-background);
   transition: background-color 800ms;
+}
+
+.layout-content-main {
+  height: calc(100vh - 111px);
+  overflow-y: auto;
+}
+
+.layout-content-main::-webkit-scrollbar {
+  display: none;
 }
 </style>

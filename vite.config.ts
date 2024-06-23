@@ -7,6 +7,8 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import UnoCSS from 'unocss/vite';
+import { lazyImport, VxeResolver } from "vite-plugin-lazy-import";
+
 import { viteMockServe } from 'vite-plugin-mock';
 
 // 以下icon图标的引入也需要使用 unplugin-vue-components/vite
@@ -30,6 +32,16 @@ export default defineConfig(({ mode }) => {
       vue(),
       VueJSX(),
       UnoCSS(),
+        lazyImport({
+          resolvers: [
+              VxeResolver({
+                libraryName: 'vxe-table'
+              }),
+              VxeResolver({
+                libraryName: 'vxe-pc-ui'
+              })
+          ]
+        }),
       AutoImport({
         // targets to transform
         include: [

@@ -102,7 +102,27 @@ const menuList = [
     key: 'icomponent_editor',
     icon: 'bi:file-earmark-richtext',
     component: 'icomponent/editor'
+  },
+  {
+    pid: 9,
+    id: 11,
+    title: '数据字典',
+    type: 2,
+    path: '/icomponent/dict',
+    key: 'icomponent_dict',
+    icon: 'arcticons:colordict',
+    component: 'icomponent/dict/index'
   }
+  // {
+  //   pid: 9,
+  //   id: 11,
+  //   title: '商品信息',
+  //   type: 2,
+  //   path: '/main/product/info',
+  //   key: 'main_product_info',
+  //   icon: 'ep:info-filled',
+  //   component: 'goods/info'
+  // }
 ];
 
 export default {
