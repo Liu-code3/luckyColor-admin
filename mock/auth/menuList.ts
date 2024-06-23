@@ -8,7 +8,9 @@ const menuList = [
     key: 'main_analysis',
     icon: 'pajamas:overview',
     component: 'index/index'
+
   },
+
   {
     pid: 0,
     id: 2,
@@ -111,6 +113,16 @@ const menuList = [
     icon: 'arcticons:colordict',
     component: 'icomponent/dict/index'
   }
+  // {
+  //   pid: 9,
+  //   id: 11,
+  //   title: '商品信息',
+  //   type: 2,
+  //   path: '/main/product/info',
+  //   key: 'main_product_info',
+  //   icon: 'ep:info-filled',
+  //   component: 'goods/info'
+  // }
 ];
 
 export default {
