@@ -1,46 +1,30 @@
 <script setup lang="ts">
 import type { TreeOption } from 'naive-ui';
+import type { Ref } from 'vue';
+import { getDictTreeApi } from '@/api/dictTree.ts';
 
-const data: TreeOption[] = [
-  {
-    label: '道生一',
-    key: 1,
-    children: [
-      {
-        label: '一生二',
-        key: 2,
-        children: [
-          {
-            label: '二生三',
-            key: 3
-          }
-        ]
-      }
-    ]
-  },
-  {
-    label: '道生一',
-    key: 11,
-    children: [
-      {
-        label: '一生二',
-        key: 22,
-        children: [
-          {
-            label: '二生三',
-            key: 33
-          }
-        ]
-      }
-    ]
-  }
-];
+const data: Ref<TreeOption[]> = ref([]);
 
 async function getData() {
   const res = await getDictTreeApi();
-  data.value = [ ...res];
+  data.value = [ ...(res.data) ];
 }
 
+const checkCamera = ({ option }: { option: TreeOption }) => {
+  return {
+    onClick() {
+      console.log(option, 'op');
+    }
+  };
+};
+
+function apiInit() {
+  getData();
+}
+
+onMounted(() => {
+  apiInit();
+});
 </script>
 
 <template>
@@ -53,7 +37,10 @@ async function getData() {
         <n-tree
           block-line
           selectable
+          key-field="id"
+          label-field="dictLabel"
           :data="data"
+          :node-props="checkCamera"
         />
       </n-gi>
       <n-gi :span="8">

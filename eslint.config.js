@@ -14,8 +14,12 @@ export default antfu(
     ],
     formatters: true,
     unocss: true,
-    vue: true,
     typescript: true,
+    vue: {
+      overrides: {
+        'vue/v-on-event-hyphenation': 'off'
+      }
+    },
     stylistic: {
       indent: 2, // 4, or 'tab'
       quotes: 'single', // or 'double'
@@ -26,7 +30,9 @@ export default antfu(
       'no-undef': 'off',
       'no-console': 'warn',
       'antfu/if-newline': 'off',
-      'style/comma-dangle': ['error', 'never']
+      'style/comma-dangle': [ 'error', 'never' ],
+      'style/array-bracket-spacing': [ 'error', 'always' ],
+      'antfu/top-level-function': 'off'
     }
   }
 );

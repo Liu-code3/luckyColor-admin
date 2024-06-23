@@ -1,12 +1,12 @@
 // 统一的请求发送
-import type { AxiosError } from 'axios';
+import type { AxiosError, AxiosResponse } from 'axios';
 import axios from 'axios';
 import sysConfig from '@/config/index';
 import tool from '@/utils/tool';
 import { message } from '@/utils/message';
 
 // 以下这些code需要重新登录
-const reloadCodes: number[] = [401, 1011007, 1011008];
+const reloadCodes: number[] = [ 401, 1011007, 1011008 ];
 const errorCodeMap: { [key: number]: string } = {
   200: '请求成功',
   400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
@@ -60,8 +60,8 @@ const error: Fnerror = () => {
 
 // 响应拦截
 service.interceptors.response.use(
-  (res) => {
-    const code = res.data.code;
+  (res: AxiosResponse) => {
+    const code: number = res.data.code;
     const data = res.data;
 
     if (reloadCodes.includes(code)) {
@@ -80,7 +80,7 @@ service.interceptors.response.use(
       // 请求成功
       const msg = data.msg || '请求成功';
       message.success(msg);
-      return Promise.resolve(res);
+      return Promise.resolve(data);
     }
   },
   (error) => {
