@@ -46,7 +46,7 @@ const switchModel: TFn.voidFn = () => {
     },
     {
       prop: '--theme-background',
-      val: '#eee'
+      val: '#fff'
     }
   ].map(item => ({ ...item, dom: document.documentElement }));
 
@@ -57,7 +57,7 @@ const switchModel: TFn.voidFn = () => {
     },
     {
       prop: '--theme-background',
-      val: '#333'
+      val: '#fff'
     }
   ].map(item => ({ ...item, dom: document.documentElement }));
   localModel ? setCssVar(dartModel) : setCssVar(lightModel);
