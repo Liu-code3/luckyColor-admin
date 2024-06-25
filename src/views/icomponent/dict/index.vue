@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { TreeOption } from 'naive-ui';
 import type { Ref } from 'vue';
-import { VxeGrid ,VxeGridProps } from 'vxe-table';
+
+import type { VxeGridProps } from 'vxe-table';
+import { VxeGrid } from 'vxe-table';
+import { Icon } from '@iconify/vue';
 import { getDictTreeApi } from '@/api/dictTree.ts';
-import { Icon } from "@iconify/vue";
 
 const data: Ref<TreeOption[]> = ref([]);
 
@@ -23,37 +25,45 @@ const checkCamera = ({ option }: { option: TreeOption }) => {
 // 表格
 const searchFormState = reactive({
   searchKey: ''
-})
+});
 
 interface RowVO {
-  id: number
-  name: string
-  role: string
-  sex: string
-  age: number
-  address: string
+  id: number;
+  name: string;
+  role: string;
+  sex: string;
+  age: number;
+  address: string;
 }
 
 const gridOptions = reactive<VxeGridProps<RowVO>>({
+  border: true,
+  columnConfig: {
+    resizable: true
+  },
   customConfig: {
     placement: 'top-right'
   },
   toolbarConfig: {
-    custom: true
+    custom: true,
+    slots: {
+      buttons: 'toolbar_buttons'
+    }
   },
   columns: [
-    { type: 'seq', width: 70 },
     { field: 'name', title: 'Name' },
     { field: 'sex', title: 'Sex' },
     { field: 'age', title: 'Age' }
   ],
   data: [
-    { id: 10001, name: 'Test1', role: 'Develop', sex: 'Man', age: 28, address: 'test abc' },
-    { id: 10002, name: 'Test2', role: 'Test', sex: 'Women', age: 22, address: 'Guangzhou' },
-    { id: 10003, name: 'Test3', role: 'PM', sex: 'Man', age: 32, address: 'Shanghai' },
-    { id: 10004, name: 'Test4', role: 'Designer', sex: 'Women', age: 24, address: 'Shanghai' }
+    // { id: 10001, name: 'Test1', role: 'Develop', sex: 'Man', age: 28, address: 'test abc' },
+    // { id: 10002, name: 'Test2', role: 'Test', sex: 'Women', age: 22, address: 'Guangzhou' },
+    // { id: 10003, name: 'Test3', role: 'PM', sex: 'Man', age: 32, address: 'Shanghai' },
+    // { id: 10004, name: 'Test4', role: 'Designer', sex: 'Women', age: 24, address: 'Shanghai' }
   ]
-})
+});
+
+const onToolbarBtnsClick = () => {};
 
 function apiInit() {
   getData();
@@ -82,7 +92,6 @@ onMounted(() => {
       </n-gi>
       <n-gi :span="10">
         <n-form
-          ref="formRef"
           :model="searchFormState"
           label-placement="left"
           label-width="auto"
@@ -110,9 +119,28 @@ onMounted(() => {
           </n-grid>
         </n-form>
         <n-divider style="margin: 12px 0" />
-       <div>
-         <vxe-grid v-bind="gridOptions"></vxe-grid>
-       </div>
+        <div>
+          <VxeGrid
+            v-bind="gridOptions"
+          >
+            <template #toolbar_buttons>
+              <n-button
+                type="primary"
+                @click="onToolbarBtnsClick"
+              >
+                <template #icon>
+                  <Icon icon="material-symbols:add" />
+                </template>
+                新增
+              </n-button>
+            </template>
+            <template #empty>
+              <div class="py-20">
+                <n-empty description="你什么也找不到" size="huge" />
+              </div>
+            </template>
+          </VxeGrid>
+        </div>
       </n-gi>
     </n-grid>
   </div>
