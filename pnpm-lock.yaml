@@ -45,11 +45,11 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0(vue@3.4.29(typescript@5.5.2))
       vxe-pc-ui:
-        specifier: ^4.0.28
-        version: 4.0.28
+        specifier: ^4.0.33
+        version: 4.0.33
       vxe-table:
-        specifier: ^4.7.30
-        version: 4.7.30
+        specifier: ^4.7.34
+        version: 4.7.34
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^2.21.1
@@ -2881,11 +2881,11 @@ packages:
     peerDependencies:
       vue: ^3.0.11
 
-  vxe-pc-ui@4.0.28:
-    resolution: {integrity: sha512-iynMNhFfjCLLeJDYdtUg1FfKg+Z6nocq88rFQXI1qRTp4sH8Fy/gCCjk3MyXDhk26aZelgaegJMgkRsx0oniVg==}
+  vxe-pc-ui@4.0.33:
+    resolution: {integrity: sha512-pKD0sb+Q6h57e87KYb/mWhQrZ1PlqydEjyVORg8r6QXeb1/ofTne08OZfI3rnp/QI9d1po200UnZP0bm2Foevw==}
 
-  vxe-table@4.7.30:
-    resolution: {integrity: sha512-AbftSBYqOTO+5W+cM92xo9dyCoIfSBUVacVemFPfdIGap5HM9FKNBN6wtZPxF+tBzK7DDJI2lbNms/xGI9cvrg==}
+  vxe-table@4.7.34:
+    resolution: {integrity: sha512-LnEq3kN2nTQtTZxiaET6vFqGTmsv+ibdZSfMzlZBgojQTQts1ZTESYg6oHyCIhtODm/EAo+1tVviPNyT5fu5eQ==}
 
   webpack-sources@3.2.3:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
@@ -5916,13 +5916,13 @@ snapshots:
       vooks: 0.2.12(vue@3.4.29(typescript@5.5.2))
       vue: 3.4.29(typescript@5.5.2)
 
-  vxe-pc-ui@4.0.28:
+  vxe-pc-ui@4.0.33:
     dependencies:
       '@vxe-ui/core': 1.0.8
 
-  vxe-table@4.7.30:
+  vxe-table@4.7.34:
     dependencies:
-      vxe-pc-ui: 4.0.28
+      vxe-pc-ui: 4.0.33
 
   webpack-sources@3.2.3: {}
 

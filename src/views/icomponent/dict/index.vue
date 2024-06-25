@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { TreeOption } from 'naive-ui';
 import type { Ref } from 'vue';
-import { VxeGrid ,VxeGridProps } from 'vxe-table';
+
+import type { VxeGridProps } from 'vxe-table';
+import { VxeGrid } from 'vxe-table';
+import { Icon } from '@iconify/vue';
 import { getDictTreeApi } from '@/api/dictTree.ts';
-import { Icon } from "@iconify/vue";
 
 const data: Ref<TreeOption[]> = ref([]);
 
@@ -23,37 +25,41 @@ const checkCamera = ({ option }: { option: TreeOption }) => {
 // 表格
 const searchFormState = reactive({
   searchKey: ''
-})
+});
 
 interface RowVO {
-  id: number
-  name: string
-  role: string
-  sex: string
-  age: number
-  address: string
+  id: number;
+  dictLabel: string;
+  dictValue: string;
+  sortCode: number;
 }
 
 const gridOptions = reactive<VxeGridProps<RowVO>>({
+  border: true,
+  columnConfig: {
+    resizable: true
+  },
   customConfig: {
     placement: 'top-right'
   },
   toolbarConfig: {
-    custom: true
+    custom: true,
+    slots: {
+      buttons: 'toolbar_buttons'
+    }
   },
   columns: [
-    { type: 'seq', width: 70 },
-    { field: 'name', title: 'Name' },
-    { field: 'sex', title: 'Sex' },
-    { field: 'age', title: 'Age' }
+    { field: 'dictLabel', title: '字典名称' },
+    { field: 'dictValue', title: '字典值' },
+    { field: 'sortCode', title: '排序' },
+    { field: 'edit', title: '编辑', slots: { default: 'edit' }, width: 200 }
   ],
   data: [
-    { id: 10001, name: 'Test1', role: 'Develop', sex: 'Man', age: 28, address: 'test abc' },
-    { id: 10002, name: 'Test2', role: 'Test', sex: 'Women', age: 22, address: 'Guangzhou' },
-    { id: 10003, name: 'Test3', role: 'PM', sex: 'Man', age: 32, address: 'Shanghai' },
-    { id: 10004, name: 'Test4', role: 'Designer', sex: 'Women', age: 24, address: 'Shanghai' }
+    { id: 10001, dictLabel: '汉族', dictValue: '汉族', sortCode: 10 }
   ]
-})
+});
+
+const onToolbarBtnsClick = () => {};
 
 function apiInit() {
   getData();
@@ -82,7 +88,6 @@ onMounted(() => {
       </n-gi>
       <n-gi :span="10">
         <n-form
-          ref="formRef"
           :model="searchFormState"
           label-placement="left"
           label-width="auto"
@@ -110,9 +115,36 @@ onMounted(() => {
           </n-grid>
         </n-form>
         <n-divider style="margin: 12px 0" />
-       <div>
-         <vxe-grid v-bind="gridOptions"></vxe-grid>
-       </div>
+        <div>
+          <VxeGrid
+            v-bind="gridOptions"
+          >
+            <!-- toolbar_buttons 左边按钮自定义插槽 -->
+            <template #toolbar_buttons>
+              <n-button
+                type="primary"
+                @click="onToolbarBtnsClick"
+              >
+                <template #icon>
+                  <Icon icon="material-symbols:add" />
+                </template>
+                新增
+              </n-button>
+            </template>
+            <!--  表格数据为空时的插槽  -->
+            <template #empty>
+              <div class="py-20">
+                <n-empty description="你什么也找不到" size="huge" />
+              </div>
+            </template>
+            <!-- 自定义表格编辑列插槽 -->
+            <template #edit>
+              <n-button quaternary type="primary" class="p-0">
+                编辑
+              </n-button>
+            </template>
+          </VxeGrid>
+        </div>
       </n-gi>
     </n-grid>
   </div>
