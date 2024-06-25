@@ -29,11 +29,9 @@ const searchFormState = reactive({
 
 interface RowVO {
   id: number;
-  name: string;
-  role: string;
-  sex: string;
-  age: number;
-  address: string;
+  dictLabel: string;
+  dictValue: string;
+  sortCode: number;
 }
 
 const gridOptions = reactive<VxeGridProps<RowVO>>({
@@ -51,15 +49,13 @@ const gridOptions = reactive<VxeGridProps<RowVO>>({
     }
   },
   columns: [
-    { field: 'name', title: 'Name' },
-    { field: 'sex', title: 'Sex' },
-    { field: 'age', title: 'Age' }
+    { field: 'dictLabel', title: '字典名称' },
+    { field: 'dictValue', title: '字典值' },
+    { field: 'sortCode', title: '排序' },
+    { field: 'edit', title: '编辑', slots: { default: 'edit' }, width: 200 }
   ],
   data: [
-    // { id: 10001, name: 'Test1', role: 'Develop', sex: 'Man', age: 28, address: 'test abc' },
-    // { id: 10002, name: 'Test2', role: 'Test', sex: 'Women', age: 22, address: 'Guangzhou' },
-    // { id: 10003, name: 'Test3', role: 'PM', sex: 'Man', age: 32, address: 'Shanghai' },
-    // { id: 10004, name: 'Test4', role: 'Designer', sex: 'Women', age: 24, address: 'Shanghai' }
+    { id: 10001, dictLabel: '汉族', dictValue: '汉族', sortCode: 10 }
   ]
 });
 
@@ -123,6 +119,7 @@ onMounted(() => {
           <VxeGrid
             v-bind="gridOptions"
           >
+            <!-- toolbar_buttons 左边按钮自定义插槽 -->
             <template #toolbar_buttons>
               <n-button
                 type="primary"
@@ -134,10 +131,17 @@ onMounted(() => {
                 新增
               </n-button>
             </template>
+            <!--  表格数据为空时的插槽  -->
             <template #empty>
               <div class="py-20">
                 <n-empty description="你什么也找不到" size="huge" />
               </div>
+            </template>
+            <!-- 自定义表格编辑列插槽 -->
+            <template #edit>
+              <n-button quaternary type="primary" class="p-0">
+                编辑
+              </n-button>
             </template>
           </VxeGrid>
         </div>
