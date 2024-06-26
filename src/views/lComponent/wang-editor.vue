@@ -3,7 +3,9 @@
 </script>
 
 <template>
-  <div>
-    商品类型
-  </div>
+  <div>富文本</div>
 </template>
+
+<style scoped lang="less">
+
+</style>

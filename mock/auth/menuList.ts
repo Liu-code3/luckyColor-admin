@@ -85,33 +85,43 @@ const menuList = [
   {
     pid: 0,
     id: 9,
-    title: '商品中心',
+    title: '组件封装',
     type: 1,
-    path: '/main/product',
-    key: 'main_product',
+    path: '/icomponent',
+    key: 'main',
     icon: 'iconoir:commodity',
-    component: 'goods'
+    component: 'icomponent'
   },
   {
     pid: 9,
     id: 10,
-    title: '商品类型',
+    title: '富文本编辑器',
     type: 2,
-    path: '/main/product/type',
-    key: 'main_product_type',
-    icon: 'lucide:file-type',
-    component: 'goods/type'
+    path: '/icomponent/editor',
+    key: 'icomponent_editor',
+    icon: 'bi:file-earmark-richtext',
+    component: 'icomponent/editor'
   },
   {
     pid: 9,
     id: 11,
-    title: '商品信息',
+    title: '数据字典',
     type: 2,
-    path: '/main/product/info',
-    key: 'main_product_info',
-    icon: 'ep:info-filled',
-    component: 'goods/info'
+    path: '/icomponent/dict',
+    key: 'icomponent_dict',
+    icon: 'arcticons:colordict',
+    component: 'icomponent/dict/index'
   }
+  // {
+  //   pid: 9,
+  //   id: 11,
+  //   title: '商品信息',
+  //   type: 2,
+  //   path: '/main/product/info',
+  //   key: 'main_product_info',
+  //   icon: 'ep:info-filled',
+  //   component: 'goods/info'
+  // }
 ];
 
 export default {

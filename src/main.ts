@@ -5,6 +5,7 @@ import {
   // create naive ui
   create
 } from 'naive-ui';
+import '@/config/vxeTable';
 import store from './store';
 import App from './App.vue';
 import router from './router';

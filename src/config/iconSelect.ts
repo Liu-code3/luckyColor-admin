@@ -1,6 +1,6 @@
 /**
  * 图标选择器基础数据
- * 推荐前往https://iconify.design/docs/icon-components/vue/ 下载图标的Vue文件，然后放在src/assets/icons文件夹里面
+ * 推荐前往 https://iconify.design/docs/icon-components/vue/ 下载图标的Vue文件，然后放在src/assets/icons文件夹里面
  * 这个网址有118个图标集，包括antd、font awesome、bootstrap、eleme等累计140456个图标
  */
 const uiwIconComponentMap = import.meta.glob('../assets/icons/uiw/*.vue'); // 异步方式

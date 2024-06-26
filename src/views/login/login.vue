@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { loginApi, menuListApi } from '@/api/index';
+import { loginApi, menuListApi } from '@/api';
 import tool from '@/utils/tool';
 import { handlMenuList } from '@/utils/handlerMenu';
 import { addRoutesWithMenu } from '@/router';
@@ -23,7 +23,7 @@ const rules = {
   password: {
     required: true,
     message: '请输入密码',
-    trigger: ['input', 'blur']
+    trigger: [ 'input', 'blur' ]
   }
 };
 
@@ -33,16 +33,16 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
   formRef.value?.validate(async (errors) => {
     if (!errors) {
       const res = await loginApi(formValue);
-      const { code, data } = res.data;
+      const { code, data } = res;
       if (code === 200) {
         tool.data.set('TOKEN', data);
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
-        tool.data.set('MENU', handlMenuList(res.data.data));
+        tool.data.set('MENU', handlMenuList(res.data));
         const md5Password = Encrypt(formValue.password);
         tool.data.set('lockPassword', md5Password);
         addRoutesWithMenu();
-        router.push('/');
+        await router.push('/');
       }
     }
     else {
@@ -60,7 +60,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
 
     <div class="login_main">
       <div class="login_config">
-        <img src="../../assets/images/Snipaste.png" style="width: 100%;">
+        <img src="@/assets/images/Snipaste.png" style="width: 100%;" alt="">
       </div>
       <div class="login-form">
         <div class="login-header">
@@ -184,9 +184,8 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
       display: block;
 
       .n-form-item {
-        margin: 0;
         display: block;
-        margin-bottom: 21px;
+        margin: 0 0 21px;
 
         :deep(.n-input-wrapper) {
           height: 47px !important;
