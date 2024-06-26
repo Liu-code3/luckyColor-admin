@@ -6,16 +6,18 @@ const routes = [
     name: 'layout',
     component: () => import('@/views/layout/index.vue'),
     redirect: config.DASHBOARD_URL,
-    children: [
-
-    ]
+    children: [],
+    meta: {
+      keepAlive: true
+    }
   },
   {
     path: '/login',
     name: 'login',
     component: () => import('@/views/login/login.vue'),
     meta: {
-      title: '登录页'
+      title: '登录页',
+      keepAlive: true
     }
   },
   {

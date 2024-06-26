@@ -5,6 +5,7 @@
 <template>
   <div>
     菜单管理
+    <input id="" type="text" name="">
   </div>
 </template>
 

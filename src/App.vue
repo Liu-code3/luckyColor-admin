@@ -17,6 +17,7 @@ function getKeepAliveComponents(): string[] | '' {
   // 获取所有缓存组件的名称
   // 首先使用 filter 方法过滤出所有 meta 属性中 keepAlive 为 true 的路由
   const filteredRoutes = routes.filter(route => route.meta && route.meta.keepAlive);
+
   // 然后使用 map 方法从这些路由中提取 name 属性
   const names = filteredRoutes.map(route => route.name) as string[] | '';
   return names.length ? names : '';

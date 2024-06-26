@@ -41,11 +41,12 @@ function xuanzhong(key: string | number) {
 
 // 退出登录
 function signOut() {
+  tool.data.clear();
+  // tool.data.remove('TOKEN');
   router.push('/login');
   message.success(
     '退出登录成功'
   );
-  tool.data.clear();
 }
 </script>
 
