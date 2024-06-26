@@ -8,7 +8,6 @@ const menuList = [
     key: 'main_analysis',
     icon: 'pajamas:overview',
     component: 'index/index'
-
   },
 
   {

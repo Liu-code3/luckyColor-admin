@@ -1,7 +1,8 @@
 /* 定义根作用域下的变量 */
 :root {
   --theme-color: #333;
-  --theme-background: #eee;
+  --theme-background: #fff;
+  --content-background: #f6f8f9;
 }
 
 /*左右垂直居中*/

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import screenfull from 'screenfull';
 import { useMessage } from 'naive-ui';
 import tool from '@/utils/tool';
+import DEFAULT_CONFIG from '@/config/index';
 import { useIconRender } from '@/hooks/iconRender';
 import { useGlobalStore } from '@/store/layoutStore';
 import SwitchTheme from '@/views/layout/components/switchTheme.vue';
@@ -46,7 +47,11 @@ const switchModel: TFn.voidFn = () => {
     },
     {
       prop: '--theme-background',
-      val: '#eee'
+      val: '#fff'
+    },
+    {
+      prop: '--content-background',
+      val: '#f6f8f9'
     }
   ].map(item => ({ ...item, dom: document.documentElement }));
 
@@ -197,13 +202,14 @@ function signOut() {
         bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
         :native-scrollbar="false" :inverted="inverted"
       >
-        <div class="logo-bar">
-          <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
-          <div class="pl-9px">
-            luckyColor admin
+        <div class="logo-bar layout-abs-center">
+          <div class="layout-abs-center">
+            <Icon class="text-32px" icon="cryptocurrency-color:ltc" />
+          </div>
+          <div class="pl-[13px]">
+            {{ DEFAULT_CONFIG.SYS_BASE_CONFIG.SNOWY_SYS_NAME }}
           </div>
         </div>
-
         <n-menu
           v-model:value="defaultLabels" :inverted="inverted" :collapsed-width="64" :collapsed-icon-size="22"
           :options="menuOptions" class="h-91vh" @update:value="handleUpdateValue"
@@ -211,6 +217,7 @@ function signOut() {
       </n-layout-sider>
       <n-layout-content>
         <div class="layout-content-snowyHeader">
+          <div>Hi,</div>
           <div class="flex flex-row items-center">
             <SwitchTheme @toggle-theme="switchModel" />
             <Icon
@@ -247,7 +254,9 @@ function signOut() {
             <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
           </template>
         </n-tabs>
-        <router-view />
+        <div class="content-background">
+          <router-view />
+        </div>
       </n-layout-content>
     </n-layout>
   </n-space>
@@ -259,15 +268,31 @@ function signOut() {
   background-color: var(--theme-background);
   transition: background-color 800ms;
 }
+.content-background {
+  background-color: var(--content-background);
+  height: calc(100vh - 110px);
+  overflow-y: scroll;
+}
+.content-background::-webkit-scrollbar {
+	display: none;
+	}
+
 
 .logo-bar {
   width: 220px;
+  // width: 100%;
   height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 18px;
   margin: 0 0 0 10px;
+  div:nth-child(1) {
+    width: 50px;
+    flex: none;
+  }
+  div:nth-child(2) {
+    width: 180px;
+    flex: none;
+    box-sizing: border-box;
+  }
 }
 
 .layout-content-snowyHeader {
@@ -275,8 +300,9 @@ function signOut() {
   border-bottom: solid #dcdfe6 1px;
   display: flex;
   align-items: center;
-  justify-content: right;
+  justify-content: space-between;
   padding: 0 20px;
+  box-sizing: border-box;
   .n-button__border {
     border: none;
   }
@@ -291,7 +317,7 @@ function signOut() {
   height: 50px;
   padding: 8px;
   border-bottom: solid #dcdfe6 1px;
-
+  box-sizing: border-box;
   .n-tabs-nav__prefix,
   .n-tabs-nav__suffix,
   .n-tabs-pad,
