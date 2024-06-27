@@ -161,7 +161,10 @@ onMounted(() => {
                   :page-sizes="[10, 20, 30, 40]"
                 >
                   <template #prefix="{ itemCount, startIndex }">
-                    从第 {{ startIndex }} 项开始, 共 {{ itemCount }} 项
+                    <div class="flex gap-2">
+                      <span>{{ startIndex + 1 }} - {{ startIndex + pageSize }}</span>
+                      <span>共{{ itemCount }}项</span>
+                    </div>
                   </template>
                 </n-pagination>
               </template>

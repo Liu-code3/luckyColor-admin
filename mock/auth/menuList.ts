@@ -128,7 +128,7 @@ const menuList = [
 export default {
   url: '/api/mock/menuList',
   method: 'post',
-  response: (req: Mockm.RequestHeaders) => {
+  response: (req: Mockm.Root) => {
     const successInfo = {
       code: 200,
       data: menuList,
