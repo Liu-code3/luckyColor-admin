@@ -102,7 +102,7 @@ function handleUpdateValue(key: string, item: any) {
   const exists = tabsList.value.some(item => item.key === key);
   if (!exists) {
     tabsList.value.push(item);
-    tool.data.set('LAST_MUN', tabsList.value);
+    tool.data.set('LAST_MENU', tabsList.value);
   }
 }
 
@@ -148,8 +148,8 @@ function handleClose(name: string | number) {
 // 默认加载
 function defaultLoading() {
   menuOptions.value = transformMenuData(menuData);
-  if (tool.data.get('LAST_MUN')) {
-    tabsList.value = tool.data.get('LAST_MUN') as TransformedMenuItem[];
+  if (tool.data.get('LAST_MENU')) {
+    tabsList.value = tool.data.get('LAST_MENU') as TransformedMenuItem[];
     const obj = tool.data.get('LAST_VIEWS_PATH') as Obj;
     defaultLabels.value = obj.key;
   }
@@ -161,7 +161,7 @@ function defaultLoading() {
           tool.data.set('LAST_VIEWS_PATH', { key: item.key });
           defaultLabels.value = item.key;
           tabsList.value.push(item);
-          tool.data.set('LAST_MUN', tabsList.value);
+          tool.data.set('LAST_MENU', tabsList.value);
           router.push(item.key);
         }
       }
