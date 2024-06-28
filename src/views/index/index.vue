@@ -11,7 +11,7 @@
         <div>自上周以来</div>
       </div>
       <div class="home-page—show-box">
-        <div>活跃用户</div>
+        <div>指标名称</div>
         <div>5,089</div>
         <div>自上周以来</div>
       </div>
@@ -26,12 +26,22 @@
         <div>自上周以来</div>
       </div>
     </div>
+    <div class="home-page-middle">
+      <div class="area-chart">
+        <div class="area-chart-title layout-center pl-20px">
+          指标名称-面积图
+        </div>
+      </div>
+      <div class="pie-chart">
+        2
+      </div>
+    </div>
   </div>
 </template>
 
-<style scoped>
+<style lang="less" scoped>
 .home-page-box {
-  padding: 20px;
+  padding: 10px;
 }
 .home-page-top {
   width: 100%;
@@ -44,7 +54,7 @@
     background-color: #fff;
     border: #dde0e7 solid 1px;
     border-radius: 6px;
-    margin-right: 20px;
+    margin-left: 10px;
     padding: 15px 15px 20px 15px;
     box-sizing: border-box;
     display: flex;
@@ -60,6 +70,7 @@
 
   .home-page—show {
     color: #fff;
+    margin-left: 0;
     background: linear-gradient(
       to right,
       #90b4f6,
@@ -70,6 +81,32 @@
       #4f89f3,
       #4e88f2
     );
+  }
+}
+
+.home-page-middle {
+  display: flex;
+  margin-top: 10px;
+  .area-chart {
+    width: 939px;
+    height: 240px;
+    background-color: #fff;
+    border-radius: 6px;
+    margin-right: 10px;
+    border: #dde0e7 solid 1px;
+    .area-chart-title {
+      width: 100%;
+      height: 50px;
+      border-bottom: #e4e7ed solid 1px;
+      box-sizing: border-box;
+    }
+  }
+  .pie-chart {
+    height: 240px;
+    background-color: #fff;
+    border-radius: 6px;
+    flex: 1;
+    border: #dde0e7 solid 1px;
   }
 }
 </style>
