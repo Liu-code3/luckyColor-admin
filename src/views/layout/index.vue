@@ -55,7 +55,7 @@ function defaultLoading() {
           tool.data.set('LAST_VIEWS_PATH', { key: item.key });
           defaultLabels.value = item.key;
           tabsList.value.push(item);
-          tool.data.set('LAST_MUN', tabsList.value);
+          tool.data.set('LAST_MENU', tabsList.value);
           router.push(item.key);
         }
       }
