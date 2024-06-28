@@ -32,16 +32,16 @@ export default defineConfig(({ mode }) => {
       vue(),
       VueJSX(),
       UnoCSS(),
-        lazyImport({
-          resolvers: [
-              VxeResolver({
-                libraryName: 'vxe-table'
-              }),
-              VxeResolver({
-                libraryName: 'vxe-pc-ui'
-              })
-          ]
-        }),
+      lazyImport({
+        resolvers: [
+          VxeResolver({
+            libraryName: 'vxe-table'
+          }),
+          VxeResolver({
+            libraryName: 'vxe-pc-ui'
+          })
+        ]
+      }),
       AutoImport({
         // targets to transform
         include: [
@@ -78,7 +78,7 @@ export default defineConfig(({ mode }) => {
             // enabledCollections: ['ep'] // 这是可选的，默认启用 Iconify 支持的所有集合['mdi']
           })
         ],
-        dirs: [r('src/components')],
+        dirs: [ r('src/components') ],
         dts: false
       }),
       viteMockServe({
