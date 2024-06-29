@@ -101,17 +101,24 @@ const menuList = [
     path: '/icomponent/editor',
     key: 'icomponent_editor',
     icon: 'bi:file-earmark-richtext',
-    component: 'icomponent/editor'
+    component: 'icomponent/editor',
+    meta: {
+      keepAlive: true
+    }
   },
   {
     pid: 9,
     id: 11,
     title: '数据字典',
+    name: 'dict',
     type: 2,
     path: '/icomponent/dict',
     key: 'icomponent_dict',
     icon: 'arcticons:colordict',
-    component: 'icomponent/dict/index'
+    component: 'icomponent/dict/index',
+    meta: {
+      keepAlive: true
+    }
   }
   // {
   //   pid: 9,

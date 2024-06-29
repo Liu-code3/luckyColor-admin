@@ -2,7 +2,7 @@
 import type { RouteRecordRaw } from 'vue-router';
 import lockScreen from '@/components/lockScreen.vue';
 import { useGlobalStore } from '@/store/layoutStore';
-import { routes } from '@/router';
+import router from '@/router';
 
 const globalStore = useGlobalStore();
 onActivated(() => {
@@ -16,19 +16,11 @@ onDeactivated(() => {
 
 function getKeepAliveComponents(routes: Array<RouteRecordRaw>): string[] | '' {
   const names: string[] = [];
-  function recurse(routes: Array<RouteRecordRaw>) {
-    for (const route of routes) {
-      if (route.meta && route.meta.keepAlive && route.name) {
-        names.push(route.name as string); // <string>route.name 这样预测类型会被识别为标签
-      }
-      if (route.children) {
-        names.push(route.name as string);
-      }
+  for (const route of routes) {
+    if (route.meta && route.meta.keepAlive) {
+      names.push(route.name as string);
     }
   }
-
-  recurse(routes);
-
   return names.length ? names : '';
 }
 </script>
@@ -47,7 +39,7 @@ function getKeepAliveComponents(routes: Array<RouteRecordRaw>): string[] | '' {
       </transition>
       <!-- 缓存组件 -->
       <router-view v-slot="{ Component }">
-        <keep-alive :include="getKeepAliveComponents(routes)">
+        <keep-alive :include="getKeepAliveComponents(router.getRoutes())">
           <component :is="Component" />
         </keep-alive>
       </router-view>
