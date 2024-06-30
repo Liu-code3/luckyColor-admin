@@ -1,75 +1,19 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
-import screenfull from 'screenfull';
-import { useMessage } from 'naive-ui';
+import NavMenu from './components/NavMenu.vue';
+import Tags from './components/tags.vue';
+import Userbar from './components/userbar.vue';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
-import { useGlobalStore } from '@/store/layoutStore';
-import SwitchTheme from '@/views/layout/components/switchTheme.vue';
-import { setCssVar } from '@/utils/setCssVar.ts';
 
-const message = useMessage();
-const globalStore = useGlobalStore();
 const iconRender = useIconRender();
 const router = useRouter();
-interface MenuItem {
-  pid: number;
-  id: number;
-  title: string;
-  type: number;
-  path: string;
-  key: string;
-  icon: string;
-  children?: MenuItem[];
-}
-
-interface TransformedMenuItem {
-  pid: number;
-  id: number;
-  label: string;
-  key: string;
-  icon: any;
-  children?: TransformedMenuItem[];
-}
-
-interface Obj {
-  [key: string]: string;
-}
-
-const switchModel: TFn.voidFn = () => {
-  const localModel = tool.data.get('themeModel') ?? true;
-  const dartModel = [
-    {
-      prop: '--theme-color',
-      val: '#333'
-    },
-    {
-      prop: '--theme-background',
-      val: '#fff'
-    }
-  ].map(item => ({ ...item, dom: document.documentElement }));
-
-  const lightModel = [
-    {
-      prop: '--theme-color',
-      val: '#eee'
-    },
-    {
-      prop: '--theme-background',
-      val: '#fff'
-    }
-  ].map(item => ({ ...item, dom: document.documentElement }));
-  localModel ? setCssVar(dartModel) : setCssVar(lightModel);
-};
-
-// 路由菜单
-const menuData: MenuItem[] = tool.data.get('MENU') as MenuItem[];
 
 // 路由传换为菜单
-function transformMenuData(data: MenuItem[]): TransformedMenuItem[] {
+function transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuItem[] {
   return data.map((item) => {
-    const newItem: TransformedMenuItem = {
+    const newItem: LayoutT.TransformedMenuItem = {
       pid: item.pid,
       id: item.id,
       label: item.title,
@@ -84,73 +28,23 @@ function transformMenuData(data: MenuItem[]): TransformedMenuItem[] {
   });
 }
 
-// 菜单
-const menuOptions = ref<TransformedMenuItem[]>([]);
-
-// 反转
-const inverted = ref(false);
-
 // 标签
-const tabsList = ref<TransformedMenuItem[]>([]);
+const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);
 const defaultLabels = ref('');
 
-// 切换菜单
-function handleUpdateValue(key: string, item: any) {
-  router.push(key);
-  tool.data.set('LAST_VIEWS_PATH', { key });
-  defaultLabels.value = key;
-  const exists = tabsList.value.some(item => item.key === key);
-  if (!exists) {
-    tabsList.value.push(item);
-    tool.data.set('LAST_MENU', tabsList.value);
-  }
-}
+// 菜单
+const menuOptions = ref<LayoutT.TransformedMenuItem[]>([]);
 
-const options = ref([
-  {
-    label: '退出登录',
-    key: 'signOut'
-  }
-]);
-
-// 锁屏
-function JumpLock() {
-  globalStore.updateIsLock(true);
-}
-
-// 刷新
-function refresh() {
-  location.reload();
-}
-
-// 全屏
-function screenfullFn() {
-  // screenfull.request(); // 全屏
-  // screenfull.exit(); // 退出全屏
-  screenfull.toggle(); // 全屏切换
-}
-
-// 标签页切换
-function tabSwitching(value: any) {
-  router.push(value);
-  defaultLabels.value = value;
-  tool.data.set('LAST_VIEWS_PATH', { key: value });
-}
-
-// 关闭标签
-function handleClose(name: string | number) {
-  tabsList.value = tabsList.value.filter((item) => {
-    return item.key !== name;
-  });
-  defaultLabels.value = tabsList.value[tabsList.value.length - 1].key;
-}
+// 路由菜单
+const menuData: LayoutT.MenuItem[] = tool.data.get('MENU') as LayoutT.MenuItem[];
 
 // 默认加载
 function defaultLoading() {
   menuOptions.value = transformMenuData(menuData);
-  if (tool.data.get('LAST_MENU')) {
-    tabsList.value = tool.data.get('LAST_MENU') as TransformedMenuItem[];
-    const obj = tool.data.get('LAST_VIEWS_PATH') as Obj;
+  const mun = tool.data.get('LAST_MUN');
+  if (mun) {
+    tabsList.value = tool.data.get('LAST_MUN') as LayoutT.TransformedMenuItem[];
+    const obj = tool.data.get('LAST_VIEWS_PATH') as LayoutT.Obj;
     defaultLabels.value = obj.key;
   }
   else {
@@ -171,91 +65,47 @@ function defaultLoading() {
 
 onMounted(() => {
   defaultLoading();
-  // 主题模式
-  switchModel();
 });
 
-function xuanzhong(key: string | number) {
-  if (key === 'signOut')
-    signOut();
+function defaultLabelsFn(val: string) {
+  defaultLabels.value = val;
 }
 
-// 退出登录
-function signOut() {
-  router.push('/login');
-  message.success(
-    '退出登录成功'
-  );
-  tool.data.clear();
+function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
+  tabsList.value = val;
 }
 </script>
 
 <template>
   <n-space vertical>
-    <n-layout has-sider>
-      <n-layout-sider
-        bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
-        :native-scrollbar="false" :inverted="inverted"
-      >
-        <div class="logo-bar">
-          <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
-          <div class="pl-9px">
-            luckyColor admin
-          </div>
-        </div>
-
-        <n-menu
-          v-model:value="defaultLabels"
-          :inverted="inverted"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-          class="n-menu-height"
-          @update:value="handleUpdateValue"
-        />
-      </n-layout-sider>
-      <n-layout-content>
-        <div class="layout-content-snowyHeader">
-          <div class="flex flex-row items-center">
-            <SwitchTheme @toggle-theme="switchModel" />
-            <Icon
-              class="mx-3 text-5"
-              icon="tabler:lock-filled"
-              @click="JumpLock"
-            />
-            <Icon
-              class="cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
-              @click="screenfullFn"
-            />
-            <Icon
-              class="mx-3 cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
-              @click="refresh"
-            />
-            <n-dropdown :options="options" class="custom-dropdown" @select="xuanzhong">
-              <n-button>
-                <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
-                <span class="ml-1 text-14px text-#606297">用户资料</span>
-              </n-button>
-            </n-dropdown>
-          </div>
-        </div>
-
-        <n-tabs
-          v-model:value="defaultLabels" default-value="oasis" type="card" closable @update:value="tabSwitching"
-          @close="handleClose"
+    <n-layout>
+      <n-layout has-sider>
+        <n-layout-sider
+          bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
+          :native-scrollbar="false"
         >
-          <template #prefix>
-            <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
-          </template>
-          <n-tab-pane v-for="item in tabsList" :key="item.key" :name="item.key" :tab="item.label" />
-          <template #suffix>
-            <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
-          </template>
-        </n-tabs>
-        <div class="layout-content-main">
+          <div class="logo-bar">
+            <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
+            <div class="pl-9px">
+              luckyColor admin
+            </div>
+          </div>
+          <NavMenu
+            v-model:menuOptions="menuOptions" v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels"
+            @default-labels-fn="defaultLabelsFn" @tabs-list-fn="tabsListFn"
+          />
+        </n-layout-sider>
+        <n-layout-content>
+          <!-- 头部 -->
+          <Userbar />
+          <!-- 标签页 -->
+          <Tags
+            v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels" @default-labels-fn="defaultLabelsFn"
+            @tabs-list-fn="tabsListFn"
+          />
           <router-view />
-        </div>
-      </n-layout-content>
+        </n-layout-content>
+      </n-layout>
     </n-layout>
   </n-space>
 </template>
@@ -263,8 +113,6 @@ function signOut() {
 <style lang="less">
 .n-scrollbar-content {
   border-right: solid #dcdfe6 2px;
-  background-color: var(--theme-background);
-  transition: background-color 800ms;
 }
 
 .logo-bar {
@@ -277,29 +125,9 @@ function signOut() {
   margin: 0 0 0 10px;
 }
 
-.layout-content-snowyHeader {
-  height: 60px;
-  border-bottom: solid #dcdfe6 1px;
-  display: flex;
-  align-items: center;
-  justify-content: right;
-  padding: 0 20px;
-  .n-button__border {
-    border: none;
-  }
-}
-
-.layout-content-right {
-  display: flex;
-  align-items: center;
-}
-
-.n-menu-height {
-  height: calc(100vh - 61px);
-}
-
 .n-tabs {
   height: 50px;
+  background-color: #fff;
   padding: 8px;
   border-bottom: solid #dcdfe6 1px;
 
@@ -333,16 +161,6 @@ function signOut() {
 }
 
 .n-layout-scroll-container {
-  background-color: var(--theme-background);
-  transition: background-color 800ms;
-}
-
-.layout-content-main {
-  height: calc(100vh - 111px);
-  overflow-y: auto;
-}
-
-.layout-content-main::-webkit-scrollbar {
-  display: none;
+  background-color: #f6f8f9;
 }
 </style>

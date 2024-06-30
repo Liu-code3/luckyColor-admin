@@ -8,7 +8,6 @@ const menuList = [
     key: 'main_analysis',
     icon: 'pajamas:overview',
     component: 'index/index'
-
   },
 
   {
@@ -71,7 +70,10 @@ const menuList = [
     path: '/main/system/menu',
     key: 'main_system_menu',
     icon: 'line-md:menu',
-    component: 'sys/menu/index'
+    component: 'sys/menu/index',
+    meta: {
+      keepAlive: true
+    }
   },
   {
     pid: 4,

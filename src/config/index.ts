@@ -72,7 +72,7 @@ const DEFAULT_CONFIG = {
     // 后端接口地址
     SNOWY_SYS_API_URL: import.meta.env.VITE_API_BASEURL,
     // 系统名称
-    SNOWY_SYS_NAME: 'Snowy',
+    SNOWY_SYS_NAME: 'LuckyColor-admin',
     // 版本
     SNOWY_SYS_VERSION: '2.0',
     // 版权
