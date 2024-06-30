@@ -30,8 +30,6 @@ declare namespace Mockm {
   }
 
   interface Query {
-    page: number;
-    size: number;
   }
 
   interface Headers {
@@ -65,5 +63,16 @@ declare namespace Mockm {
     sortCode: number;
     deleteFlag: string;
     children?: Mockm.IdictTree[];
+  }
+
+  interface IDictResponse {
+    code: number;
+    msg: string;
+    data: {
+      total: number;
+      size: number;
+      current: number;
+      records: Mockm.IDictTree[];
+    };
   }
 }
