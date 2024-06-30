@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { RouteRecordRaw } from 'vue-router';
+// import type { RouteRecordRaw } from 'vue-router';
 import lockScreen from '@/components/lockScreen.vue';
 import { useGlobalStore } from '@/store/layoutStore';
-import router from '@/router';
 
 const globalStore = useGlobalStore();
 onActivated(() => {
@@ -14,15 +13,16 @@ onDeactivated(() => {
   // 4. 以及组件卸载时调用
 });
 
-function getKeepAliveComponents(routes: Array<RouteRecordRaw>): string[] | '' {
-  const names: string[] = [];
-  for (const route of routes) {
-    if (route.meta && route.meta.keepAlive) {
-      names.push(route.name as string);
-    }
-  }
-  return names.length ? names : '';
-}
+// function getKeepAliveComponents(routes: Array<RouteRecordRaw>): string[] | '' {
+//   const names: string[] = [];
+//   for (const route of routes) {
+//     if (route.meta && route.meta.keepAlive && route.name) {
+//       names.push(route.name as string);
+//     }
+//   }
+//   console.log(names, 'names');
+//   return names.length ? names : '';
+// }
 </script>
 
 <template>
@@ -39,7 +39,7 @@ function getKeepAliveComponents(routes: Array<RouteRecordRaw>): string[] | '' {
       </transition>
       <!-- 缓存组件 -->
       <router-view v-slot="{ Component }">
-        <keep-alive :include="getKeepAliveComponents(router.getRoutes())">
+        <keep-alive>
           <component :is="Component" />
         </keep-alive>
       </router-view>
