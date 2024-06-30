@@ -85,7 +85,7 @@ function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
 export function addRoutesWithMenu() {
   const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
   const menuRouter = filterAsyncRouter(apiMenu);
-  menuRouter.forEach(route => router.addRoute('layout', route));
+  menuRouter.forEach(route => router.addRoute(route));
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
