@@ -2,11 +2,18 @@
 :root {
   --theme-color: #333;
   --theme-background: #fff;
+  --content-background: #f6f8f9;
 }
 
 /*左右垂直居中*/
 .layout-abs-center {
   display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+/*垂直居中*/
+.layout-center {
+  display: flex;
   align-items: center;
 }

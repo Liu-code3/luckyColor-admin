@@ -28,7 +28,7 @@ const colorList = [
     color: '#009688'
   },
   {
-    key: '拂晓蓝（默认）',
+    key: '拂晓蓝',
     color: '#4890F7'
   },
   {
