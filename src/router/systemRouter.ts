@@ -3,13 +3,8 @@ import config from '@/config';
 const routes = [
   {
     path: '/',
-    name: 'layout',
-    component: () => import('@/views/layout/index.vue'),
-    redirect: config.DASHBOARD_URL,
-    children: [],
-    meta: {
-      keepAlive: true
-    }
+    name: 'Home',
+    redirect: config.DASHBOARD_URL
   },
   {
     path: '/login',

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
-import tool from '@/utils/tool';
+import tool from '@/utils/tool.ts';
 
 const props = defineProps({
   menuOptions: {
@@ -16,7 +16,7 @@ const props = defineProps({
     default: ''
   }
 });
-const emits = defineEmits(['defaultLabelsFn', 'tabsListFn']);
+const emits = defineEmits([ 'defaultLabelsFn', 'tabsListFn' ]);
 
 const router = useRouter();
 

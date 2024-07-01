@@ -26,7 +26,6 @@ export default antfu(
       semi: true // or false
     },
     rules: {
-      'no-unused-vars': 'error',
       'no-undef': 'off',
       'no-console': 'warn',
       'antfu/if-newline': 'off',
