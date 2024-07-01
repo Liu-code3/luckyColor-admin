@@ -20,29 +20,29 @@ const DEFAULT_CONFIG = {
   // 请求是否开启缓存
   REQUEST_CACHE: false,
 
-  // 布局 经典：classical，双排菜单：doublerow, 肆筑自定义布局: sizhuCustom
-  SNOWY_LAYOUT: 'classical',
+  // 布局
+  LUCK_LAYOUT: 'normal',
 
   // 菜单是否折叠
-  SNOWY_MENU_COLLAPSE: false,
+  LUCK_MENU_COLLAPSE: false,
 
   // 模块坞
-  SNOWY_MODULE_UNFOLD_OPEN: true,
+  LUCK_MODULE_UNFOLD_OPEN: true,
 
   // 是否开启多标签
-  SNOWY_LAYOUT_TAGS_OPEN: true,
+  LUCK_LAYOUT_TAGS_OPEN: true,
 
   // 是否开启展示面包屑
-  SNOWY_BREADCRUMD_OPEN: false,
+  LUCK_BREADCRUMD_OPEN: false,
 
   // 顶栏是否应用主题色
-  SNOWY_TOP_HEADER_THEME_COLOR_OPEN: true,
+  LUCK_TOP_HEADER_THEME_COLOR_OPEN: true,
 
   // 顶栏主题色通栏
-  SNOWY_TOP_HEADER_THEME_COLOR_SPREAD: true,
+  LUCK_TOP_HEADER_THEME_COLOR_SPREAD: true,
 
   // 侧边菜单是否排他展开
-  SNOWY_SIDE_UNIQUE_OPEN: true,
+  LUCK_SIDE_UNIQUE_OPEN: true,
 
   // 语言
   LANG: 'zh-cn',
@@ -51,10 +51,10 @@ const DEFAULT_CONFIG = {
   COLOR: '#1890FF',
 
   // 默认整体主题
-  SNOWY_THEME: 'light',
+  LUCK_THEME: 'light',
 
   // 整体表单风格
-  SNOWY_FORM_STYLE: 'drawer',
+  LUCK_FORM_STYLE: 'drawer',
 
   // 成功色
   success: '#52c41a',
@@ -68,23 +68,23 @@ const DEFAULT_CONFIG = {
   // 系统基础配置，这些是数据库中保存起来的
   SYS_BASE_CONFIG: {
     // 默认logo
-    SNOWY_SYS_LOGO: '/img/logo.png',
+    LUCK_SYS_LOGO: '/img/logo.png',
     // 后端接口地址
-    SNOWY_SYS_API_URL: import.meta.env.VITE_API_BASEURL,
+    LUCK_SYS_API_URL: import.meta.env.VITE_API_BASEURL,
     // 系统名称
-    SNOWY_SYS_NAME: 'LuckyColor-admin',
+    LUCK_SYS_NAME: 'LuckyColor-admin',
     // 版本
-    SNOWY_SYS_VERSION: '2.0',
+    LUCK_SYS_VERSION: '2.0',
     // 版权
-    SNOWY_SYS_COPYRIGHT: 'Snowy ©2022 Created by xiaonuo.vip',
+    LUCK_SYS_COPYRIGHT: 'LUCK ©2022 Created by xiaonuo.vip',
     // 版权跳转URL
-    SNOWY_SYS_COPYRIGHT_URL: 'https://www.xiaonuo.vip',
+    LUCK_SYS_COPYRIGHT_URL: 'https://www.xiaonuo.vip',
     // 默认文件存储
-    SNOWY_SYS_DEFAULT_FILE_ENGINE: 'LOCAL',
+    LUCK_SYS_DEFAULT_FILE_ENGINE: 'LOCAL',
     // 是否开启验证码
-    SNOWY_SYS_DEFAULT_CAPTCHA_OPEN: 'false',
+    LUCK_SYS_DEFAULT_CAPTCHA_OPEN: 'false',
     // 默认重置密码
-    SNOWY_SYS_DEFAULT_PASSWORD: '123456'
+    LUCK_SYS_DEFAULT_PASSWORD: '123456'
   }
 };
 

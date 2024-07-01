@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
-import tool from '@/utils/tool';
+import tool from '@/utils/tool.ts';
 
 const props = defineProps({
   tabsList: {
@@ -13,7 +13,7 @@ const props = defineProps({
     default: ''
   }
 });
-const emits = defineEmits(['defaultLabelsFn']);
+const emits = defineEmits([ 'defaultLabelsFn' ]);
 const router = useRouter();
 // 标签
 const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);

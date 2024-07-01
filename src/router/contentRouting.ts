@@ -1,8 +1,8 @@
 const routes = [
   {
-    path: '/layout',
+    path: '/layouts',
     name: 'layout',
-    component: () => import('../layout/index.vue')
+    component: () => import('@/layouts/normal/index.vue')
   }
 ];
 

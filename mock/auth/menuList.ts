@@ -8,9 +8,9 @@ const menuList = [
     path: '/index',
     key: 'main_analysis',
     icon: 'pajamas:overview',
+    layout: '',
     component: 'index/index'
   },
-
   {
     pid: 0,
     id: 2,

@@ -3,8 +3,8 @@ import screenfull from 'screenfull';
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { useGlobalStore } from '@/store/layoutStore';
-import tool from '@/utils/tool';
+import { useGlobalStore } from '@/store/layoutStore.ts';
+import tool from '@/utils/tool.ts';
 
 const router = useRouter();
 const message = useMessage();
@@ -51,7 +51,7 @@ function signOut() {
 </script>
 
 <template>
-  <div class="layout-content-snowyHeader">
+  <div class="layout-content-luckHeader">
     <div class="layout-content-right">
       <Icon
         class="text-5"
@@ -77,7 +77,7 @@ function signOut() {
 </template>
 
 <style lang="less" scoped>
-.layout-content-snowyHeader {
+.layout-content-luckHeader {
   height: 60px;
   background-color: #fff;
   border-bottom: solid #dcdfe6 1px;

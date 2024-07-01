@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import tool from '@/utils/tool.ts';
 
-const emits = defineEmits(['toggleTheme']);
+const emits = defineEmits([ 'toggleTheme' ]);
 
 const localModel = tool.data.get('themeModel') ?? true;
 const checkedVal = ref(localModel);

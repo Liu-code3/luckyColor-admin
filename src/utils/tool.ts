@@ -125,7 +125,7 @@ const tool = {
     const targetNode = findNodeByValue(tree, value);
     return targetNode ? targetNode.dictLabel ?? '' : '';
   },
-  snowyUuid(): string {
+  luckUuid(): string {
     const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;

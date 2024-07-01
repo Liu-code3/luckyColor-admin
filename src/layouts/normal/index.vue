@@ -103,7 +103,7 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
             v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels" @default-labels-fn="defaultLabelsFn"
             @tabs-list-fn="tabsListFn"
           />
-          <router-view />
+          <slot />
         </n-layout-content>
       </n-layout>
     </n-layout>
