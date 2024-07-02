@@ -41,15 +41,15 @@ watch(
 );
 
 // 标签页切换
-function tabSwitching(value: any) {
+function tabSwitching(value: string) {
   router.push(value);
   defaultLabels.value = value;
   tool.data.set('LAST_VIEWS_PATH', { key: value });
-  emits('defaultLabelsFn', defaultLabels.value);
+  emits('defaultLabelsFn', value);
 };
 
 // 关闭标签
-function handleClose(name: string | number) {
+function handleClose(name: string) {
   tabsList.value = tabsList.value.filter((item) => {
     return item.key !== name;
   });
@@ -59,19 +59,20 @@ function handleClose(name: string | number) {
 
 <template>
   <n-tabs
-    v-model:value="defaultLabels" default-value="oasis" type="card" closable @update:value="tabSwitching"
+    :value="defaultLabels"
+    type="card"
+    :closable="tabsList.length > 1"
     @close="handleClose"
+    @update:value="tabSwitching"
   >
     <template #prefix>
       <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
     </template>
-    <n-tab-pane v-for="item in tabsList" :key="item.key" :name="item.key" :tab="item.label" />
-    <template #suffix>
-      <Icon class="text-12px" color="#595959" icon="ep:arrow-right" />
-    </template>
+    <n-tab-pane
+      v-for="item in tabsList"
+      :key="item.key"
+      :name="item.key"
+      :tab="item.label"
+    />
   </n-tabs>
 </template>
-
-<style lang="less" scoped>
-
-</style>
