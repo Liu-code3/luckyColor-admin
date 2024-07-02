@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
-import NavMenu from './components/NavMenu.vue';
-import Tags from './components/tags.vue';
-import Userbar from './components/userbar.vue';
+import Tags from '@/layouts/components/tags.vue';
+import Userbar from '@/layouts/components/userbar.vue';
+import NavMenu from '@/layouts/components/NavMenu.vue';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
 

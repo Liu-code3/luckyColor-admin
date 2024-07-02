@@ -12,13 +12,16 @@ const routes = [
     component: () => import('@/views/login/login.vue'),
     meta: {
       title: '登录页',
-      keepAlive: true
+      layout: 'empty'
     }
   },
   {
     path: '/:pathMatch(.*)*',
     hidden: true,
-    component: () => import('../views/errorPage/404.vue')
+    component: () => import('../views/errorPage/404.vue'),
+    meta: {
+      layout: 'empty'
+    }
   }
 ];
 
