@@ -29,6 +29,7 @@ function transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuIte
 }
 
 // 标签
+// TODO 标签移到pinia中 把布局模块抽离 2024/07/02
 const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);
 const defaultLabels = ref('');
 
