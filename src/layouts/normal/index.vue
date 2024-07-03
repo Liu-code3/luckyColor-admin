@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
-import NavMenu from './components/NavMenu.vue';
-import Tags from './components/tags.vue';
-import Userbar from './components/userbar.vue';
+import Tags from '@/layouts/components/tags.vue';
+import Userbar from '@/layouts/components/userbar.vue';
+import NavMenu from '@/layouts/components/NavMenu.vue';
 import tool from '@/utils/tool';
 import { useIconRender } from '@/hooks/iconRender';
 
@@ -29,6 +29,7 @@ function transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuIte
 }
 
 // 标签
+// TODO 标签移到pinia中 把布局模块抽离 2024/07/02
 const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);
 const defaultLabels = ref('');
 
@@ -103,9 +104,7 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
             v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels" @default-labels-fn="defaultLabelsFn"
             @tabs-list-fn="tabsListFn"
           />
-          <div class="content-box">
-            <router-view />
-          </div>
+          <slot />
         </n-layout-content>
       </n-layout>
     </n-layout>
@@ -165,25 +164,4 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
 .n-layout-scroll-container {
   background-color: #f6f8f9;
 }
-.content-box {
-  height: calc(100vh - 114px) !important;
-  overflow: hidden;
-  overflow-y: scroll;
-  padding: 10px;
-  box-sizing:border-box;
-
-}
-
-.content-box::-webkit-scrollbar {
-		width: 5px;
-		height: 6px;
-		box-sizing: border-box;
-	}
-
-	.content-box::-webkit-scrollbar-thumb {
-		border-radius: 4.5px;
-		background: #d7d8db;
-		height: 321px;
-	}
-
 </style>

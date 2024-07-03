@@ -1,13 +1,9 @@
 import { dictTreeData } from './dictTreeData';
 
-interface IResponse {
-  code: number;
-  msg: string;
-  data: {
-    total: number;
+interface Query {
+  query: {
+    page: number;
     size: number;
-    current: number;
-    records: Mockm.IDictTree[];
   };
 }
 
@@ -17,7 +13,7 @@ const recordsAllList = bySortCode(treeToData(arr));
 export default {
   url: '/api/mock/dict/page',
   method: 'get',
-  response: (req: Mockm.Root): IResponse => {
+  response: (req: Query): Mockm.IDictResponse => {
     const { page, size } = req.query;
     const records = recordsAllList.slice((page - 1) * size, page * size);
     return {

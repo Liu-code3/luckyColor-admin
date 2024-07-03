@@ -3,13 +3,8 @@ import config from '@/config';
 const routes = [
   {
     path: '/',
-    name: 'layout',
-    component: () => import('@/views/layout/index.vue'),
-    redirect: config.DASHBOARD_URL,
-    children: [],
-    meta: {
-      keepAlive: true
-    }
+    name: 'Home',
+    redirect: config.DASHBOARD_URL
   },
   {
     path: '/login',
@@ -17,13 +12,16 @@ const routes = [
     component: () => import('@/views/login/login.vue'),
     meta: {
       title: '登录页',
-      keepAlive: true
+      layout: 'empty'
     }
   },
   {
     path: '/:pathMatch(.*)*',
     hidden: true,
-    component: () => import('../views/errorPage/404.vue')
+    component: () => import('../views/errorPage/404.vue'),
+    meta: {
+      layout: 'empty'
+    }
   }
 ];
 

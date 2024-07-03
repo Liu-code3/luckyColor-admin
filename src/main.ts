@@ -15,7 +15,7 @@ import './style.css';
 import 'animate.css';
 
 const naive = create({
-  components: [NButton]
+  components: [ NButton ]
 });
 
 const app = createApp(App);

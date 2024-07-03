@@ -6,6 +6,8 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (previously Volar) and disable Vetur
 
+## 代码样式
+[![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 ## 技术栈
 
 <div style="display: flex; align-items: center;">
