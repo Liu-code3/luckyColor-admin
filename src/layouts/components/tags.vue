@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
-import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 
 const tabStore = useTabStore();
@@ -10,9 +9,8 @@ const router = useRouter();
 // 标签页切换
 function tabSwitching(value: string) {
   router.push(value);
-  tabStore.activeTab = value;
-  tool.data.set('LAST_VIEWS_PATH', { path: value });
-};
+  tabStore.setActiveTab(value)
+}
 
 // 关闭标签
 function handleClose(path: string) {
@@ -33,8 +31,8 @@ function handleClose(path: string) {
     </template>
     <n-tab-pane
       v-for="item in tabStore.tabs"
-      :key="item.path"
-      :name="item.path"
+      :key="item.key"
+      :name="item.key"
       :tab="item.label"
     />
   </n-tabs>

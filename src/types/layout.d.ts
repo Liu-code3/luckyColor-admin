@@ -14,12 +14,15 @@ declare namespace LayoutT {
     pid: number;
     id: number;
     label: string;
-    path: string;
+    key: string;
     icon: any;
     children?: TransformedMenuItem[];
   }
 
-  interface Obj {
-    [key: string]: string;
+  interface ILastMenu {
+    pid: number;
+    id: number;
+    label: string;
+    key: string;
   }
 }

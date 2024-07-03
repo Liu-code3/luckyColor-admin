@@ -1,86 +1,48 @@
 <script lang="ts" setup>
-import { useRouter } from 'vue-router';
-import tool from '@/utils/tool.ts';
+import { MenuInst } from 'naive-ui';
+import { useMenuStore } from "@/store/modules/menu.ts";
+import { useRoute, useRouter } from "vue-router";
+import { useTabStore } from "@/store/modules/tab.ts";
 
-const props = defineProps({
-  menuOptions: {
-    type: Array,
-    default: () => []
-  },
-  tabsList: {
-    type: Array,
-    default: () => []
-  },
-  defaultLabels: {
-    type: String,
-    default: ''
-  }
-});
-const emits = defineEmits([ 'defaultLabelsFn', 'tabsListFn' ]);
+const router = useRouter()
+const route = useRoute()
+const menuStore = useMenuStore()
+const tabStore = useTabStore()
 
-const router = useRouter();
+// 展开选中的菜单项
+const menuInstRef = ref<MenuInst | null>(null)
+watch(route, async () => {
+  await nextTick()
+  menuInstRef.value?.showOption()
+}, { immediate: true })
 
 // 反转
 const inverted = ref(false);
 
-// 菜单
-const menuOptions = ref<LayoutT.TransformedMenuItem[]>([]);
-
-const defaultLabels = ref('');
-
-watch(
-  () => props.menuOptions,
-  (val) => {
-    menuOptions.value = val as LayoutT.TransformedMenuItem[];
-  },
-  {
-    immediate: true
-  }
-);
-
-watch(
-  () => props.defaultLabels,
-  (val) => {
-    defaultLabels.value = val;
-  },
-  {
-    immediate: true
-  }
-);
-
-const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);
-watch(
-  () => props.tabsList,
-  (val) => {
-    tabsList.value = val as LayoutT.TransformedMenuItem[];
-  },
-  {
-    immediate: true
-  }
-);
-
 // 切换菜单
 function handleUpdateValue(key: string, item: any) {
   router.push(key);
-  tool.data.set('LAST_VIEWS_PATH', { key });
-  defaultLabels.value = key;
-  const exists = tabsList.value.some(item => item.key === key);
+  tabStore.setActiveTab(key)
+  const exists = tabStore.tabs.some(item => item.key === key);
   if (!exists) {
-    tabsList.value.push(item);
-    tool.data.set('LAST_MUN', tabsList.value);
+    tabStore.addTab(item)
   }
-  emits('defaultLabelsFn', defaultLabels.value);
-  emits('tabsListFn', tabsList.value);
 }
+
+onMounted(() => {
+  menuStore.defaultLoading()
+})
 </script>
 
 <template>
   <n-menu
-    v-model:value="defaultLabels" :inverted="inverted" :collapsed-width="64" :collapsed-icon-size="22"
-    :options="menuOptions" class="h-91vh" @update:value="handleUpdateValue"
+    ref="menuInstRef"
+    v-model:value="tabStore.activeTab"
+    :inverted="inverted"
+    :collapsed-width="64"
+    :collapsed-icon-size="22"
+    :options="menuStore.menuOptions"
+    class="h-91vh"
+    @update:value="handleUpdateValue"
   />
 </template>
-
-<style lang="less" scoped>
-
-</style>
