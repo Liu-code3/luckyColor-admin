@@ -37,3 +37,7 @@ function handleClose(path: string) {
     />
   </n-tabs>
 </template>
+
+<style lang="less" scoped>
+
+</style>
