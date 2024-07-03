@@ -19,7 +19,10 @@ declare namespace LayoutT {
     children?: TransformedMenuItem[];
   }
 
-  interface Obj {
-    [key: string]: string;
+  interface ILastMenu {
+    pid: number;
+    id: number;
+    label: string;
+    key: string;
   }
 }
