@@ -103,7 +103,9 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
             v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels" @default-labels-fn="defaultLabelsFn"
             @tabs-list-fn="tabsListFn"
           />
-          <router-view />
+          <div class="content-box">
+            <router-view />
+          </div>
         </n-layout-content>
       </n-layout>
     </n-layout>
@@ -163,4 +165,25 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
 .n-layout-scroll-container {
   background-color: #f6f8f9;
 }
+.content-box {
+  height: calc(100vh - 114px) !important;
+  overflow: hidden;
+  overflow-y: scroll;
+  padding: 10px;
+  box-sizing:border-box;
+
+}
+
+.content-box::-webkit-scrollbar {
+		width: 5px;
+		height: 6px;
+		box-sizing: border-box;
+	}
+
+	.content-box::-webkit-scrollbar-thumb {
+		border-radius: 4.5px;
+		background: #d7d8db;
+		height: 321px;
+	}
+
 </style>
