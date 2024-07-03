@@ -14,7 +14,7 @@ declare namespace LayoutT {
     pid: number;
     id: number;
     label: string;
-    key: string;
+    path: string;
     icon: any;
     children?: TransformedMenuItem[];
   }

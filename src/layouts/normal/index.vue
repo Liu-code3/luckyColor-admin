@@ -17,7 +17,7 @@ function transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuIte
       pid: item.pid,
       id: item.id,
       label: item.title,
-      key: item.path,
+      path: item.path,
       icon: iconRender(item.icon)
     };
 
@@ -46,18 +46,18 @@ function defaultLoading() {
   if (mun) {
     tabsList.value = tool.data.get('LAST_MUN') as LayoutT.TransformedMenuItem[];
     const obj = tool.data.get('LAST_VIEWS_PATH') as LayoutT.Obj;
-    defaultLabels.value = obj.key;
+    defaultLabels.value = obj.path;
   }
   else {
     menuOptions.value.forEach((item, index) => {
       if (index === 0) {
-        const exists = tabsList.value.some(v => v.key === item.key);
+        const exists = tabsList.value.some(v => v.path === item.path);
         if (!exists) {
-          tool.data.set('LAST_VIEWS_PATH', { key: item.key });
-          defaultLabels.value = item.key;
+          tool.data.set('LAST_VIEWS_PATH', { path: item.path });
+          defaultLabels.value = item.path;
           tabsList.value.push(item);
           tool.data.set('LAST_MENU', tabsList.value);
-          router.push(item.key);
+          router.push(item.path);
         }
       }
     });

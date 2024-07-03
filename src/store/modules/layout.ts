@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import tool from '@/utils/tool';
+import tool from '@/utils/tool.ts';
 import DEFAULT_CONFIG from '@/config';
 
 enum Layout {
@@ -7,8 +7,7 @@ enum Layout {
   LAYOUT = 'layout'
 }
 
-export const layoutStore = defineStore({
-  id: 'layoutStore',
+export const layout = defineStore('layout', {
   state: () => ({
     isLocked: tool.session.get(Layout.LOCK_SCREEN) ?? false,
     layout: tool.session.get(Layout.LAYOUT) ?? DEFAULT_CONFIG.LUCK_LAYOUT
@@ -25,4 +24,4 @@ export const layoutStore = defineStore({
   }
 });
 
-export const useGlobalStore = layoutStore;
+export const useGlobalStore = layout;

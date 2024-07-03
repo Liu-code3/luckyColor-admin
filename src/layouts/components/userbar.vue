@@ -3,7 +3,7 @@ import screenfull from 'screenfull';
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { useGlobalStore } from '@/store/layoutStore.ts';
+import { useGlobalStore } from '@/store/modules/layout.ts';
 import tool from '@/utils/tool.ts';
 
 const router = useRouter();
