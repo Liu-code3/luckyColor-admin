@@ -1,80 +1,9 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
-import { useRouter } from 'vue-router';
 import Tags from '@/layouts/components/tags.vue';
-import Userbar from '@/layouts/components/userbar.vue';
+import UserBar from '@/layouts/components/userbar.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
-import tool from '@/utils/tool';
-import { useIconRender } from '@/hooks/iconRender';
 
-const iconRender = useIconRender();
-const router = useRouter();
-
-// 路由传换为菜单
-function transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuItem[] {
-  return data.map((item) => {
-    const newItem: LayoutT.TransformedMenuItem = {
-      pid: item.pid,
-      id: item.id,
-      label: item.title,
-      key: item.path,
-      icon: iconRender(item.icon)
-    };
-
-    if (item.children && item.children.length > 0)
-      newItem.children = transformMenuData(item.children);
-
-    return newItem;
-  });
-}
-
-// 标签
-// TODO 标签移到pinia中 把布局模块抽离 2024/07/02
-const tabsList = ref<LayoutT.TransformedMenuItem[]>([]);
-const defaultLabels = ref('');
-
-// 菜单
-const menuOptions = ref<LayoutT.TransformedMenuItem[]>([]);
-
-// 路由菜单
-const menuData: LayoutT.MenuItem[] = tool.data.get('MENU') as LayoutT.MenuItem[];
-
-// 默认加载
-function defaultLoading() {
-  menuOptions.value = transformMenuData(menuData);
-  const mun = tool.data.get('LAST_MUN');
-  if (mun) {
-    tabsList.value = tool.data.get('LAST_MUN') as LayoutT.TransformedMenuItem[];
-    const obj = tool.data.get('LAST_VIEWS_PATH') as LayoutT.Obj;
-    defaultLabels.value = obj.key;
-  }
-  else {
-    menuOptions.value.forEach((item, index) => {
-      if (index === 0) {
-        const exists = tabsList.value.some(v => v.key === item.key);
-        if (!exists) {
-          tool.data.set('LAST_VIEWS_PATH', { key: item.key });
-          defaultLabels.value = item.key;
-          tabsList.value.push(item);
-          tool.data.set('LAST_MENU', tabsList.value);
-          router.push(item.key);
-        }
-      }
-    });
-  }
-}
-
-onMounted(() => {
-  defaultLoading();
-});
-
-function defaultLabelsFn(val: string) {
-  defaultLabels.value = val;
-}
-
-function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
-  tabsList.value = val;
-}
 </script>
 
 <template>
@@ -91,22 +20,14 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
               luckyColor admin
             </div>
           </div>
-          <NavMenu
-            v-model:menuOptions="menuOptions" v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels"
-            @default-labels-fn="defaultLabelsFn" @tabs-list-fn="tabsListFn"
-          />
+          <NavMenu />
         </n-layout-sider>
         <n-layout-content>
           <!-- 头部 -->
-          <Userbar />
+          <UserBar />
           <!-- 标签页 -->
-          <Tags
-            v-model:tabsList="tabsList" v-model:defaultLabels="defaultLabels" @default-labels-fn="defaultLabelsFn"
-            @tabs-list-fn="tabsListFn"
-          />
-          <div class="n-content">
-            <slot />
-          </div>
+          <Tags />
+          <slot />
         </n-layout-content>
       </n-layout>
     </n-layout>

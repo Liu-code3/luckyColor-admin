@@ -17,10 +17,6 @@ export const layoutStore = defineStore({
     updateIsLock(isLocked: boolean) {
       this.isLocked = isLocked;
       tool.session.set(Layout.LOCK_SCREEN, isLocked);
-    },
-    updateLayout(layout: string) {
-      this.layout = layout;
-      tool.session.set(Layout.LAYOUT, layout);
     }
   }
 });
