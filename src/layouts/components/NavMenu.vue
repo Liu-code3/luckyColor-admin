@@ -1,20 +1,20 @@
 <script lang="ts" setup>
-import { MenuInst } from 'naive-ui';
-import { useMenuStore } from "@/store/modules/menu.ts";
-import { useRoute, useRouter } from "vue-router";
-import { useTabStore } from "@/store/modules/tab.ts";
+import type { MenuInst } from 'naive-ui';
+import { useRoute, useRouter } from 'vue-router';
+import { useMenuStore } from '@/store/modules/menu.ts';
+import { useTabStore } from '@/store/modules/tab.ts';
 
-const router = useRouter()
-const route = useRoute()
-const menuStore = useMenuStore()
-const tabStore = useTabStore()
+const router = useRouter();
+const route = useRoute();
+const menuStore = useMenuStore();
+const tabStore = useTabStore();
 
 // 展开选中的菜单项
-const menuInstRef = ref<MenuInst | null>(null)
+const menuInstRef = ref<MenuInst | null>(null);
 watch(route, async () => {
-  await nextTick()
-  menuInstRef.value?.showOption()
-}, { immediate: true })
+  await nextTick();
+  menuInstRef.value?.showOption();
+}, { immediate: true });
 
 // 反转
 const inverted = ref(false);
@@ -22,16 +22,16 @@ const inverted = ref(false);
 // 切换菜单
 function handleUpdateValue(key: string, item: any) {
   router.push(key);
-  tabStore.setActiveTab(key)
+  tabStore.setActiveTab(key);
   const exists = tabStore.tabs.some(item => item.key === key);
   if (!exists) {
-    tabStore.addTab(item)
+    tabStore.addTab(item);
   }
 }
 
 onMounted(() => {
-  menuStore.defaultLoading()
-})
+  menuStore.defaultLoading();
+});
 </script>
 
 <template>

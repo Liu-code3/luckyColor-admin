@@ -3,14 +3,14 @@ import { useIconRender } from '@/hooks/iconRender.ts';
 import tool from '@/utils/tool.ts';
 
 interface IMenuState {
-    menuOptions: LayoutT.ILastMenu[];
+  menuOptions: LayoutT.ILastMenu[];
 }
 
 // const tabStore = useTabStore()
 const iconRender = useIconRender();
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
-      menuOptions: []
+    menuOptions: []
   }),
   actions: {
     /**
@@ -34,8 +34,8 @@ export const useMenuStore = defineStore('menu', {
       });
     },
     defaultLoading() {
-        const menuData =  tool.data.get('MENU') as LayoutT.MenuItem[];
-        this.menuOptions = this.transformMenuData(menuData);
+      const menuData = tool.data.get('MENU') as LayoutT.MenuItem[];
+      this.menuOptions = this.transformMenuData(menuData);
     }
   }
 });
