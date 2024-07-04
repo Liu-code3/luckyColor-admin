@@ -110,7 +110,6 @@ onActivated(() => {
             <n-grid x-gap="12" :cols="24">
               <n-form-item-gi :span="8" label="字典名称: " path="searchKey">
                 <n-input v-model:value="searchFormState.searchKey" placeholder="请输入字典名称" />
-                <input type="text">
               </n-form-item-gi>
               <n-gi :span="4">
                 <n-button type="primary">

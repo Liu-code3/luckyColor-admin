@@ -1,7 +1,7 @@
-import tool from '@/utils/tool'
+import tool from '@/utils/tool';
 
 interface UserInfo {
-  buttonCodeList: string[]
+  buttonCodeList: string[];
 }
 
 /**
@@ -15,19 +15,19 @@ interface UserInfo {
  * 想要判断 button1 与 button2 的权限，可以写成：hasPerm(['button1', 'button2' ], 'and')
  */
 export function hasPerm(data: Array<string> | string, rlue = 'or') {
-  if (!data) return false
+  if (!data) return false;
 
-  const userInfo = tool.data.get('USER_INFO') as UserInfo | null
+  const userInfo = tool.data.get('USER_INFO') as UserInfo | null;
 
-  if (!userInfo) return false
+  if (!userInfo) return false;
 
-  const { buttonCodeList } = userInfo
+  const { buttonCodeList } = userInfo;
 
-  if (!buttonCodeList) return false
+  if (!buttonCodeList) return false;
 
   if (Array.isArray(data)) {
-    const fn = rlue === 'or' ? 'some' : 'every'
-    return data[fn](item => buttonCodeList.includes(item))
+    const fn = rlue === 'or' ? 'some' : 'every';
+    return data[fn](item => buttonCodeList.includes(item));
   }
-  return buttonCodeList.includes(data)
+  return buttonCodeList.includes(data);
 }

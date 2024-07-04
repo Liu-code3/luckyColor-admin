@@ -16,9 +16,6 @@ function tabSwitching(value: string) {
 function handleClose(path: string) {
   tabStore.removeTab(path);
 }
-onMounted(() => {
-  console.log(tabStore.tabs, '  tabStore.tabs');
-});
 </script>
 
 <template>
@@ -40,7 +37,3 @@ onMounted(() => {
     />
   </n-tabs>
 </template>
-
-<style lang="less" scoped>
-
-</style>

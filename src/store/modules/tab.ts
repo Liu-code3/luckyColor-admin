@@ -45,6 +45,5 @@ export const useTabStore = defineStore('tab', {
         await this.setActiveTab(this.tabs[this.tabs.length - 1].key);
       }
     }
-
   }
 });
