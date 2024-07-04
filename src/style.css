@@ -17,3 +17,10 @@
   display: flex;
   align-items: center;
 }
+
+/*横向左右垂直居右*/
+.layout-end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}

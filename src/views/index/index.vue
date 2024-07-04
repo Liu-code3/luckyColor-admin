@@ -36,13 +36,30 @@
         2
       </div>
     </div>
+    <div class="home-page-area-chart">
+      <div class="area-chart-title layout-center pl-20px">
+        指标名称-面积图
+      </div>
+    </div>
+    <div class="home-page-buttom">
+      <div class="area-chart">
+        <div class="area-chart-title layout-center pl-20px">
+          指标名称-面积图
+        </div>
+      </div>
+      <div class="area-chart">
+        <div class="area-chart-title layout-center pl-20px">
+          指标名称-面积图
+        </div>
+      </div>
+    </div>
+    <div class="home-page-tail">
+      敏公主: 1998888777
+    </div>
   </div>
 </template>
 
 <style lang="less" scoped>
-.home-page-box {
-  padding: 10px;
-}
 .home-page-top {
   width: 100%;
   display: flex;
@@ -88,7 +105,7 @@
   display: flex;
   margin-top: 10px;
   .area-chart {
-    width: 939px;
+    width: 935px;
     height: 240px;
     background-color: #fff;
     border-radius: 6px;
@@ -108,5 +125,53 @@
     flex: 1;
     border: #dde0e7 solid 1px;
   }
+}
+.home-page-area-chart {
+  width: 100%;
+  height: 240px;
+  background-color: #fff;
+  border-radius: 6px;
+  margin-top: 10px;
+  border: #dde0e7 solid 1px;
+  .area-chart-title {
+    width: 100%;
+    height: 50px;
+    border-bottom: #e4e7ed solid 1px;
+    box-sizing: border-box;
+  }
+}
+.home-page-buttom {
+  display: flex;
+  margin-top: 10px;
+  .area-chart {
+    width: 935px;
+    height: 240px;
+    background-color: #fff;
+    border-radius: 6px;
+    margin-right: 10px;
+    border: #dde0e7 solid 1px;
+    .area-chart-title {
+      width: 100%;
+      height: 50px;
+      border-bottom: #e4e7ed solid 1px;
+      box-sizing: border-box;
+    }
+  }
+  .area-chart:nth-child(2) {
+    margin-right: 0;
+  }
+}
+.home-page-tail {
+  width: 100%;
+  height: 50px;
+  background: #fff;
+  border-radius: 4px;
+  border: #dde0e7 solid 1px;
+  box-sizing: border-box;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #59596f;
 }
 </style>

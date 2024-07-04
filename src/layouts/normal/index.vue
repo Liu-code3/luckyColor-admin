@@ -27,7 +27,9 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
           <UserBar />
           <!-- 标签页 -->
           <Tags />
+          <div class="n-content">
           <slot />
+          </div>
         </n-layout-content>
       </n-layout>
     </n-layout>
@@ -38,6 +40,16 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
 .n-scrollbar-content {
   border-right: solid #dcdfe6 2px;
 }
+.n-content {
+  height: calc(100vh - 111px);
+  overflow: hidden;
+  overflow-y: scroll;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.n-content::-webkit-scrollbar {
+		display: none;
+	}
 
 .logo-bar {
   width: 220px;
