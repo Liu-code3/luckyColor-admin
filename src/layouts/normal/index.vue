@@ -124,6 +124,9 @@ function tabsListFn(val: LayoutT.TransformedMenuItem[]) {
   padding: 10px;
   box-sizing: border-box;
 }
+.n-content::-webkit-scrollbar {
+		display: none;
+	}
 
 .logo-bar {
   width: 220px;
