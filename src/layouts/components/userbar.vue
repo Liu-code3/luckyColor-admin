@@ -5,10 +5,12 @@ import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
+import { useTabStore } from '@/store/modules/tab.ts';
 
 const router = useRouter();
 const message = useMessage();
 const globalStore = useGlobalStore();
+const tabStore = useTabStore();
 
 // 锁屏
 function JumpLock() {
@@ -42,6 +44,7 @@ function xuanzhong(key: string | number) {
 // 退出登录
 function signOut() {
   tool.data.clear();
+  tabStore.$reset();
   // tool.data.remove('TOKEN');
   router.push('/login');
   message.success(

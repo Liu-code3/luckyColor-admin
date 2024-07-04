@@ -21,10 +21,18 @@ router.beforeEach((to, _, next) => {
   start();
   const token = tool.data.get('TOKEN');
   if (to.path === '/login') {
-    if (token)
-      next({ path: '/' });
-    else
+    if (token) {
+      const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
+      if (num) {
+        router.push(num);
+      }
+      else {
+        router.push('/');
+      }
+    }
+    else {
       next();
+    }
   }
   else {
     if (token)

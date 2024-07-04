@@ -9,7 +9,7 @@ const router = useRouter();
 // 标签页切换
 function tabSwitching(value: string) {
   router.push(value);
-  tabStore.setActiveTab(value)
+  tabStore.setActiveTab(value);
 }
 
 // 关闭标签
@@ -37,7 +37,3 @@ function handleClose(path: string) {
     />
   </n-tabs>
 </template>
-
-<style lang="less" scoped>
-
-</style>

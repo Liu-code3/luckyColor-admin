@@ -26,6 +26,7 @@ const rules = {
     trigger: [ 'input', 'blur' ]
   }
 };
+console.log('login');
 
 type FnClick = (e: MouseEvent) => void;
 const handleValidateClick: FnClick = (e: MouseEvent) => {
