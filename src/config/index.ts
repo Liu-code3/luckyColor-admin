@@ -18,7 +18,7 @@ const DEFAULT_CONFIG = {
   HEADERS: {},
 
   // 请求是否开启缓存
-  REQUEST_CACHE: false,
+  REQUEST_CACHE: true,
 
   // 布局
   LUCK_LAYOUT: 'normal',

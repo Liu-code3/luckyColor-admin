@@ -1,8 +1,8 @@
-import service from '../utils/request';
+import { request } from '@/utils/http';
 
 // 登录示例
 export function loginApi<T>(data: T) {
-  return service({
+  return request({
     url: '/mock/login',
     method: 'POST',
     data
@@ -11,7 +11,7 @@ export function loginApi<T>(data: T) {
 
 // 获取用户的菜单
 export function menuListApi<T>(data: T) {
-  return service({
+  return request({
     url: '/mock/menuList',
     method: 'POST',
     data

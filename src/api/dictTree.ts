@@ -1,7 +1,7 @@
-import service from '@/utils/request.ts';
+import { request } from '@/utils/http';
 
 export function getDictTreeApi() {
-  return service({
+  return request({
     url: '/mock/dict/tree',
     method: 'get'
   });
