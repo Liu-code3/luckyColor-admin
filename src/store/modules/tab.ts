@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import router from "@/router";
+import router from '@/router';
 import tool from '@/utils/tool.ts';
 
 interface TabState {
@@ -22,7 +22,7 @@ export const useTabStore = defineStore('tab', {
     async setActiveTab(path: string) {
       await nextTick(); // tab栏dom更新完再设置激活，让tab栏定位到新增的tab上生效
       this.activeTab = path;
-      tool.data.set('LAST_VIEWS_PATH', path)
+      tool.data.set('LAST_VIEWS_PATH', path);
     },
     setTabs(tabs: LayoutT.ILastMenu[]) {
       this.tabs = tabs;
@@ -36,14 +36,15 @@ export const useTabStore = defineStore('tab', {
         return;
       }
       this.setTabs([ ...this.tabs, tab ]);
-      this.setActiveTab(tab.key)
+      this.setActiveTab(tab.key);
     },
     async removeTab(path: string) {
       this.setTabs(this.tabs.filter(tab => tab.key !== path));
       if (path === this.activeTab) {
         await router?.push(this.tabs[this.tabs.length - 1].key);
-        await this.setActiveTab(this.tabs[this.tabs.length - 1].key)
+        await this.setActiveTab(this.tabs[this.tabs.length - 1].key);
       }
     }
+
   }
 });

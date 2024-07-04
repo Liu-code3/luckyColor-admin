@@ -27,7 +27,9 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
           <UserBar />
           <!-- 标签页 -->
           <Tags />
+          <div class="n-content">
           <slot />
+          </div>
         </n-layout-content>
       </n-layout>
     </n-layout>
