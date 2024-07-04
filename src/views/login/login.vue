@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router';
 import { loginApi, menuListApi } from '@/api';
 import tool from '@/utils/tool';
 import { handlMenuList } from '@/utils/handlerMenu';
-import { addRoutesWithMenu } from '@/router';
+// import { addRoutesWithMenu } from '@/router';
 import { Encrypt } from '@/utils/crypto-md5';
+import { useMenuStore } from '@/store/modules/menu.ts';
 
 const router = useRouter();
+const menuStore = useMenuStore();
 const formRef = ref<FormInst | null>(null);
 const formValue = reactive({
   adminName: 'admin',
@@ -34,6 +36,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
   formRef.value?.validate(async (errors) => {
     if (!errors) {
       const res = await loginApi(formValue);
+      // TODO 理解VO 于 TO 的区别 返回值类型做一下
       const { code, data } = res;
       if (code === 200) {
         tool.data.set('TOKEN', data);
@@ -42,7 +45,7 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
         tool.data.set('MENU', handlMenuList(res.data));
         const md5Password = Encrypt(formValue.password);
         tool.data.set('lockPassword', md5Password);
-        addRoutesWithMenu();
+        menuStore.addRoutesWithMenu();
         await router.push('/');
       }
     }

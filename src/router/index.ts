@@ -4,6 +4,7 @@ import systemRouter from './systemRouter';
 import { useLoading } from '@/utils/nprogress';
 import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
+import { useMenuStore } from '@/store/modules/menu.ts';
 
 // 进度条配置
 const { start, done } = useLoading();
@@ -20,26 +21,32 @@ const router = createRouter({
 router.beforeEach((to, _, next) => {
   start();
   const token = tool.data.get('TOKEN');
+  const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
+
   if (to.path === '/login') {
     if (token) {
-      const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
-      if (num) {
-        router.push(num);
-      }
-      else {
-        router.push('/');
-      }
+      const targetPath = num || '/';
+      next({ path: targetPath });
     }
     else {
       next();
     }
   }
-  else {
-    if (token)
-      next();
-    else
-      next({ path: '/login' });
+
+  if (!token) {
+    next({ path: '/login' });
+    return;
   }
+
+  const meunStore = useMenuStore();
+  // TODO routesAdded 替换为用户信息来判断
+  if (!meunStore.routesAdded) { // 检查是否已经添加了路由
+    meunStore.addRoutesWithMenu(); // 确保路由添加完成
+    meunStore.routesAdded = true; // 设置标志位，表示路由已经添加
+    next({ ...to, replace: true }); // 确保重新导航到目标路径
+    return; // 确保每次调用 next 后都立即返回，以避免重复调用。
+  }
+  next(); // 默认情况继续导航
 });
 
 router.afterEach(() => {
@@ -53,54 +60,5 @@ router.onError((error) => {
     description: error.message
   });
 });
-
-interface MenuItem {
-  path: string;
-  name: string;
-  component: string;
-  meta?: {
-    type?: string;
-    url?: string;
-  };
-  redirect?: string;
-  children?: MenuItem[];
-}
-
-function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
-  const accessedRouters: RouteRecordRaw[] = [];
-  routerMap.forEach((item) => {
-    item.meta = item.meta || {};
-    // 处理外部链接特殊路由
-    if (item.meta.type === 'iframe') {
-      item.meta.url = item.path;
-      item.path = `/i/${item.name}`;
-    }
-    // 转换为路由对象
-    const route: RouteRecordRaw = {
-      path: item.path,
-      name: item.name,
-      meta: item.meta,
-      // redirect: item.redirect,
-      children: item.children ? filterAsyncRouter(item.children) : [],
-      component: loadComponent(item.component)
-    };
-
-    accessedRouters.push(route);
-  });
-  return accessedRouters;
-}
-
-export function addRoutesWithMenu() {
-  const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
-  const menuRouter = filterAsyncRouter(apiMenu);
-  menuRouter.forEach(route => router.addRoute(route));
-}
-
-const modules = import.meta.glob('/src/views/**/*.vue');
-
-function loadComponent(component: string) {
-  if (component.includes('/')) return modules[`/src/views/${component}.vue`];
-  return modules[`/src/views/${component}/index.vue`];
-}
 
 export default router;
