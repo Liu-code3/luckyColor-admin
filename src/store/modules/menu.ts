@@ -5,43 +5,46 @@ import tool from '@/utils/tool.ts';
 import router from '@/router';
 
 interface IMenuState {
-  menuOptions: LayoutT.ILastMenu[];
+  menuOptions: LayoutT.TransformedMenuItem[];
   accessedRouters: RouteRecordRaw[];
-  routesAdded: boolean;
 }
 
 interface MenuItem {
-  path: string;
+  pid: number;
+  id: number;
+  title: string;
   name: string;
+  type: number;
+  path: string;
+  key: string;
+  icon: string;
+  layout: string;
   component: string;
   meta?: {
-    type?: string;
-    url?: string;
+    [key: string]: string;
   };
   redirect?: string;
   children?: MenuItem[];
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
-
 const iconRender = useIconRender();
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
     menuOptions: [], // 侧边栏菜单列表
-    accessedRouters: [],
-    routesAdded: tool.data.get('routeAdd') ?? false
+    accessedRouters: [] // 权限路由列表
   }),
   actions: {
     /**
      * @description 路由传换为菜单
      */
     transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuItem[] {
-      return data.map((item) => {
+      return data.map((item: LayoutT.MenuItem) => {
         const newItem: LayoutT.TransformedMenuItem = {
-          pid: item.pid,
-          id: item.id,
-          label: item.title,
+          type: item.type,
+          layout: item.layout,
           key: item.path,
+          label: item.title,
           icon: iconRender(item.icon)
         };
 
@@ -60,7 +63,6 @@ export const useMenuStore = defineStore('menu', {
       const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
       const menuRouter = this.filterAsyncRouter(apiMenu);
       menuRouter.forEach(route => router.addRoute(route));
-      this.routesAdded = true;
     },
     filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
       const accessedRouters: RouteRecordRaw[] = [];
@@ -76,8 +78,12 @@ export const useMenuStore = defineStore('menu', {
         const route: RouteRecordRaw = {
           path: item.path,
           name: item.name,
-          meta: item.meta,
-          // redirect: item.redirect,
+          meta: {
+            ...item.meta,
+            title: item.title,
+            icon: item.icon
+          },
+          redirect: item?.redirect,
           children: item.children ? this.filterAsyncRouter(item.children) : [],
           component: this.loadComponent(item.component)
         };
