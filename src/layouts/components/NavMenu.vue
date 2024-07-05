@@ -16,16 +16,18 @@ watch(route, async () => {
   menuInstRef.value?.showOption();
 }, { immediate: true });
 
-// 反转
-const inverted = ref(false);
-
 // 切换菜单
-function handleUpdateValue(key: string, item: any) {
+function handleUpdateValue(key: string, item: LayoutT.TransformedMenuItem) {
   router.push(key);
   tabStore.setActiveTab(key);
   const exists = tabStore.tabs.some(item => item.key === key);
   if (!exists) {
-    tabStore.addTab(item);
+    const tab = {
+      label: item.label,
+      key: item.key,
+      layout: item.layout
+    };
+    tabStore.addTab(tab);
   }
 }
 
@@ -38,7 +40,6 @@ onMounted(() => {
   <n-menu
     ref="menuInstRef"
     v-model:value="tabStore.activeTab"
-    :inverted="inverted"
     :collapsed-width="64"
     :collapsed-icon-size="22"
     :options="menuStore.menuOptions"

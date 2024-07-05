@@ -1,10 +1,12 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
+import sysConfig from '@/config';
 import { useLoading } from '@/utils/nprogress';
 import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
 import { useMenuStore } from '@/store/modules/menu.ts';
+import { useTabStore } from '@/store/modules/tab.ts';
 
 // 进度条配置
 const { start, done } = useLoading();
@@ -18,38 +20,48 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, _, next) => {
+router.beforeEach((to) => {
   start();
   const token = tool.data.get('TOKEN');
-  const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
+  const lastPath: string = tool.data.get('LAST_VIEWS_PATH') as string;
 
   if (to.path === '/login') {
     if (token) {
-      const targetPath = num || '/';
-      next({ path: targetPath });
+      const targetPath = lastPath || '/';
+      return ({ path: targetPath, replace: true });
     }
     else {
-      next();
+      return true;
     }
   }
 
   if (!token) {
-    next({ path: '/login' });
-    return;
+    return ({ path: '/login', replace: true });
   }
 
-  const meunStore = useMenuStore();
-  // TODO routesAdded 替换为用户信息来判断
-  if (!meunStore.routesAdded) { // 检查是否已经添加了路由
-    meunStore.addRoutesWithMenu(); // 确保路由添加完成
-    meunStore.routesAdded = true; // 设置标志位，表示路由已经添加
-    next({ ...to, replace: true }); // 确保重新导航到目标路径
-    return; // 确保每次调用 next 后都立即返回，以避免重复调用。
+  // 防止动态路由刷新丢失
+  const menuStore = useMenuStore();
+  if (!menuStore.accessedRouters.length) {
+    menuStore.addRoutesWithMenu(); // 确保路由添加完成
+    return ({ ...to, replace: true }); // 确保重新导航到目标路径
   }
-  next(); // 默认情况继续导航
+
+  // 保留上一次关闭系统时候的路由界面
+  if (to.path === sysConfig.DASHBOARD_URL && lastPath) {
+    return { path: lastPath };
+  }
 });
 
-router.afterEach(() => {
+export const EXCLUDE_TAB = [ '/login' ];
+router.afterEach((to) => {
+  // 刚登入系统时 添加tab
+  const tab: LayoutT.ITab = {
+    label: to.meta.title as string,
+    key: to.path,
+    layout: to.meta.layout as string
+  };
+  const tabStore = useTabStore();
+  !(EXCLUDE_TAB.includes(to.path)) && tabStore.addTab(tab);
   done();
 });
 
