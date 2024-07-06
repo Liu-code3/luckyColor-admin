@@ -30,9 +30,7 @@ router.beforeEach((to) => {
       const targetPath = lastPath || '/';
       return ({ path: targetPath, replace: true });
     }
-    else {
-      return true;
-    }
+    return true;
   }
 
   if (!token) {
@@ -48,7 +46,12 @@ router.beforeEach((to) => {
 
   // 保留上一次关闭系统时候的路由界面
   if (to.path === sysConfig.DASHBOARD_URL && lastPath) {
-    return { path: lastPath };
+    if (sysConfig.DASHBOARD_URL === lastPath) {
+      return true;
+    }
+    else {
+      return ({ path: lastPath, replace: true });
+    }
   }
 });
 
