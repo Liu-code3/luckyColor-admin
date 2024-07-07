@@ -14,11 +14,12 @@ export default {
   url: '/api/mock/dict/page/:id',
   method: 'get',
   response: (req: Query): Mockm.IDictResponse => {
-    const { page, size } = req.query;
+    const page = req.query.page || 1;
+    const size = req.query.size || 10;
     const match = req.url.match(/\/api\/mock\/dict\/page\/([^?]+)/);
     const id = match?.length ? match[1] : '';
 
-    const filterData = hanldeDictTree(dictTreeList, id);
+    const filterData = handleDictTree(dictTreeList, id);
     const records = filterData.slice((page - 1) * size, page * size);
 
     const successInfo = {
@@ -43,11 +44,11 @@ export default {
       }
     };
 
-    return id === '' ? successInfo : errorInfo;
+    return id === '' ? errorInfo : successInfo;
   }
 };
 
-function hanldeDictTree(dictTreeList: Mockm.IDictTree[], id: string) {
+function handleDictTree(dictTreeList: Mockm.IDictTree[], id: string) {
   const records: Mockm.IDictTree[] = [];
   recursion(dictTreeList, id);
   function recursion(dictTreeList: Mockm.IDictTree[], id: string) {
