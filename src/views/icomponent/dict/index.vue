@@ -6,13 +6,13 @@ import type { Ref } from 'vue';
 import type { VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
-import { getDictTreeApi } from '@/api/dictTree.ts';
+import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts';
 
-const data: Ref<TreeOption[]> = ref([]);
-
-async function getData() {
+// 获取侧边树结构
+const TreeData: Ref<TreeOption[]> = ref([]);
+async function getTreeData() {
   const res = await getDictTreeApi();
-  data.value = [ ...(res.data) ];
+  TreeData.value = [ ...(res.data) ];
 }
 
 const checkCamera = ({ option }: { option: TreeOption }) => {
@@ -35,6 +35,42 @@ interface RowVO {
   sortCode: number;
 }
 
+interface ITbRecords {
+  id: string;
+  parentId: string;
+  weight: number;
+  name: string;
+  tenantId: string;
+  dictLabel: string;
+  dictValue: string;
+  category: string;
+  sortCode: number;
+  deleteFlag: string;
+}
+
+interface IDto {
+  current: number;
+  total: number;
+  size: number;
+  records: ITbRecords[];
+}
+
+const getTableData = async () => {
+  const params = {
+    size: 10,
+    page: 1
+  };
+
+  try {
+    const res = await getTableDataApi(params);
+    const { records } = res.data as IDto;
+    return [ ...records ];
+  }
+  catch (e) {
+    return [];
+  }
+};
+
 const gridOptions = reactive<VxeGridProps<RowVO>>({
   border: true,
   columnConfig: {
@@ -49,14 +85,18 @@ const gridOptions = reactive<VxeGridProps<RowVO>>({
       buttons: 'toolbar_buttons'
     }
   },
+  proxyConfig: {
+    ajax: {
+      query() {
+        return getTableData();
+      }
+    }
+  },
   columns: [
     { field: 'dictLabel', title: '字典名称' },
     { field: 'dictValue', title: '字典值' },
     { field: 'sortCode', title: '排序' },
     { field: 'edit', title: '编辑', slots: { default: 'edit' }, width: 200 }
-  ],
-  data: [
-    { id: 10001, dictLabel: '汉族', dictValue: '汉族', sortCode: 10 }
   ]
 });
 
@@ -66,16 +106,11 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 
 function apiInit() {
-  getData();
+  getTreeData();
 }
 
 onMounted(() => {
   apiInit();
-  console.log('bg');
-});
-
-onActivated(() => {
-  console.log('fuck');
 });
 </script>
 
@@ -95,7 +130,7 @@ onActivated(() => {
             selectable
             key-field="id"
             label-field="dictLabel"
-            :data="data"
+            :data="TreeData"
             :node-props="checkCamera"
           />
         </n-gi>
