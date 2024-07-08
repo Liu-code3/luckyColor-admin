@@ -1,8 +1,9 @@
 import {
-  VxeButton,
+  VxeUI,
 
+  VxeButton,
   VxeIcon,
-  VxeUI
+  VxePager
 } from 'vxe-pc-ui';
 
 import {
@@ -25,6 +26,7 @@ VxeUI.setLanguage('zh-CN');
 // 如果是配置式的，没有在页面中显性导入，则需要逐个注册
 VxeUI.component(VxeButton);
 VxeUI.component(VxeIcon);
+VxeUI.component(VxePager);
 
 VxeUI.component(VxeTable);
 VxeUI.component(VxeToolbar);

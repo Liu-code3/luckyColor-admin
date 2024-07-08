@@ -1,41 +1,13 @@
 <script setup lang="ts">
-import type { TreeOption } from 'naive-ui';
 import { dateZhCN, zhCN } from 'naive-ui';
 import type { Ref } from 'vue';
 
-import type { VxeGridProps } from 'vxe-table';
+import type { VxeGridInstance, VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
 import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts';
 
-// 获取侧边树结构
-const TreeData: Ref<TreeOption[]> = ref([]);
-async function getTreeData() {
-  const res = await getDictTreeApi();
-  TreeData.value = [ ...(res.data) ];
-}
-
-const checkCamera = ({ option }: { option: TreeOption }) => {
-  return {
-    onClick() {
-      console.log(option, 'op');
-    }
-  };
-};
-
-// 表格
-const searchFormState = reactive({
-  searchKey: ''
-});
-
 interface RowVO {
-  id: number;
-  dictLabel: string;
-  dictValue: string;
-  sortCode: number;
-}
-
-interface ITbRecords {
   id: string;
   parentId: string;
   weight: number;
@@ -46,30 +18,22 @@ interface ITbRecords {
   category: string;
   sortCode: number;
   deleteFlag: string;
+  children?: RowVO[];
 }
 
 interface IDto {
   current: number;
   total: number;
   size: number;
-  records: ITbRecords[];
+  records: RowVO[];
 }
 
-const getTableData = async () => {
-  const params = {
-    size: 10,
-    page: 1
-  };
-
-  try {
-    const res = await getTableDataApi(params);
-    const { records } = res.data as IDto;
-    return [ ...records ];
-  }
-  catch (e) {
-    return [];
-  }
-};
+// 获取侧边树结构
+const TreeData: Ref<RowVO[]> = ref([]);
+async function getTreeData() {
+  const res = await getDictTreeApi();
+  TreeData.value = [ ...(res.data) ];
+}
 
 const gridOptions = reactive<VxeGridProps<RowVO>>({
   border: true,
@@ -85,28 +49,65 @@ const gridOptions = reactive<VxeGridProps<RowVO>>({
       buttons: 'toolbar_buttons'
     }
   },
-  proxyConfig: {
-    ajax: {
-      query() {
-        return getTableData();
-      }
-    }
-  },
   columns: [
     { field: 'dictLabel', title: '字典名称' },
     { field: 'dictValue', title: '字典值' },
     { field: 'sortCode', title: '排序' },
     { field: 'edit', title: '编辑', slots: { default: 'edit' }, width: 200 }
-  ]
+  ],
+  data: []
 });
+
+const checkCamera = ({ option }: { option: RowVO }) => {
+  return {
+    onClick() {
+      console.log(option);
+    }
+  };
+};
+
+// 表格
+const searchFormState = reactive({
+  searchKey: ''
+});
+
+const pagerConfig = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+});
+
+const getTableData = async (page = 1, size = 10) => {
+  const params = {
+    size,
+    page
+  };
+
+  try {
+    const res = await getTableDataApi(params);
+    const { current, size, total, records } = res.data as IDto;
+    pagerConfig.currentPage = current;
+    pagerConfig.pageSize = size;
+    pagerConfig.total = total;
+    gridOptions.data = [ ...records ];
+  }
+  catch (e) {
+    gridOptions.data = [];
+  }
+};
+
+const gridRef = ref<VxeGridInstance<RowVO>>();
 
 const onToolbarBtnsClick = () => {};
 
-const currentPage = ref(1);
-const pageSize = ref(10);
+const onUpdatePage = (page: number) => {
+  pagerConfig.currentPage = page;
+  getTableData(page, 10);
+};
 
 function apiInit() {
   getTreeData();
+  getTableData();
 }
 
 onMounted(() => {
@@ -146,7 +147,7 @@ onMounted(() => {
               <n-form-item-gi :span="8" label="字典名称: " path="searchKey">
                 <n-input v-model:value="searchFormState.searchKey" placeholder="请输入字典名称" />
               </n-form-item-gi>
-              <n-gi :span="4">
+              <n-gi :span="8">
                 <n-button type="primary">
                   <template #icon>
                     <Icon class="h-4 w-4" icon="simple-line-icons:magnifier" />
@@ -165,9 +166,10 @@ onMounted(() => {
           <n-divider style="margin: 12px 0" />
           <div>
             <VxeGrid
+              ref="gridRef"
               v-bind="gridOptions"
             >
-              <!-- toolbar_buttons 左边按钮自定义插槽, 需要在 -->
+              <!-- toolbar_buttons 左边按钮自定义插槽, 需要在toolbarConfig中配置插槽名 -->
               <template #toolbar_buttons>
                 <n-button
                   type="primary"
@@ -193,16 +195,17 @@ onMounted(() => {
               </template>
               <template #pager>
                 <n-pagination
-                  v-model:page="currentPage"
-                  v-model:page-size="pageSize"
+                  v-model:page="pagerConfig.currentPage"
+                  v-model:page-size="pagerConfig.pageSize"
                   class="mt-4 justify-end"
                   show-size-picker
-                  :item-count="101"
+                  :item-count="pagerConfig.total"
                   :page-sizes="[10, 20, 30, 40]"
+                  :on-update:page="onUpdatePage"
                 >
                   <template #prefix="{ itemCount, startIndex }">
                     <div class="flex gap-2">
-                      <span>{{ startIndex + 1 }} - {{ startIndex + pageSize }}</span>
+                      <span>{{ startIndex + 1 }} - {{ startIndex + pagerConfig.pageSize }}</span>
                       <span>共{{ itemCount }}项</span>
                     </div>
                   </template>
