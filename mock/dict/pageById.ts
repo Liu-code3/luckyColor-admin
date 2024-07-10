@@ -19,14 +19,14 @@ export default {
     const match = req.url.match(/\/api\/mock\/dict\/page\/([^?]+)/);
     const id = match?.length ? match[1] : '';
 
-    const filterData = handleDictTree(dictTreeList, id);
+    const filterData = getFlattenedRecordsById(dictTreeList, id);
     const records = filterData.slice((page - 1) * size, page * size);
 
     const successInfo = {
       code: 200,
       msg: 'success',
       data: {
-        total: dictTreeList.length,
+        total: filterData.length,
         size: Number(size),
         current: Number(page),
         records
@@ -48,19 +48,28 @@ export default {
   }
 };
 
-function handleDictTree(dictTreeList: Mockm.IDictTree[], id: string) {
-  const records: Mockm.IDictTree[] = [];
-  recursion(dictTreeList, id);
-  function recursion(dictTreeList: Mockm.IDictTree[], id: string) {
-    for (const item of dictTreeList) {
-      if (item.children) {
-        recursion(item.children, id);
+function getFlattenedRecordsById(dictTreeList: Mockm.IDictTree[], id: string) {
+  const result: Mockm.IDictTree[] = [];
+
+  findAndFlatten(dictTreeList, id);
+  function findAndFlatten(dictTreeList: Mockm.IDictTree[], id: string) {
+    for (const record of dictTreeList) {
+      if (record.id === id) {
+        const { children, ...rest } = record;
+        result.push(rest);
+        if (children) {
+          for (const child of children) {
+            const { children: _, ...childRest } = child; // 去除子元素的children属性
+            result.push(childRest);
+          }
+        }
+        return;
       }
-      if (item.id === id) {
-        records.push(item);
+      if (record.children) {
+        findAndFlatten(record.children, id);
       }
     }
   }
 
-  return records;
+  return result.length ? result : [];
 }

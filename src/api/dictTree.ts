@@ -26,7 +26,19 @@ function getTableDataApi(params: ITbParams) {
   });
 }
 
+/**
+ * @description 获取表格数据根据id
+ */
+function getTableDataByIdApi(id: string, params: ITbParams) {
+  return request({
+    url: `/mock/dict/page/${id}`,
+    method: 'get',
+    params
+  });
+}
+
 export {
   getDictTreeApi,
-  getTableDataApi
+  getTableDataApi,
+  getTableDataByIdApi
 };

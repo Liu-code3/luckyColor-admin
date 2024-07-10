@@ -1,9 +1,9 @@
 import {
-  VxeUI,
-
   VxeButton,
+
   VxeIcon,
-  VxePager
+  VxePager,
+  VxeUI
 } from 'vxe-pc-ui';
 
 import {

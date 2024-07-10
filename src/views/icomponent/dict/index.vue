@@ -2,10 +2,10 @@
 import { dateZhCN, zhCN } from 'naive-ui';
 import type { Ref } from 'vue';
 
-import type { VxeGridInstance, VxeGridProps } from 'vxe-table';
+import type { VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
-import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts';
+import { getDictTreeApi, getTableDataApi, getTableDataByIdApi } from '@/api/dictTree.ts';
 
 interface RowVO {
   id: string;
@@ -30,10 +30,16 @@ interface IDto {
 
 // 获取侧边树结构
 const TreeData: Ref<RowVO[]> = ref([]);
-async function getTreeData() {
+const getTreeData = async () => {
   const res = await getDictTreeApi();
   TreeData.value = [ ...(res.data) ];
-}
+};
+
+const pagerConfig = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0
+});
 
 const gridOptions = reactive<VxeGridProps<RowVO>>({
   border: true,
@@ -58,25 +64,62 @@ const gridOptions = reactive<VxeGridProps<RowVO>>({
   data: []
 });
 
-const checkCamera = ({ option }: { option: RowVO }) => {
+const flag = ref(false);
+const onClickNodeProsId = ref('');
+
+/**
+ * @description 获取表格数据 - 根据id
+ * @param id
+ * @param page
+ * @param size
+ */
+const getTableDataById = async (id: string, page = 1, size = 10) => {
+  const params = { page, size };
+  try {
+    const res = await getTableDataByIdApi(id, params);
+    const { current, size, total, records } = res.data as IDto;
+    pagerConfig.currentPage = current;
+    pagerConfig.pageSize = size;
+    pagerConfig.total = total;
+    gridOptions.data = [ ...records ];
+  }
+  catch (e) {
+    gridOptions.data = [];
+  }
+};
+
+/**
+ * @description 点击树节点
+ * @params option
+ */
+const nodeProps = ({ option }: { option: RowVO }) => {
   return {
     onClick() {
-      console.log(option);
+      gridOptions.data = [];
+      const Index = gridOptions.columns?.findIndex(item => item.field === 'parentId');
+      if (Index === -1) {
+        gridOptions.columns?.splice(2, 0, { field: 'parentId', title: '层级', slots: { default: 'parentId_filter' } });
+      }
+
+      flag.value = true;
+      onClickNodeProsId.value = option.id;
+      getTableDataById(option.id, pagerConfig.currentPage, pagerConfig.pageSize);
     }
   };
 };
+
+const onToolbarBtnsClick = () => {};
 
 // 表格
 const searchFormState = reactive({
   searchKey: ''
 });
 
-const pagerConfig = reactive({
-  currentPage: 1,
-  pageSize: 10,
-  total: 0
-});
-
+/**
+ * @description 获取表格数据
+ * @param page 当前页码
+ * @param size 每页条数
+ */
 const getTableData = async (page = 1, size = 10) => {
   const params = {
     size,
@@ -96,13 +139,14 @@ const getTableData = async (page = 1, size = 10) => {
   }
 };
 
-const gridRef = ref<VxeGridInstance<RowVO>>();
-
-const onToolbarBtnsClick = () => {};
-
 const onUpdatePage = (page: number) => {
   pagerConfig.currentPage = page;
-  getTableData(page, 10);
+  flag.value ? getTableDataById(onClickNodeProsId.value, page, pagerConfig.pageSize) : getTableData(page, pagerConfig.pageSize);
+};
+
+const onUpdatePageSize = (pageSize: number) => {
+  pagerConfig.pageSize = pageSize;
+  flag.value ? getTableDataById(onClickNodeProsId.value, pagerConfig.currentPage, pageSize) : getTableData(pagerConfig.currentPage, pageSize);
 };
 
 function apiInit() {
@@ -132,7 +176,7 @@ onMounted(() => {
             key-field="id"
             label-field="dictLabel"
             :data="TreeData"
-            :node-props="checkCamera"
+            :node-props="nodeProps"
           />
         </n-gi>
         <n-gi :span="10">
@@ -166,7 +210,6 @@ onMounted(() => {
           <n-divider style="margin: 12px 0" />
           <div>
             <VxeGrid
-              ref="gridRef"
               v-bind="gridOptions"
             >
               <!-- toolbar_buttons 左边按钮自定义插槽, 需要在toolbarConfig中配置插槽名 -->
@@ -187,12 +230,25 @@ onMounted(() => {
                   <n-empty description="你什么也找不到" size="huge" />
                 </div>
               </template>
+              <template #parentId_filter="{ row }">
+                <template v-if="row.parentId === '0'">
+                  <n-button ghost color="#0958d9">
+                    上级
+                  </n-button>
+                </template>
+                <template v-else>
+                  <n-button ghost color="#389e0d">
+                    子级
+                  </n-button>
+                </template>
+              </template>
               <!-- 自定义表格编辑列插槽, 需要在columns字段配置插槽名 -->
               <template #edit>
                 <n-button quaternary type="primary" class="p-0">
                   编辑
                 </n-button>
               </template>
+              <!-- 自定义分页器 -->
               <template #pager>
                 <n-pagination
                   v-model:page="pagerConfig.currentPage"
@@ -200,8 +256,9 @@ onMounted(() => {
                   class="mt-4 justify-end"
                   show-size-picker
                   :item-count="pagerConfig.total"
-                  :page-sizes="[10, 20, 30, 40]"
+                  :page-sizes="[10, 20, 30, 50]"
                   :on-update:page="onUpdatePage"
+                  :on-update:page-size="onUpdatePageSize"
                 >
                   <template #prefix="{ itemCount, startIndex }">
                     <div class="flex gap-2">
