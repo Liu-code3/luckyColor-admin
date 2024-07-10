@@ -45,11 +45,11 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0(vue@3.4.31(typescript@5.5.3))
       vxe-pc-ui:
-        specifier: ^4.0.42
-        version: 4.0.45
+        specifier: ^4.0.50
+        version: 4.0.50
       vxe-table:
-        specifier: ^4.7.40
-        version: 4.7.40
+        specifier: ^4.7.45
+        version: 4.7.45
     devDependencies:
       '@antfu/eslint-config':
         specifier: ^2.21.1
@@ -643,46 +643,55 @@ packages:
     resolution: {integrity: sha512-C/zbRYRXFjWvz9Z4haRxcTdnkPt1BtCkz+7RtBSuNmKzMzp3ZxdM28Mpccn6pt28/UWUCTXa+b0Mx1k3g6NOMA==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.18.0':
     resolution: {integrity: sha512-l3m9ewPgjQSXrUMHg93vt0hYCGnrMOcUpTz6FLtbwljo2HluS4zTXFy2571YQbisTnfTKPZ01u/ukJdQTLGh9A==}
     cpu: [arm]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.18.0':
     resolution: {integrity: sha512-rJ5D47d8WD7J+7STKdCUAgmQk49xuFrRi9pZkWoRD1UeSMakbcepWXPF8ycChBoAqs1pb2wzvbY6Q33WmN2ftw==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.18.0':
     resolution: {integrity: sha512-be6Yx37b24ZwxQ+wOQXXLZqpq4jTckJhtGlWGZs68TgdKXJgw54lUUoFYrg6Zs/kjzAQwEwYbp8JxZVzZLRepQ==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.18.0':
     resolution: {integrity: sha512-hNVMQK+qrA9Todu9+wqrXOHxFiD5YmdEi3paj6vP02Kx1hjd2LLYR2eaN7DsEshg09+9uzWi2W18MJDlG0cxJA==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.18.0':
     resolution: {integrity: sha512-ROCM7i+m1NfdrsmvwSzoxp9HFtmKGHEqu5NNDiZWQtXLA8S5HBCkVvKAxJ8U+CVctHwV2Gb5VUaK7UAkzhDjlg==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-s390x-gnu@4.18.0':
     resolution: {integrity: sha512-0UyyRHyDN42QL+NbqevXIIUnKA47A+45WyasO+y2bGJ1mhQrfrtXUpTxCOrfxCR4esV3/RLYyucGVPiUsO8xjg==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.18.0':
     resolution: {integrity: sha512-xuglR2rBVHA5UsI8h8UbX4VJ470PtGCf5Vpswh7p2ukaqBGFTnsfzxUBetoWBWymHMxbIG0Cmx7Y9qDZzr648w==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.18.0':
     resolution: {integrity: sha512-LKaqQL9osY/ir2geuLVvRRs+utWUNilzdE90TpyoX0eNqPzWjRm14oMEE+YLve4k/NAqCdPkGYDaDF5Sw+xBfg==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.18.0':
     resolution: {integrity: sha512-7J6TkZQFGo9qBKH0pk2cEVSRhJbL6MtfWxth7Y5YmZs57Pi+4x6c2dStAUvaQkHQLnEQv1jzBUW43GvZW8OFqA==}
@@ -2882,11 +2891,11 @@ packages:
     peerDependencies:
       vue: ^3.0.11
 
-  vxe-pc-ui@4.0.45:
-    resolution: {integrity: sha512-JFT9sT+L+fdn2B5iVP3/2xsFxzXzl8l7dSTdEj+rL9q+HA7iYAPK+iBJIRcGCYH0QnViwFP7gN4TAJ1z3nJDhg==}
+  vxe-pc-ui@4.0.50:
+    resolution: {integrity: sha512-0KPy6JzmlYrRlRkCHkHczaNxdarpQtIWFOR4ackPVra6Sm3iNywj207Ccu/oyRUcACTCr80AH0QO3M9mlE6K6w==}
 
-  vxe-table@4.7.40:
-    resolution: {integrity: sha512-y9VC3oLJgusxFj3xZ28G4gU+YClBuDIV8oM75Dx3doYJ7vanXZnSf70XJ+W5xEKflamUmjGre66XZ2b4XuqtMw==}
+  vxe-table@4.7.45:
+    resolution: {integrity: sha512-cJC2hZSqR+0wN6UAeH0Q3cQkp+ZmZ1I9qyuEklzvVnjpRQl4qu2WHQXgGa/kUe2lHO5YuhKTkTIXHI1Cm/6NXA==}
 
   webpack-sources@3.2.3:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
@@ -5929,13 +5938,13 @@ snapshots:
       vooks: 0.2.12(vue@3.4.31(typescript@5.5.3))
       vue: 3.4.31(typescript@5.5.3)
 
-  vxe-pc-ui@4.0.45:
+  vxe-pc-ui@4.0.50:
     dependencies:
       '@vxe-ui/core': 1.0.12
 
-  vxe-table@4.7.40:
+  vxe-table@4.7.45:
     dependencies:
-      vxe-pc-ui: 4.0.45
+      vxe-pc-ui: 4.0.50
 
   webpack-sources@3.2.3: {}
 
