@@ -1,10 +1,10 @@
-import config from '@/config';
+import sysConfig from '@/config';
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    redirect: config.DASHBOARD_URL
+    redirect: sysConfig.DASHBOARD_URL
   },
   {
     path: '/login',
@@ -17,7 +17,6 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    hidden: true,
     component: () => import('../views/errorPage/404.vue'),
     meta: {
       layout: 'empty'

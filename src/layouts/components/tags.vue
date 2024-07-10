@@ -40,7 +40,3 @@ onMounted(() => {
     />
   </n-tabs>
 </template>
-
-<style lang="less" scoped>
-
-</style>

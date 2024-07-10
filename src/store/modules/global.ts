@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import tool from '@/utils/tool.ts';
 import DEFAULT_CONFIG from '@/config';
 
+
+
 enum Global {
   LOCK_SCREEN = 'LOCK_SCREEN',
   LAYOUT = 'layout'

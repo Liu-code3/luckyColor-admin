@@ -3,26 +3,27 @@ declare namespace LayoutT {
     pid: number;
     id: number;
     title: string;
+    name: string;
     type: number;
     path: string;
     key: string;
     icon: string;
+    layout: string;
     children?: MenuItem[];
   }
 
   interface TransformedMenuItem {
-    pid: number;
-    id: number;
     label: string;
+    type: number;
     key: string;
-    icon: any;
+    icon: () => VNode;
+    layout: string;
     children?: TransformedMenuItem[];
   }
 
-  interface ILastMenu {
-    pid: number;
-    id: number;
+  interface ITab {
     label: string;
     key: string;
+    layout: string;
   }
 }

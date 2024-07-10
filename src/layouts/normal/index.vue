@@ -28,7 +28,7 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
           <!-- 标签页 -->
           <Tags />
           <div class="n-content">
-          <slot />
+            <slot />
           </div>
         </n-layout-content>
       </n-layout>

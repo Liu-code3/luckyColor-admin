@@ -3,7 +3,7 @@ import router from '@/router';
 import tool from '@/utils/tool.ts';
 
 interface TabState {
-  tabs: LayoutT.ILastMenu[];
+  tabs: LayoutT.ITab[];
   activeTab: string;
 }
 
@@ -15,7 +15,7 @@ export const useTabStore = defineStore('tab', {
   getters: {
     activeIndex(): number {
       if (!this.tabs.length) return -1;
-      return this.tabs.findIndex((item: LayoutT.ILastMenu) => item.key === this.activeTab);
+      return this.tabs.findIndex((item: LayoutT.ITab) => item.key === this.activeTab);
     }
   },
   actions: {
@@ -24,11 +24,11 @@ export const useTabStore = defineStore('tab', {
       this.activeTab = path;
       tool.data.set('LAST_VIEWS_PATH', path);
     },
-    setTabs(tabs: LayoutT.ILastMenu[]) {
+    setTabs(tabs: LayoutT.ITab[]) {
       this.tabs = tabs;
       tool.data.set('tabs', tabs);
     },
-    addTab(tab: LayoutT.ILastMenu) {
+    addTab(tab: LayoutT.ITab) {
       const findIndex = this.tabs.findIndex(item => item.key === tab.key);
       if (findIndex !== -1) {
         this.tabs.splice(findIndex, 1, tab);

@@ -1,4 +1,4 @@
-import service from '../utils/request';
+import { request } from '@/utils/http';
 
 interface FileInfo {
   name: string;
@@ -13,7 +13,7 @@ class FileAPI {
   static upload(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    return service<any, FileInfo>({
+    return request<any, FileInfo>({
       url: '/api/file/upload',
       method: 'post',
       data: formData,
@@ -28,7 +28,7 @@ class FileAPI {
    * @param filePath 文件完整路径
    */
   static deleteByPath(filePath: string) {
-    return service({
+    return request({
       url: '/api/file/delete',
       method: 'get',
       params: { filePath }

@@ -1,9 +1,12 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
+import sysConfig from '@/config';
 import { useLoading } from '@/utils/nprogress';
 import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
+import { useMenuStore } from '@/store/modules/menu.ts';
+import { useTabStore } from '@/store/modules/tab.ts';
 
 // 进度条配置
 const { start, done } = useLoading();
@@ -17,32 +20,51 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, _, next) => {
+router.beforeEach((to) => {
   start();
   const token = tool.data.get('TOKEN');
+  const lastPath: string = tool.data.get('LAST_VIEWS_PATH') as string;
+
   if (to.path === '/login') {
     if (token) {
-      const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
-      if (num) {
-        router.push(num);
-      }
-      else {
-        router.push('/');
-      }
+      const targetPath = lastPath || '/';
+      return ({ path: targetPath, replace: true });
+    }
+    return true;
+  }
+
+  if (!token) {
+    return ({ path: '/login', replace: true });
+  }
+
+  // 防止动态路由刷新丢失
+  const menuStore = useMenuStore();
+  if (!menuStore.accessedRouters.length) {
+    menuStore.addRoutesWithMenu(); // 确保路由添加完成
+    return ({ ...to, replace: true }); // 确保重新导航到目标路径
+  }
+
+  // 保留上一次关闭系统时候的路由界面
+  if (to.path === sysConfig.DASHBOARD_URL && lastPath) {
+    if (sysConfig.DASHBOARD_URL === lastPath) {
+      return true;
     }
     else {
-      next();
+      return ({ path: lastPath, replace: true });
     }
-  }
-  else {
-    if (token)
-      next();
-    else
-      next({ path: '/login' });
   }
 });
 
-router.afterEach(() => {
+export const EXCLUDE_TAB = [ '/login' ];
+router.afterEach((to) => {
+  // 刚登入系统时 添加tab
+  const tab: LayoutT.ITab = {
+    label: to.meta.title as string,
+    key: to.path,
+    layout: to.meta.layout as string
+  };
+  const tabStore = useTabStore();
+  !(EXCLUDE_TAB.includes(to.path)) && tabStore.addTab(tab);
   done();
 });
 
@@ -53,54 +75,5 @@ router.onError((error) => {
     description: error.message
   });
 });
-
-interface MenuItem {
-  path: string;
-  name: string;
-  component: string;
-  meta?: {
-    type?: string;
-    url?: string;
-  };
-  redirect?: string;
-  children?: MenuItem[];
-}
-
-function filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
-  const accessedRouters: RouteRecordRaw[] = [];
-  routerMap.forEach((item) => {
-    item.meta = item.meta || {};
-    // 处理外部链接特殊路由
-    if (item.meta.type === 'iframe') {
-      item.meta.url = item.path;
-      item.path = `/i/${item.name}`;
-    }
-    // 转换为路由对象
-    const route: RouteRecordRaw = {
-      path: item.path,
-      name: item.name,
-      meta: item.meta,
-      // redirect: item.redirect,
-      children: item.children ? filterAsyncRouter(item.children) : [],
-      component: loadComponent(item.component)
-    };
-
-    accessedRouters.push(route);
-  });
-  return accessedRouters;
-}
-
-export function addRoutesWithMenu() {
-  const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
-  const menuRouter = filterAsyncRouter(apiMenu);
-  menuRouter.forEach(route => router.addRoute(route));
-}
-
-const modules = import.meta.glob('/src/views/**/*.vue');
-
-function loadComponent(component: string) {
-  if (component.includes('/')) return modules[`/src/views/${component}.vue`];
-  return modules[`/src/views/${component}/index.vue`];
-}
 
 export default router;

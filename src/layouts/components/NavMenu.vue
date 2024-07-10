@@ -3,10 +3,9 @@ import type { MenuInst } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
-import tool from '@/utils/tool.ts';
 
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 const menuStore = useMenuStore();
 const tabStore = useTabStore();
 
@@ -17,25 +16,23 @@ watch(route, async () => {
   menuInstRef.value?.showOption();
 }, { immediate: true });
 
-// 反转
-const inverted = ref(false);
-
 // 切换菜单
-function handleUpdateValue(key: string, item: any) {
+function handleUpdateValue(key: string, item: LayoutT.TransformedMenuItem) {
   router.push(key);
   tabStore.setActiveTab(key);
   const exists = tabStore.tabs.some(item => item.key === key);
   if (!exists) {
-    tabStore.addTab(item);
+    const tab = {
+      label: item.label,
+      key: item.key,
+      layout: item.layout
+    };
+    tabStore.addTab(tab);
   }
 }
 
 onMounted(() => {
   menuStore.defaultLoading();
-  const num: string = tool.data.get('LAST_VIEWS_PATH') as string;
-  if (!num) {
-    handleUpdateValue(menuStore.menuOptions[0].key, menuStore.menuOptions[0]);
-  }
 });
 </script>
 
@@ -43,7 +40,6 @@ onMounted(() => {
   <n-menu
     ref="menuInstRef"
     v-model:value="tabStore.activeTab"
-    :inverted="inverted"
     :collapsed-width="64"
     :collapsed-icon-size="22"
     :options="menuStore.menuOptions"
