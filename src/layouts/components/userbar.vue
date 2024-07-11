@@ -58,6 +58,10 @@ function signOut() {
     '退出登录成功'
   );
 }
+
+function handleLinkClick(link: string) {
+  window.open(link, '_blank');
+}
 </script>
 
 <template>
@@ -69,15 +73,20 @@ function signOut() {
     <div class="layout-content-right">
       <Icon
         class="text-5"
+        icon="logos:github-icon"
+        @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
+      />
+      <Icon
+        class="mx-3 text-5"
         icon="tabler:lock-filled"
         @click="JumpLock"
       />
       <Icon
-        class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
+        class="cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
         @click="screenfullFn"
       />
       <Icon
-        class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+        class="mx-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
         @click="refresh"
       />
 
