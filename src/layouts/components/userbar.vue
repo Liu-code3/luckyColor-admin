@@ -8,6 +8,7 @@ import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
+import SwitchTheme from '@/layouts/components/switchTheme.vue';
 
 const router = useRouter();
 const message = useMessage();
@@ -71,22 +72,23 @@ function handleLinkClick(link: string) {
       <Breadcrumb />
     </div>
     <div class="layout-content-right">
+      <SwitchTheme />
       <Icon
-        class="text-5"
+        class="mx-3 cursor-pointer text-5"
         icon="logos:github-icon"
         @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
-        class="mx-3 text-5"
+        class="cursor-pointer text-5"
         icon="tabler:lock-filled"
         @click="JumpLock"
       />
       <Icon
-        class="cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
+        class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
         @click="screenfullFn"
       />
       <Icon
-        class="mx-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+        class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
         @click="refresh"
       />
 
