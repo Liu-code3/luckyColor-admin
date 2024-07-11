@@ -12,11 +12,18 @@ const errorMap: Record<string, string> = {
   PromiseRejectionEvent: '未处理的 Promise 拒绝事件'
 };
 
-export default (error: unknown) => {
-  const errorName = error instanceof Error ? errorMap[error.message] : '未知错误';
+export default (error: unknown, _: ComponentPublicInstance | null, info: string) => {
+  let errorName = '错误';
+  let errorContent = info || '';
+
+  if (error instanceof Error) {
+    errorName = errorMap[error.name] || '错误';
+    errorContent = error.message || '未知错误';
+  }
+
   notification.error({
-    title: '错误',
-    content: errorName,
+    title: errorName,
+    content: errorContent,
     duration: 5000
   });
 };

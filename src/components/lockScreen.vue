@@ -3,16 +3,18 @@ import { Icon } from '@iconify/vue';
 import { Encrypt } from '@/utils/crypto-md5';
 import tool from '@/utils/tool';
 import { message } from '@/utils/message';
+import { useGlobalStore } from '@/store/modules/global.ts';
 
-const emits = defineEmits(['unlock']);
+const emits = defineEmits([ 'unlock' ]);
 const lockPwd = ref('');
-const isLocked = ref(true);
+
+const globalStore = useGlobalStore();
 const onEnLock: () => void = () => {
   const pwd = Encrypt(lockPwd.value);
   const oldPwd = tool.data.get<string>('lockPassword') ?? '';
   if (pwd === oldPwd) {
     emits('unlock');
-    isLocked.value = false;
+    globalStore.updateIsLock(false);
     return;
   }
   message.warning('密码错误');
@@ -20,7 +22,7 @@ const onEnLock: () => void = () => {
 
 // 禁用浏览器的后退按钮
 function preventBack(event: PopStateEvent) {
-  if (isLocked.value) {
+  if (globalStore.isLocked) {
     event.preventDefault();
     history.pushState(null, '', location.href);
   }

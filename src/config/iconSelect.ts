@@ -39,7 +39,7 @@ export default {
         {
           name: '其他',
           key: 'other',
-          item: ['UiwGithub']
+          item: [ 'UiwGithub' ]
         }
       ]
     }
