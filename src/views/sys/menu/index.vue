@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import type { VxeGridProps } from 'vxe-table';
+import { VxeGrid } from 'vxe-table';
+import { handlMenuList } from '@/utils/handlerMenu';
+import { menuListApi } from '@/api';
 
 const page = ref(1);
 const formRef = ref(null);
@@ -16,6 +20,41 @@ const formValue = ref({
   switchValue: '',
   multipleSelectValue: '',
   selectValue: ''
+});
+
+interface RowVO {
+  pid: number;
+  id: number;
+  title: string;
+  type: number;
+  path: string;
+  icon?: () => import('vue').VNodeChild;
+  children?: RowVO[];
+}
+
+const gridOptions = ref<VxeGridProps<RowVO>>({
+  border: true,
+  treeConfig: {
+    rowField: 'id',
+    childrenField: 'children'
+  },
+  columns: [
+    { field: 'title', title: '名称', treeNode: true },
+    { field: 'icon', title: '图标', slots: { default: 'icon' }, width: 50 },
+    { field: 'key', title: '类型' },
+    { field: 'path', title: '路由地址' },
+    { field: 'component', title: '组件' },
+    { field: 'isVisible', title: '是否可见', slots: { default: 'isVisible' } },
+    { field: '', title: '排序' },
+    { field: 'edit', title: '操作', slots: { default: 'edit' }, width: 310 }
+  ],
+  data: []
+});
+
+// const tableData: Ref<App.GlobalMenuOption[]> = ref([]);
+onMounted(async () => {
+  const res = await menuListApi({ token: '111111111111111' });
+  gridOptions.value.data = [ ...handlMenuList(res.data) ];
 });
 
 const generalOptions = [ '管理员', '质检员' ].map(
@@ -57,42 +96,31 @@ const add_role = () => {
           批量删除
         </NButton>
       </div>
-      <n-table>
-        <thead>
-          <tr>
-            <th>名称</th>
-            <th>图标</th>
-            <th>类型</th>
-            <th>路由地址</th>
-            <th>组件</th>
-            <th>是否可见</th>
-            <th>排序</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td>
-              <n-button type="primary" class="mx-10px">
-                <Icon icon="lucide:edit" /> 编辑
-              </n-button>
-              <n-button type="error">
-                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />  删除
-              </n-button>
-              <n-button type="primary" class="mx-10px">
-                <Icon icon="lucide:edit" /> 按钮权限
-              </n-button>
-            </td>
-          </tr>
-        </tbody>
-      </n-table>
+      <VxeGrid v-bind="gridOptions">
+        <template #icon="{ row }">
+          <div>
+            <Icon class="h-4 w-4" :icon="row.icon" />
+          </div>
+        </template>
+        <template #isVisible="{ row }">
+          <div>
+            <NTag type="primary">
+              {{ row.isVisible ? '显示' : '隐藏' }}
+            </NTag>
+          </div>
+        </template>
+        <template #edit>
+          <n-button quaternary type="primary" class="mx-10px p-0">
+            编辑
+          </n-button>
+          <n-button quaternary type="error">
+            删除
+          </n-button>
+          <n-button quaternary type="primary" class="mx-10px p-0">
+            按钮权限
+          </n-button>
+        </template>
+      </VxeGrid>
       <n-space vertical class="mt-10px" style="display: flex; align-items: end; ">
         <n-pagination v-model:page="page" :page-count="100" :page-slot="4" />
       </n-space>

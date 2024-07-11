@@ -17,7 +17,6 @@ function handleClose(path: string) {
   tabStore.removeTab(path);
 }
 onMounted(() => {
-  console.log(tabStore.tabs, '  tabStore.tabs');
 });
 </script>
 
