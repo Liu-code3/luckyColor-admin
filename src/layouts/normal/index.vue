@@ -11,9 +11,9 @@ const menuStore = useMenuStore();
 <template>
   <n-space vertical>
     <n-layout>
-      <n-layout has-sider >
+      <n-layout has-sider>
         <n-layout-sider
-        :collapsed="menuStore.collapsed"
+          :collapsed="menuStore.collapsed"
           bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
           :native-scrollbar="false"
         >
@@ -51,8 +51,8 @@ const menuStore = useMenuStore();
   box-sizing: border-box;
 }
 .n-content::-webkit-scrollbar {
-		display: none;
-	}
+  display: none;
+}
 
 .logo-bar {
   width: 220px;
@@ -102,7 +102,8 @@ const menuStore = useMenuStore();
 .n-layout-scroll-container {
   background-color: #f6f8f9;
 }
-.n-layout-toggle-button{
+
+.n-layout-toggle-button {
   display: none !important;
 }
 </style>
