@@ -3,14 +3,17 @@ import { Icon } from '@iconify/vue';
 import Tags from '@/layouts/components/tags.vue';
 import UserBar from '@/layouts/components/userbar.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
+import { useMenuStore } from '@/store/modules/menu.ts';
 
+const menuStore = useMenuStore();
 </script>
 
 <template>
   <n-space vertical>
     <n-layout>
-      <n-layout has-sider>
+      <n-layout has-sider >
         <n-layout-sider
+        :collapsed="menuStore.collapsed"
           bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="260"
           :native-scrollbar="false"
         >
@@ -98,5 +101,8 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
 
 .n-layout-scroll-container {
   background-color: #f6f8f9;
+}
+.n-layout-toggle-button{
+  display: none !important;
 }
 </style>

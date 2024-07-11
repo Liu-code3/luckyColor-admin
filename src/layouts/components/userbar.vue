@@ -3,14 +3,17 @@ import screenfull from 'screenfull';
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
+import Breadcrumb from './breadcrumb.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
+import { useMenuStore } from '@/store/modules/menu.ts';
 
 const router = useRouter();
 const message = useMessage();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
+const menuStore = useMenuStore();
 
 // 锁屏
 function JumpLock() {
@@ -41,6 +44,10 @@ function xuanzhong(key: string | number) {
     signOut();
 }
 
+const fold_fn = () => {
+  menuStore.collapsed = !menuStore.collapsed;
+};
+
 // 退出登录
 function signOut() {
   tool.data.clear();
@@ -55,6 +62,10 @@ function signOut() {
 
 <template>
   <div class="layout-content-luckHeader">
+    <div class="layout-content-left">
+      <Icon :icon=" menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'" class="mr-10px h-20px w-20px" @click="fold_fn" />
+      <Breadcrumb />
+    </div>
     <div class="layout-content-right">
       <Icon
         class="text-5"
@@ -66,14 +77,17 @@ function signOut() {
         @click="screenfullFn"
       />
       <Icon
-        class="cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+        class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
         @click="refresh"
       />
-      <n-dropdown :options="options" class="custom-dropdown" @select="xuanzhong">
-        <n-button>
+
+      <n-dropdown :options="options" @select="xuanzhong">
+        <div class="flex cursor-pointer items-center">
           <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
-          <span class="ml-4px text-14px text-#606297">用户资料</span>
-        </n-button>
+          <div class="ml-1px flex-shrink-0 flex-col items-center">
+            <span class="ml-4px text-14px text-#606297">用户资料</span>
+          </div>
+        </div>
       </n-dropdown>
     </div>
   </div>
@@ -86,13 +100,16 @@ function signOut() {
   border-bottom: solid #dcdfe6 1px;
   display: flex;
   align-items: center;
-  justify-content: right;
+  justify-content: space-between;
   padding: 0 20px;
   .n-button__border {
     border: none;
   }
 }
-
+.layout-content-left {
+  display: flex;
+  align-items: center;
+}
 .layout-content-right {
   display: flex;
   align-items: center;
