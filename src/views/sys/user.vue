@@ -73,7 +73,32 @@ const cancel_fn = () => {
 };
 
 // 添加用户
-const user_pop_up = ref(true);
+const user_pop_up = ref(false);
+const formRef = ref(null);
+const add_users = () => {
+  user_pop_up.value = !user_pop_up.value;
+};
+
+const formValue = ref({
+  user: {
+    name: '',
+    age: ''
+  },
+  phone: '',
+  adminName: '',
+  password: '',
+  radioGroupValue: '',
+  switchValue: '',
+  multipleSelectValue: '',
+  selectValue: ''
+});
+
+const generalOptions = [ '管理员', '质检员' ].map(
+  v => ({
+    label: v,
+    value: v
+  })
+);
 </script>
 
 <template>
@@ -107,7 +132,7 @@ const user_pop_up = ref(true);
     </div>
     <div class="user_content">
       <div class="mb-15px">
-        <NButton type="primary" class="mr-10px">
+        <NButton type="primary" class="mr-10px" @click="add_users">
           <Icon icon="material-symbols:add" class="mr-5px" />增加新用户
         </NButton>
       </div>
@@ -216,9 +241,78 @@ const user_pop_up = ref(true);
   </n-modal>
 
   <!-- 添加用户 -->
-  <n-drawer v-model:show="user_pop_up" :width="502" placement="right">
+  <n-drawer v-model:show="user_pop_up" :width="702" placement="right">
     <n-drawer-content title="添加用户">
-      <div />
+      <n-form
+        ref="formRef"
+        require-mark-placement="right-hanging"
+        :style="{
+          maxWidth: '640px',
+        }"
+      >
+        <n-form-item label="账号：" path="uadminName">
+          <n-input v-model:value="formValue.adminName" placeholder="输入姓名" />
+        </n-form-item>
+        <n-form-item label="密码：" path="password">
+          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
+        </n-form-item>
+        <n-form-item label="昵称：" path="user.name">
+          <n-input v-model:value="formValue.user.name" placeholder="输入姓名" />
+        </n-form-item>
+        <n-form-item label="邮箱：" path="password">
+          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
+        </n-form-item>
+        <n-form-item label="性别" path="radioGroupValue">
+          <n-radio-group v-model:value="formValue.radioGroupValue" name="radiogroup2">
+            <n-radio value="男">
+              男
+            </n-radio>
+            <n-radio value="女">
+              女
+            </n-radio>
+          </n-radio-group>
+        </n-form-item>
+        <n-form-item label="状态" path="switchValue">
+          <n-switch v-model:value="formValue.switchValue">
+            <template #checked>
+              启用
+            </template>
+            <template #unchecked>
+              禁用
+            </template>
+          </n-switch>
+        </n-form-item>
+        <n-form-item label="手机号：" path="phone">
+          <n-input v-model:value="formValue.phone" placeholder="电话号码" />
+        </n-form-item>
+        <n-form-item label="角色" path="multipleSelectValue">
+          <n-select
+            v-model:value="formValue.multipleSelectValue"
+            placeholder="请选择角色"
+            :options="generalOptions"
+            multiple
+          />
+        </n-form-item>
+        <n-form-item label="部门" path="selectValue">
+          <n-select
+            v-model:value="formValue.selectValue"
+            placeholder="请选择部门"
+            :options="generalOptions"
+          />
+        </n-form-item>
+        <n-form-item label="职位" path="selectValue">
+          <n-select
+            v-model:value="formValue.selectValue"
+            placeholder="请选择职位"
+            :options="generalOptions"
+          />
+        </n-form-item>
+        <n-form-item>
+          <n-button attr-type="button">
+            验证
+          </n-button>
+        </n-form-item>
+      </n-form>
     </n-drawer-content>
   </n-drawer>
 </template>
@@ -255,5 +349,13 @@ const user_pop_up = ref(true);
 }
 .n-space {
   flex: 1;
+}
+.n-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  .n-form-item {
+    width: 48%;
+  }
 }
 </style>

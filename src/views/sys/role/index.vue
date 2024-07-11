@@ -12,6 +12,19 @@ const values = ref('false');
 const active = ref(true);
 
 const page = ref(1);
+
+// 添加角色
+const role_pop_up = ref(false);
+const formRef = ref(null);
+const add_role = () => {
+  role_pop_up.value = true;
+};
+
+const formValue = ref({
+  adminName: '',
+  password: '',
+  switchValue: ''
+});
 </script>
 
 <template>
@@ -38,8 +51,8 @@ const page = ref(1);
     </div>
     <div class="user_content">
       <div class="mb-15px">
-        <NButton type="primary" class="mr-10px">
-          <Icon icon="material-symbols:add" class="mr-5px" />增加新用户
+        <NButton type="primary" class="mr-10px" @click="add_role">
+          <Icon icon="material-symbols:add" class="mr-5px" />增加新角色
         </NButton>
         <NButton type="error" ghost>
           批量删除
@@ -70,13 +83,13 @@ const page = ref(1);
             </td>
             <td>
               <n-button strong secondary type="primary">
-                分配用户
+                <Icon icon="lets-icons:user-add" /> 分配用户
               </n-button>
               <n-button type="primary" class="mx-10px">
-                编辑
+                <Icon icon="lucide:edit" /> 编辑
               </n-button>
               <n-button type="error">
-                删除
+                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />  删除
               </n-button>
             </td>
           </tr>
@@ -87,6 +100,43 @@ const page = ref(1);
       </n-space>
     </div>
   </div>
+
+  <!-- 添加角色 -->
+  <n-drawer v-model:show="role_pop_up" :width="702" placement="right">
+    <n-drawer-content title="添加角色">
+      <n-form
+        ref="formRef"
+        require-mark-placement="right-hanging"
+        :style="{
+          maxWidth: '640px',
+        }"
+      >
+        <n-form-item label="角色名：" path="uadminName">
+          <n-input v-model:value="formValue.adminName" placeholder="输入姓名" />
+        </n-form-item>
+        <n-form-item label="角色编码" path="password">
+          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
+        </n-form-item>
+
+        <n-form-item label="状态" path="switchValue">
+          <n-switch v-model:value="formValue.switchValue">
+            <template #checked>
+              启用
+            </template>
+            <template #unchecked>
+              禁用
+            </template>
+          </n-switch>
+        </n-form-item>
+
+        <n-form-item>
+          <n-button attr-type="button">
+            验证
+          </n-button>
+        </n-form-item>
+      </n-form>
+    </n-drawer-content>
+  </n-drawer>
 </template>
 
 <style lang="less" scoped>

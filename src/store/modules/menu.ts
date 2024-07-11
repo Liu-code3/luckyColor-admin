@@ -7,6 +7,7 @@ import router from '@/router';
 interface IMenuState {
   menuOptions: LayoutT.TransformedMenuItem[];
   accessedRouters: RouteRecordRaw[];
+  collapsed: boolean;
 }
 
 interface MenuItem {
@@ -32,7 +33,8 @@ const iconRender = useIconRender();
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
     menuOptions: [], // 侧边栏菜单列表
-    accessedRouters: [] // 权限路由列表
+    accessedRouters: [], // 权限路由列表
+    collapsed: false
   }),
   actions: {
     /**

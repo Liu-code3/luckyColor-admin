@@ -16,6 +16,8 @@ function tabSwitching(value: string) {
 function handleClose(path: string) {
   tabStore.removeTab(path);
 }
+onMounted(() => {
+});
 </script>
 
 <template>

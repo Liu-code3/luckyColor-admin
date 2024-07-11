@@ -9,6 +9,7 @@ const menuList = [
     key: 'main_analysis',
     icon: 'pajamas:overview',
     layout: '',
+    isVisible: true,
     component: 'index/index'
   },
   {
@@ -20,6 +21,7 @@ const menuList = [
     path: '/main',
     key: 'main_analysis',
     icon: 'pajamas:overview',
+    isVisible: true,
     component: 'sys'
   },
   {
@@ -31,6 +33,7 @@ const menuList = [
     path: '/main/index',
     key: 'main_analysis_technology',
     icon: 'ri:coreos-fill',
+    isVisible: true,
     component: 'sys/overview/index'
   },
   {
@@ -42,6 +45,7 @@ const menuList = [
     path: '/main/system',
     key: 'main_system',
     icon: 'material-symbols:folder-managed-sharp',
+    isVisible: true,
     component: 'sys'
   },
   {
@@ -53,6 +57,7 @@ const menuList = [
     path: '/main/system/users',
     key: 'main_system_users',
     icon: 'mdi:user',
+    isVisible: true,
     component: 'sys/user'
   },
   {
@@ -64,6 +69,7 @@ const menuList = [
     path: '/main/system/department',
     key: 'main_system_department',
     icon: 'mingcute:department-fill',
+    isVisible: true,
     component: 'sys/department/department'
   },
   {
@@ -75,6 +81,7 @@ const menuList = [
     path: '/main/system/menu',
     key: 'main_system_menu',
     icon: 'line-md:menu',
+    isVisible: true,
     component: 'sys/menu/index',
     meta: {
       keepAlive: true
@@ -89,6 +96,7 @@ const menuList = [
     path: '/main/system/role',
     key: 'main_system_role',
     icon: 'eos-icons:role-binding-outlined',
+    isVisible: true,
     component: 'sys/role/index'
   },
   {
@@ -100,6 +108,7 @@ const menuList = [
     path: '/icomponent',
     key: 'main',
     icon: 'iconoir:commodity',
+    isVisible: true,
     component: 'icomponent'
   },
   {
@@ -111,6 +120,7 @@ const menuList = [
     path: '/icomponent/editor',
     key: 'icomponent_editor',
     icon: 'bi:file-earmark-richtext',
+    isVisible: true,
     component: 'icomponent/editor',
     meta: {
       keepAlive: true
@@ -125,6 +135,7 @@ const menuList = [
     path: '/icomponent/dict',
     key: 'icomponent_dict',
     icon: 'arcticons:colordict',
+    isVisible: true,
     component: 'icomponent/dict/index',
     meta: {
       keepAlive: true
