@@ -29,7 +29,7 @@ const updateBreadcrumb = () => {
 };
 
 const onDropDownOptions = (children: RouteRecordRaw[]) => {
-  children.map((child) => {
+  return children.map((child) => {
     const icon = isString(child.meta?.icon);
     return { key: child.path, label: child.meta?.title, icon: iconRender(icon) };
   });
