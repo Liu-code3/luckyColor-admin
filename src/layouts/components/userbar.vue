@@ -67,6 +67,10 @@ function handleLinkClick(link: string) {
 
 <template>
   <div class="layout-content-luckHeader">
+    <div class="layout-content-left">
+      <Icon :icon=" menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'" class="mr-10px h-20px w-20px" @click="fold_fn" />
+      <Breadcrumb />
+    </div>
     <div class="layout-content-right">
       <SwitchTheme />
       <Icon
