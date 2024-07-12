@@ -8,6 +8,7 @@ import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
+import SwitchTheme from '@/layouts/components/switchTheme.vue';
 
 const router = useRouter();
 const message = useMessage();
@@ -58,17 +59,23 @@ function signOut() {
     '退出登录成功'
   );
 }
+
+function handleLinkClick(link: string) {
+  window.open(link, '_blank');
+}
 </script>
 
 <template>
   <div class="layout-content-luckHeader">
-    <div class="layout-content-left">
-      <Icon :icon=" menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'" class="mr-10px h-20px w-20px" @click="fold_fn" />
-      <Breadcrumb />
-    </div>
     <div class="layout-content-right">
+      <SwitchTheme />
       <Icon
-        class="text-5"
+        class="mx-3 cursor-pointer text-5"
+        icon="logos:github-icon"
+        @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
+      />
+      <Icon
+        class="cursor-pointer text-5"
         icon="tabler:lock-filled"
         @click="JumpLock"
       />

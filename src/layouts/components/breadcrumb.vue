@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { RouteLocationMatched } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { useTabStore } from '@/store/modules/tab.ts';
 
@@ -6,9 +7,9 @@ const tabStore = useTabStore();
 const route = useRoute();
 const router = useRouter();
 
-const Breadcrumb: Ref<any[]> = ref([]);
+const Breadcrumb: Ref<RouteLocationMatched[]> = ref([]);
 
-function tabSwitching(value: any) {
+function tabSwitching(value: RouteLocationMatched) {
   if (value.children.length === 0) {
     router.push(value.path);
     tabStore.setActiveTab(value.path);
@@ -19,18 +20,17 @@ function tabSwitching(value: any) {
   }
 }
 
+const updateBreadcrumb = () => {
+  Breadcrumb.value = route.matched;
+};
+
 // 监听路由变化，更新面包屑导航
 watch(
   () => route.path,
   () => {
-    // eslint-disable-next-line ts/no-use-before-define
     updateBreadcrumb();
   }
 );
-
-const updateBreadcrumb = () => {
-  Breadcrumb.value = route.matched;
-};
 
 onMounted(() => {
   updateBreadcrumb();
