@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { RouteLocationMatched } from 'vue-router';
+import type { RouteRecord, RouteRecordRaw } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useTabStore } from '@/store/modules/tab.ts';
@@ -11,9 +11,9 @@ const tabStore = useTabStore();
 const route = useRoute();
 const router = useRouter();
 
-const Breadcrumb: Ref<RouteLocationMatched[]> = ref([]);
+const Breadcrumb: Ref<RouteRecord[]> = ref([]);
 
-function tabSwitching(value: RouteLocationMatched) {
+function tabSwitching(value: RouteRecord) {
   if (value.children.length === 0) {
     router.push(value.path);
     tabStore.setActiveTab(value.path);
@@ -25,7 +25,14 @@ function tabSwitching(value: RouteLocationMatched) {
 }
 
 const updateBreadcrumb = () => {
-  Breadcrumb.value = route.matched;
+  Breadcrumb.value = [ ...route.matched ];
+};
+
+const onDropDownOptions = (children: RouteRecordRaw[]) => {
+  return children.map((child) => {
+    const icon = isString(child.meta?.icon);
+    return { key: child.path, label: child.meta?.title, icon: iconRender(icon) };
+  });
 };
 
 const handleSelect = (key: string) => {
@@ -38,12 +45,15 @@ watch(
   () => route.path,
   () => {
     updateBreadcrumb();
+  },
+  {
+    immediate: true
   }
 );
 
-onMounted(() => {
-  updateBreadcrumb();
-});
+function isString<T>(str: T): string {
+  return typeof str === 'string' ? str : '';
+}
 </script>
 
 <template>
@@ -55,11 +65,12 @@ onMounted(() => {
         @click="tabSwitching(item)"
       >
         <n-dropdown
-          :options="item.children.map(child => ({ key: child.path, label: child.meta?.title, icon: iconRender(child.meta?.icon as '') }))"
+          :options="onDropDownOptions(item.children)"
           @select="handleSelect"
         >
           <div class="trigger">
-            <Icon :icon="item.meta?.icon" class="mr-5px text-18px" /> {{ item.meta.title }}
+            <Icon :icon="isString(item.meta?.icon)" class="mr-5px text-18px" />
+            {{ item.meta.title }}
           </div>
         </n-dropdown>
       </n-breadcrumb-item>

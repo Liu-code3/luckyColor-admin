@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import screenfull from 'screenfull';
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
+import { useFullscreen } from '@vueuse/core';
 import Breadcrumb from './breadcrumb.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
@@ -12,6 +12,7 @@ import SwitchTheme from '@/layouts/components/switchTheme.vue';
 
 const router = useRouter();
 const message = useMessage();
+const { isFullscreen, toggle } = useFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
 const menuStore = useMenuStore();
@@ -19,13 +20,6 @@ const menuStore = useMenuStore();
 // 锁屏
 function JumpLock() {
   globalStore.updateIsLock(true);
-}
-
-// 全屏
-function screenfullFn() {
-  // screenfull.request(); // 全屏
-  // screenfull.exit(); // 退出全屏
-  screenfull.toggle(); // 全屏切换
 }
 
 // 刷新
@@ -84,8 +78,10 @@ function handleLinkClick(link: string) {
         @click="JumpLock"
       />
       <Icon
-        class="mx-3 cursor-pointer text-5" color="#595959" icon="lets-icons:full-alt-light"
-        @click="screenfullFn"
+        class="mx-3 cursor-pointer text-5"
+        color="#595959"
+        :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
+        @click="toggle"
       />
       <Icon
         class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
