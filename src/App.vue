@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
+import { darkTheme, dateZhCN, zhCN } from 'naive-ui';
 import lockScreen from '@/components/lockScreen.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
+import { isString } from '@/utils/is.ts';
 
 const route = useRoute();
 const globalStore = useGlobalStore();
@@ -12,7 +14,7 @@ const Layout = computed(() => {
   if (!route.matched.length) {
     return null;
   }
-  return getLayout(route?.meta.layout || globalStore.layout);
+  return getLayout(isString(route.meta.layout) || globalStore.layout);
 });
 
 const layouts = new Map();
@@ -26,6 +28,10 @@ function getLayout(name: string) {
   return layout;
 }
 
+watchEffect(() => {
+  globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark);
+});
+
 onActivated(() => {
   // 1. 调用时机为首次挂载
   // 2. 以及每次从缓存中被重新插入时
@@ -38,24 +44,32 @@ onDeactivated(() => {
 
 <template>
   <div>
-    <n-message-provider>
-      <transition
-        enter-active-class="animate__animated animate__bounceIn"
-        leave-active-class="animate__animated animate__bounceOut"
-      >
-        <lockScreen
-          v-if="globalStore.isLocked"
-          @unlock="globalStore.updateIsLock(false);"
-        />
-      </transition>
-      <!-- 缓存组件 -->
-      <router-view v-if="Layout" v-slot="{ Component }">
-        <component :is="Layout">
-          <keep-alive>
-            <component :is="Component" />
-          </keep-alive>
-        </component>
-      </router-view>
-    </n-message-provider>
+    <n-config-provider
+      class="h-full w-full"
+      :locale="zhCN"
+      :date-locale="dateZhCN"
+      :theme="globalStore.isDark ? darkTheme : null"
+      :theme-overrides="globalStore.naiveThemeOverrides"
+    >
+      <n-message-provider>
+        <transition
+          enter-active-class="animate__animated animate__bounceIn"
+          leave-active-class="animate__animated animate__bounceOut"
+        >
+          <lockScreen
+            v-if="globalStore.isLocked"
+            @unlock="globalStore.updateIsLock(false);"
+          />
+        </transition>
+        <!-- 缓存组件 -->
+        <router-view v-if="Layout" v-slot="{ Component }">
+          <component :is="Layout">
+            <keep-alive>
+              <component :is="Component" />
+            </keep-alive>
+          </component>
+        </router-view>
+      </n-message-provider>
+    </n-config-provider>
   </div>
 </template>
