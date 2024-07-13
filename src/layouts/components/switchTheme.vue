@@ -1,21 +1,40 @@
 <script setup lang="ts">
-import tool from '@/utils/tool.ts';
+import { useDark, useToggle } from '@vueuse/core';
+import { useGlobalStore } from '@/store/modules/global.ts';
 
-const emits = defineEmits([ 'toggleTheme' ]);
+const globalStore = useGlobalStore();
+const isDark = useDark();
 
-const localModel = tool.data.get('themeModel') ?? true;
-const checkedVal = ref(localModel);
+function toggleTheme(event: Event) {
+  const { clientX, clientY } = event as MouseEvent;
+  const maxRadius = Math.hypot(
+    Math.max(clientX, window.innerWidth - clientX),
+    Math.max(clientY, window.innerHeight - clientY)
+  );
+  const style = document.documentElement.style;
+  style.setProperty('--circle-x', `${clientX}px`);
+  style.setProperty('--circle-y', `${clientY}px`);
+  style.setProperty('--circle-r', `${maxRadius}px`);
 
-const toggleTheme: TFn.voidFn = () => {
-  tool.data.set('themeModel', checkedVal.value);
-  emits('toggleTheme');
-};
+  function handler() {
+    globalStore.toggleDark();
+    useToggle(isDark)();
+  }
+
+  // 检查 startViewTransition 是否存在并且是一个函数
+  if ('startViewTransition' in document && typeof document.startViewTransition === 'function') {
+    document.startViewTransition(handler);
+  }
+  else {
+    handler();
+  }
+}
 </script>
 
 <template>
   <div class="theme_main">
     <label for="switch" class="toggle">
-      <input id="switch" v-model="checkedVal" type="checkbox" class="input" @change="toggleTheme">
+      <input id="switch" :value="globalStore.isDark" type="checkbox" class="input" @click="toggleTheme">
       <div class="icon icon--moon">
         <svg
           xmlns="http://www.w3.org/2000/svg"

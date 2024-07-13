@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useIconRender } from '@/hooks/iconRender.ts';
+import { isString } from '@/utils/is.ts';
 
 const iconRender = useIconRender();
 
@@ -50,10 +51,6 @@ watch(
     immediate: true
   }
 );
-
-function isString<T>(str: T): string {
-  return typeof str === 'string' ? str : '';
-}
 </script>
 
 <template>

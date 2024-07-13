@@ -5,6 +5,26 @@
   --content-background: #f6f8f9;
 }
 
+/* 切换主题的动画效果 */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: 0.5s ease-in circle-animation;
+  mix-blend-mode: normal;
+}
+
+@keyframes circle-animation {
+  from {
+    clip-path: circle(0 at var(--circle-x) var(--circle-y));
+  }
+  to {
+    clip-path: circle(var(--circle-r) at var(--circle-x) var(--circle-y));
+  }
+}
+
 /*左右垂直居中*/
 .layout-abs-center {
   display: flex;

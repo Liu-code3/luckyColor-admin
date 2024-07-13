@@ -5,7 +5,7 @@ import App from './App.vue';
 import router from './router';
 import luckyColor from './luckyColor';
 import 'virtual:uno.css';
-import './style.css';
+import './style.scss';
 import 'animate.css';
 
 const app = createApp(App);
