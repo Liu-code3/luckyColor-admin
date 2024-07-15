@@ -25,6 +25,7 @@ onMounted(() => {
     :value="tabStore.activeTab"
     type="card"
     :closable="tabStore.tabs.length > 1"
+    class="tabs-container"
     @close="handleClose"
     @update:value="tabSwitching"
   >
@@ -39,3 +40,9 @@ onMounted(() => {
     />
   </n-tabs>
 </template>
+
+<style scoped>
+.tabs-container {
+  background-color: var(--theme-background);
+}
+</style>

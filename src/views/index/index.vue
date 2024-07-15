@@ -41,7 +41,7 @@
         指标名称-面积图
       </div>
     </div>
-    <div class="home-page-buttom">
+    <div class="home-page-bottom">
       <div class="area-chart">
         <div class="area-chart-title layout-center pl-20px">
           指标名称-面积图
@@ -68,8 +68,7 @@
   .home-page—show-box {
     width: 387px;
     height: 163px;
-    background-color: #fff;
-    border: #dde0e7 solid 1px;
+    border: 1px solid #dde0e7;
     border-radius: 6px;
     margin-left: 10px;
     padding: 15px 15px 20px 15px;
@@ -77,6 +76,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    background-color: var(--theme-background);
+    color: var(--theme-color);
     div:nth-child(1) {
       font-size: 14px;
     }
@@ -107,32 +108,35 @@
   .area-chart {
     width: 935px;
     height: 240px;
-    background-color: #fff;
     border-radius: 6px;
     margin-right: 10px;
-    border: #dde0e7 solid 1px;
+    border: 1px solid #dde0e7;
+    background-color: var(--theme-background);
     .area-chart-title {
       width: 100%;
       height: 50px;
       border-bottom: #e4e7ed solid 1px;
       box-sizing: border-box;
+      color: var(--theme-color);
     }
   }
   .pie-chart {
-    height: 240px;
-    background-color: #fff;
-    border-radius: 6px;
     flex: 1;
-    border: #dde0e7 solid 1px;
+    height: 240px;
+    border-radius: 6px;
+    border: 1px solid #dde0e7;
+    color: var(--theme-color);
+    background-color: var(--theme-background);
   }
 }
 .home-page-area-chart {
   width: 100%;
   height: 240px;
-  background-color: #fff;
   border-radius: 6px;
   margin-top: 10px;
-  border: #dde0e7 solid 1px;
+  border: 1px solid #dde0e7;
+  background-color: var(--theme-background);
+  color: var(--theme-color);
   .area-chart-title {
     width: 100%;
     height: 50px;
@@ -140,16 +144,17 @@
     box-sizing: border-box;
   }
 }
-.home-page-buttom {
+.home-page-bottom {
   display: flex;
   margin-top: 10px;
   .area-chart {
     width: 935px;
     height: 240px;
-    background-color: #fff;
     border-radius: 6px;
     margin-right: 10px;
     border: #dde0e7 solid 1px;
+    color: var(--theme-color);
+    background-color: var(--theme-background);
     .area-chart-title {
       width: 100%;
       height: 50px;
@@ -164,14 +169,14 @@
 .home-page-tail {
   width: 100%;
   height: 50px;
-  background: #fff;
-  border-radius: 4px;
-  border: #dde0e7 solid 1px;
-  box-sizing: border-box;
-  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #59596f;
+  border-radius: 4px;
+  border: 1px solid #dde0e7;
+  box-sizing: border-box;
+  margin-top: 10px;
+  color: var(--theme-color);
+  background-color: var(--theme-background);
 }
 </style>
