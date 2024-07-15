@@ -102,13 +102,14 @@ function handleLinkClick(link: string) {
 
 <style lang="less" scoped>
 .layout-content-luckHeader {
+  padding: 0 20px;
   height: 60px;
-  background-color: #fff;
-  border-bottom: solid #dcdfe6 1px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  border-bottom: 1px solid #dcdfe6;
+  color: var(--theme-color);
+  background-color: var(--theme-background);
   .n-button__border {
     border: none;
   }
