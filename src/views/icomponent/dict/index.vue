@@ -115,6 +115,11 @@ const searchFormState = reactive({
   searchKey: ''
 });
 
+const onSearchTable = () => {
+  const val = searchFormState.searchKey.trim();
+  if (!val) return;
+};
+
 /**
  * @description 获取表格数据
  * @param page 当前页码
@@ -192,7 +197,10 @@ onMounted(() => {
                 <n-input v-model:value="searchFormState.searchKey" placeholder="请输入字典名称" />
               </n-form-item-gi>
               <n-gi :span="8">
-                <n-button type="primary">
+                <n-button
+                  type="primary"
+                  @click="onSearchTable"
+                >
                   <template #icon>
                     <Icon class="h-4 w-4" icon="simple-line-icons:magnifier" />
                   </template>
