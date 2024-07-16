@@ -11,12 +11,12 @@ interface Query {
 const dictTreeList = dictTreeData.data as Mockm.IDictTree[];
 
 export default {
-  url: '/api/mock/dict/page/:id',
+  url: '/api/mock/dict/page/id/:id',
   method: 'get',
   response: (req: Query): Mockm.IDictResponse => {
     const page = req.query.page || 1;
     const size = req.query.size || 10;
-    const match = req.url.match(/\/api\/mock\/dict\/page\/([^?]+)/);
+    const match = req.url.match(/\/api\/mock\/dict\/page\/id\/([^?]+)/);
     const id = match?.length ? match[1] : '';
 
     const filterData = getFlattenedRecordsById(dictTreeList, id);
