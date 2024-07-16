@@ -31,7 +31,7 @@ function getTableDataApi(params: ITbParams) {
  */
 function getTableDataByIdApi(id: string, params: ITbParams) {
   return request({
-    url: `/mock/dict/page/${id}`,
+    url: `/mock/dict/page/id/${id}`,
     method: 'get',
     params
   });
