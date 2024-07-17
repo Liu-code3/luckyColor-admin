@@ -1,10 +1,5 @@
 import { request } from '@/utils/http';
 
-interface ITbParams {
-  page: number;
-  size: number;
-}
-
 /**
  * @description 获取树数据
  */
@@ -18,7 +13,7 @@ function getDictTreeApi() {
 /**
  * @description 获取表格数据
  */
-function getTableDataApi(params: ITbParams) {
+function getTableDataApi(params: IDict.ITbParams) {
   return request({
     url: '/mock/dict/page',
     method: 'get',
@@ -26,19 +21,7 @@ function getTableDataApi(params: ITbParams) {
   });
 }
 
-/**
- * @description 获取表格数据根据id
- */
-function getTableDataByIdApi(id: string, params: ITbParams) {
-  return request({
-    url: `/mock/dict/page/id/${id}`,
-    method: 'get',
-    params
-  });
-}
-
 export {
   getDictTreeApi,
-  getTableDataApi,
-  getTableDataByIdApi
+  getTableDataApi
 };
