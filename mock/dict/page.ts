@@ -4,11 +4,12 @@ interface Query {
   query: {
     page: number;
     size: number;
+    id: string;
+    searchKey: string;
   };
 }
 
 const dictTreeList = dictTreeData.data as Mockm.IDictTree[];
-const recordsAllList = bySortCode(treeToData(dictTreeList));
 
 export default {
   url: '/api/mock/dict/page',
@@ -16,15 +17,77 @@ export default {
   response: (req: Query): Mockm.IDictResponse => {
     const page = req.query.page || 1;
     const size = req.query.size || 10;
-    const records = recordsAllList.slice((page - 1) * size, page * size);
+    const id = req.query.id || '';
+    const searchKey = req.query.searchKey || '';
+
+    if (!id && !searchKey) {
+      const recordsAllList = bySortCode(treeToData(dictTreeList));
+      const records = recordsAllList.slice((page - 1) * size, page * size);
+      return {
+        code: 200,
+        msg: 'success',
+        data: {
+          total: recordsAllList.length,
+          size: Number(size),
+          current: Number(page),
+          records
+        }
+      };
+    }
+
+    if (!id) {
+      const filterList = filterDataByKey(searchKey, dictTreeList);
+      const records = filterList.slice((page - 1) * size, page * size);
+      return {
+        code: 200,
+        msg: 'success',
+        data: {
+          total: filterList.length,
+          size: Number(size),
+          current: Number(page),
+          records
+        }
+      };
+    }
+
+    if (!searchKey) {
+      const filterList = getFlattenedRecordsById(id, dictTreeList);
+      const records = filterList.slice((page - 1) * size, page * size);
+      return {
+        code: 200,
+        msg: 'success',
+        data: {
+          total: filterList.length,
+          size: Number(size),
+          current: Number(page),
+          records
+        }
+      };
+    }
+
+    if (id && searchKey) {
+      const filterList = filterDataById(id, searchKey, dictTreeList);
+      const records = filterList.slice((page - 1) * size, page * size);
+      return {
+        code: 200,
+        msg: 'success',
+        data: {
+          total: filterList.length,
+          size: Number(size),
+          current: Number(page),
+          records
+        }
+      };
+    }
+
     return {
       code: 200,
       msg: 'success',
       data: {
-        total: recordsAllList.length,
+        total: 0,
         size: Number(size),
         current: Number(page),
-        records
+        records: []
       }
     };
   }
@@ -53,4 +116,72 @@ function bySortCode(list: Mockm.IDictTree[]) {
     }
     return a.sortCode - b.sortCode;
   });
+}
+
+function filterDataByKey(searchKey: string, list: Mockm.IDictTree[]) {
+  const dataArr: Mockm.IDictTree[] = [];
+  recursion(searchKey, list);
+  function recursion(searchKey: string, list: Mockm.IDictTree[]) {
+    for (const item of list) {
+      if (item.dictLabel.includes(searchKey)) {
+        dataArr.push(item);
+      }
+      else {
+        if (item.children) {
+          recursion(searchKey, item.children);
+        }
+      }
+    }
+  }
+
+  return dataArr;
+}
+
+function getFlattenedRecordsById(id: string, dictTreeList: Mockm.IDictTree[]) {
+  const result: Mockm.IDictTree[] = [];
+
+  findAndFlatten(dictTreeList, id);
+  function findAndFlatten(dictTreeList: Mockm.IDictTree[], id: string) {
+    for (const record of dictTreeList) {
+      if (record.id === id) {
+        const { children, ...rest } = record;
+        result.push(rest);
+        if (children) {
+          for (const child of children) {
+            const { children: _, ...childRest } = child; // 去除子元素的children属性
+            result.push(childRest);
+          }
+        }
+        return;
+      }
+      if (record.children) {
+        findAndFlatten(record.children, id);
+      }
+    }
+  }
+
+  return result.length ? result : [];
+}
+
+function filterDataById(id: string, searchKey: string, list: Mockm.IDictTree[]) {
+  const dataArr: Mockm.IDictTree[] = [];
+  recursion(id, list);
+  function recursion(id: string, list: Mockm.IDictTree[]) {
+    for (const item of list) {
+      if (item.id === id) {
+        if (item.dictLabel.includes(searchKey)) {
+          const newItem = { ...item };
+          newItem.children && delete newItem.children;
+          dataArr.push(newItem);
+        }
+
+        item.children && item.children.forEach(child => child.dictLabel.includes(searchKey) && dataArr.push(child));
+      }
+      else {
+        item.children && recursion(id, item.children);
+      }
+    }
+  }
+
+  return dataArr;
 }

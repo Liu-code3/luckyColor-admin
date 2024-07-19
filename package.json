@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@arco-design/color": "^0.4.0",
     "@vicons/ionicons5": "^0.12.0",
     "@vueuse/core": "^10.11.0",
     "@wangeditor/editor": "^5.1.23",

@@ -5,7 +5,8 @@ import type { Ref } from 'vue';
 import type { VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
-import { getDictTreeApi, getTableDataApi, getTableDataByIdApi } from '@/api/dictTree.ts';
+import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts';
+import { notification } from '@/utils/message.ts';
 
 interface RowVO {
   id: string;
@@ -64,19 +65,11 @@ const gridOptions = reactive<VxeGridProps<RowVO>>({
   data: []
 });
 
-const flag = ref(false);
 const onClickNodeProsId = ref('');
 
-/**
- * @description 获取表格数据 - 根据id
- * @param id
- * @param page
- * @param size
- */
-const getTableDataById = async (id: string, page = 1, size = 10) => {
-  const params = { page, size };
+const getTableData = async (params: IDict.ITbParams) => {
   try {
-    const res = await getTableDataByIdApi(id, params);
+    const res = await getTableDataApi(params);
     const { current, size, total, records } = res.data as IDto;
     pagerConfig.currentPage = current;
     pagerConfig.pageSize = size;
@@ -84,6 +77,10 @@ const getTableDataById = async (id: string, page = 1, size = 10) => {
     gridOptions.data = [ ...records ];
   }
   catch (e) {
+    notification.error({
+      description: '请求失败',
+      duration: 3
+    });
     gridOptions.data = [];
   }
 };
@@ -101,9 +98,13 @@ const nodeProps = ({ option }: { option: RowVO }) => {
         gridOptions.columns?.splice(2, 0, { field: 'parentId', title: '层级', slots: { default: 'parentId_filter' } });
       }
 
-      flag.value = true;
       onClickNodeProsId.value = option.id;
-      getTableDataById(option.id, pagerConfig.currentPage, pagerConfig.pageSize);
+      const params = {
+        page: pagerConfig.currentPage,
+        size: pagerConfig.pageSize,
+        id: option.id
+      };
+      getTableData(params);
     }
   };
 };
@@ -115,43 +116,48 @@ const searchFormState = reactive({
   searchKey: ''
 });
 
-/**
- * @description 获取表格数据
- * @param page 当前页码
- * @param size 每页条数
- */
-const getTableData = async (page = 1, size = 10) => {
-  const params = {
-    size,
-    page
+const onSearchTable = async () => {
+  const val = searchFormState.searchKey.trim();
+  if (!val) return;
+
+  const searchParams: IDict.ITbParams = {
+    searchKey: val,
+    page: pagerConfig.currentPage,
+    size: pagerConfig.pageSize
   };
 
-  try {
-    const res = await getTableDataApi(params);
-    const { current, size, total, records } = res.data as IDto;
-    pagerConfig.currentPage = current;
-    pagerConfig.pageSize = size;
-    pagerConfig.total = total;
-    gridOptions.data = [ ...records ];
-  }
-  catch (e) {
-    gridOptions.data = [];
-  }
+  onClickNodeProsId.value && (searchParams.id = onClickNodeProsId.value);
+  await getTableData(searchParams);
 };
 
 const onUpdatePage = (page: number) => {
   pagerConfig.currentPage = page;
-  flag.value ? getTableDataById(onClickNodeProsId.value, page, pagerConfig.pageSize) : getTableData(page, pagerConfig.pageSize);
+  const params: IDict.ITbParams = {
+    page,
+    size: pagerConfig.pageSize
+  };
+
+  onClickNodeProsId.value && (params.id = onClickNodeProsId.value);
+  searchFormState.searchKey && (params.searchKey = searchFormState.searchKey);
+
+  getTableData(params);
 };
 
 const onUpdatePageSize = (pageSize: number) => {
   pagerConfig.pageSize = pageSize;
-  flag.value ? getTableDataById(onClickNodeProsId.value, pagerConfig.currentPage, pageSize) : getTableData(pagerConfig.currentPage, pageSize);
+  const params: IDict.ITbParams = {
+    page: pagerConfig.currentPage,
+    size: pageSize
+  };
+  onClickNodeProsId.value && (params.id = onClickNodeProsId.value);
+  searchFormState.searchKey && (params.searchKey = searchFormState.searchKey);
+
+  getTableData(params);
 };
 
 function apiInit() {
   getTreeData();
-  getTableData();
+  getTableData({ page: pagerConfig.currentPage, size: pagerConfig.pageSize });
 }
 
 onMounted(() => {
@@ -192,7 +198,10 @@ onMounted(() => {
                 <n-input v-model:value="searchFormState.searchKey" placeholder="请输入字典名称" />
               </n-form-item-gi>
               <n-gi :span="8">
-                <n-button type="primary">
+                <n-button
+                  type="primary"
+                  @click="onSearchTable"
+                >
                   <template #icon>
                     <Icon class="h-4 w-4" icon="simple-line-icons:magnifier" />
                   </template>

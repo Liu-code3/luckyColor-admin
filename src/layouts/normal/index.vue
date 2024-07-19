@@ -49,6 +49,7 @@ const menuStore = useMenuStore();
   overflow-y: scroll;
   padding: 10px;
   box-sizing: border-box;
+  background-color: var(--theme-background);
 }
 .n-content::-webkit-scrollbar {
   display: none;
