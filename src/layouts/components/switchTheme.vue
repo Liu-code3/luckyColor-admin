@@ -35,7 +35,7 @@ function toggleTheme(event: Event) {
 <template>
   <Icon
     :icon="globalStore.isDark ? 'ph:moon' : 'ph:sun'"
-    class="h-5 w-5"
+    class="h-5 w-5 color-primary"
     @click="toggleTheme"
   />
 </template>

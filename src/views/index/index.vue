@@ -68,7 +68,7 @@
   .home-page—show-box {
     width: 387px;
     height: 163px;
-    border: 1px solid #dde0e7;
+    border: 1px solid var(--primary-color);
     border-radius: 6px;
     margin-left: 10px;
     padding: 15px 15px 20px 15px;

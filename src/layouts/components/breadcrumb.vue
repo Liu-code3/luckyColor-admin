@@ -65,9 +65,9 @@ watch(
           :options="onDropDownOptions(item.children)"
           @select="handleSelect"
         >
-          <div class="trigger">
+          <div class="trigger color-primary">
             <Icon :icon="isString(item.meta?.icon)" class="mr-5px text-18px" />
-            {{ item.meta.title }}
+            <span>{{ item.meta.title }}</span>
           </div>
         </n-dropdown>
       </n-breadcrumb-item>
@@ -79,7 +79,6 @@ watch(
 .trigger {
   padding: 4px;
   margin: -4px;
-  border-radius: inherit;
   display: flex;
   align-items: center;
 }

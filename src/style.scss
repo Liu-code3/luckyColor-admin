@@ -1,15 +1,3 @@
-/* 定义根作用域下的变量 */
-:root {
-  --theme-color: #333;
-  --theme-background: #fff;
-  --content-background: #f6f8f9;
-}
-
-html.dark {
-  --theme-color: #999;
-  --theme-background: rgb(44, 44, 50);
-}
-
 /* 切换主题的动画效果 */
 ::view-transition-old(root) {
   animation: none;

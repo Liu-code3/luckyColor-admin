@@ -62,29 +62,33 @@ function handleLinkClick(link: string) {
 <template>
   <div class="layout-content-luckHeader">
     <div class="layout-content-left">
-      <Icon :icon=" menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'" class="mr-10px h-20px w-20px" @click="fold_fn" />
+      <Icon
+        :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
+        class="mr-10px h-20px w-20px color-primary"
+        @click="fold_fn"
+      />
       <Breadcrumb />
     </div>
     <div class="layout-content-right">
       <SwitchTheme />
       <Icon
-        class="mx-3 cursor-pointer text-5"
-        icon="logos:github-icon"
+        class="mx-3 cursor-pointer text-5 color-primary"
+        icon="hugeicons:github"
         @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
-        class="cursor-pointer text-5"
+        class="cursor-pointer text-5 color-primary"
         icon="tabler:lock-filled"
         @click="JumpLock"
       />
       <Icon
-        class="mx-3 cursor-pointer text-5"
-        color="#595959"
+        class="mx-3 cursor-pointer text-5 color-primary"
         :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
         @click="toggle"
       />
       <Icon
-        class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+        class="mr-10px cursor-pointer text-5 color-primary"
+        icon="mdi:circular-arrows"
         @click="refresh"
       />
 
@@ -100,16 +104,14 @@ function handleLinkClick(link: string) {
   </div>
 </template>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .layout-content-luckHeader {
   padding: 0 20px;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #dcdfe6;
-  color: var(--theme-color);
-  background-color: var(--theme-background);
+  border-bottom: 1px solid var(--primary-color);
   .n-button__border {
     border: none;
   }
@@ -122,4 +124,8 @@ function handleLinkClick(link: string) {
   display: flex;
   align-items: center;
 }
+
+//.primary {
+//  color: var(--primary-color);
+//}
 </style>
