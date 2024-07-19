@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import type { GlobalThemeOverrides } from 'naive-ui';
 import { useDark } from '@vueuse/core';
 import tool from '@/utils/tool.ts';
 import sysConfig, { naiveThemeOverrides } from '@/config';
@@ -8,14 +9,9 @@ interface IGlobalState {
   layout: string;
   isDark: globalThis.WritableComputedRef<boolean>;
   primaryColor: string;
-  naiveThemeOverrides: {
-    common: {
-      primaryColor: string;
-      primaryColorHover: string;
-      primaryColorPressed: string;
-      primaryColorSuppl: string;
-    };
-  };
+  naiveThemeOverrides: GlobalThemeOverrides;
+  darkColor: string[];
+  lightColor: string[];
 }
 
 enum Global {
@@ -31,7 +27,9 @@ export const useGlobalStore = defineStore('layout', {
     layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
-    naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides
+    naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
+    lightColor: [ '#FFFFFF', '#CCCCCC', '#999999', '#666666', '#333333', '#FFC0CB', '#000000', '#000000', '#000000', '#000000' ],
+    darkColor: [ '#000000', '#000000', '#000000', '#000000', '#000000', '#FF1493', '#666464', '#999393', '#CCC0C0', '#FFEBEB' ]
   }),
   actions: {
     updateIsLock(isLocked: boolean) {
@@ -51,10 +49,35 @@ export const useGlobalStore = defineStore('layout', {
     setThemeColor(color: string, isDark: boolean) {
       const primaryColor = color || this.primaryColor;
       const isDarkMode = isDark || this.isDark;
+
+      const bodyStyle = document.body.style;
+      if (isDarkMode) {
+        this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
+          primaryColor: this.darkColor[5],
+          primaryColorHover: this.darkColor[4],
+          primaryColorSuppl: this.darkColor[4],
+          primaryColorPressed: this.darkColor[6]
+        });
+        bodyStyle.setProperty('--primary-color', this.darkColor[5]);
+        bodyStyle.setProperty('--primary-bgColor', this.darkColor[5]);
+        bodyStyle.setProperty('--primary-bColor', this.darkColor[5]);
+      }
+      else {
+        // https://www.naiveui.com/zh-CN/os-theme/docs/customize-theme naive-ui 配置主题色
+        this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
+          primaryColor: this.lightColor[5],
+          primaryColorHover: this.lightColor[4],
+          primaryColorSuppl: this.lightColor[4],
+          primaryColorPressed: this.lightColor[6]
+        });
+        bodyStyle.setProperty('--primary-color', this.lightColor[5]);
+        bodyStyle.setProperty('--primary-bgColor', this.lightColor[5]);
+        bodyStyle.setProperty('--primary-bColor', this.lightColor[5]);
+      }
+
       tool.session.set(Global.PRIMARY_COLOR, primaryColor);
       tool.session.set('isDark', isDarkMode);
       tool.session.set(Global.NaiveThemeOverrides, JSON.stringify(naiveThemeOverrides));
-      document.body.style.setProperty('--primary-color', '255,192,203');
     }
   }
 });
