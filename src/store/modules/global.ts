@@ -28,8 +28,8 @@ export const useGlobalStore = defineStore('layout', {
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
-    lightColor: [ '#FFFFFF', '#CCCCCC', '#999999', '#666666', '#333333', '#FFC0CB', '#000000', '#000000', '#000000', '#000000' ],
-    darkColor: [ '#000000', '#000000', '#000000', '#000000', '#000000', '#FF1493', '#666464', '#999393', '#CCC0C0', '#FFEBEB' ]
+    lightColor: [ '#333639', '#FFFFFF', '#dde0e7', '#666666', '#333333', '#FFC0CB', '#000000', '#000000', '#000000', '#000000' ],
+    darkColor: [ '#FFFFFFD1', '#000000', '#000000', '#000000', '#000000', '#FF1493', '#666464', '#999393', '#CCC0C0', '#FFEBEB' ]
   }),
   actions: {
     updateIsLock(isLocked: boolean) {
@@ -53,26 +53,26 @@ export const useGlobalStore = defineStore('layout', {
       const bodyStyle = document.body.style;
       if (isDarkMode) {
         this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.darkColor[5],
+          primaryColor: this.darkColor[0],
           primaryColorHover: this.darkColor[4],
           primaryColorSuppl: this.darkColor[4],
           primaryColorPressed: this.darkColor[6]
         });
-        bodyStyle.setProperty('--primary-color', this.darkColor[5]);
-        bodyStyle.setProperty('--primary-bgColor', this.darkColor[5]);
-        bodyStyle.setProperty('--primary-bColor', this.darkColor[5]);
+        bodyStyle.setProperty('--primary-color', this.darkColor[0]);
+        bodyStyle.setProperty('--primary-bgColor', this.darkColor[1]);
+        bodyStyle.setProperty('--primary-bColor', this.darkColor[2]);
       }
       else {
         // https://www.naiveui.com/zh-CN/os-theme/docs/customize-theme naive-ui 配置主题色
         this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.lightColor[5],
+          primaryColor: this.lightColor[0],
           primaryColorHover: this.lightColor[4],
           primaryColorSuppl: this.lightColor[4],
           primaryColorPressed: this.lightColor[6]
         });
-        bodyStyle.setProperty('--primary-color', this.lightColor[5]);
-        bodyStyle.setProperty('--primary-bgColor', this.lightColor[5]);
-        bodyStyle.setProperty('--primary-bColor', this.lightColor[5]);
+        bodyStyle.setProperty('--primary-color', this.lightColor[0]);
+        bodyStyle.setProperty('--primary-bgColor', this.lightColor[1]);
+        bodyStyle.setProperty('--primary-bColor', this.lightColor[2]);
       }
 
       tool.session.set(Global.PRIMARY_COLOR, primaryColor);

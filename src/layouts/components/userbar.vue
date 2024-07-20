@@ -112,6 +112,8 @@ function handleLinkClick(link: string) {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--primary-color);
+  background-color: var(--primary-bgColor);
+
   .n-button__border {
     border: none;
   }
@@ -124,8 +126,4 @@ function handleLinkClick(link: string) {
   display: flex;
   align-items: center;
 }
-
-//.primary {
-//  color: var(--primary-color);
-//}
 </style>
