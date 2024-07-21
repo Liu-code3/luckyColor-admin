@@ -96,7 +96,7 @@ function handleLinkClick(link: string) {
         <div class="flex cursor-pointer items-center">
           <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
           <div class="ml-1px flex-shrink-0 flex-col items-center">
-            <span class="ml-4px text-14px text-#606297">用户资料</span>
+            <span class="ml-4px text-14px text-primary">用户资料</span>
           </div>
         </div>
       </n-dropdown>

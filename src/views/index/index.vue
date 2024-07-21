@@ -59,7 +59,7 @@
   </div>
 </template>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .home-page-top {
   width: 100%;
   display: flex;
@@ -68,7 +68,7 @@
   .home-page—show-box {
     width: 387px;
     height: 163px;
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--primary-bColor);
     border-radius: 6px;
     margin-left: 10px;
     padding: 15px 15px 20px 15px;
@@ -76,8 +76,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: var(--theme-background);
-    color: var(--theme-color);
+    background-color: var(--primary-bgColor);
+    color: var(--primary-color);
     div:nth-child(1) {
       font-size: 14px;
     }
@@ -86,7 +86,7 @@
     }
   }
 
-  .home-page—show {
+  div.home-page—show {
     color: #fff;
     margin-left: 0;
     background: linear-gradient(
@@ -111,7 +111,7 @@
     border-radius: 6px;
     margin-right: 10px;
     border: 1px solid #dde0e7;
-    background-color: var(--theme-background);
+    background-color: var(--primary-bgColor);
     .area-chart-title {
       width: 100%;
       height: 50px;
@@ -124,9 +124,9 @@
     flex: 1;
     height: 240px;
     border-radius: 6px;
-    border: 1px solid #dde0e7;
-    color: var(--theme-color);
-    background-color: var(--theme-background);
+    border: 1px solid var(--primary-bgColor);
+    color: var(--primary-color);
+    background-color: var(--primary-bgColor);
   }
 }
 .home-page-area-chart {

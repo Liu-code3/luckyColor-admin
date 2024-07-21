@@ -30,7 +30,7 @@ onMounted(() => {
     @update:value="tabSwitching"
   >
     <template #prefix>
-      <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
+      <Icon class="text-12px text-primary" icon="ep:arrow-left" />
     </template>
     <n-tab-pane
       v-for="item in tabStore.tabs"
@@ -41,8 +41,8 @@ onMounted(() => {
   </n-tabs>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .tabs-container {
-  background-color: var(--theme-background);
+  background-color: var(--primary-bgColor);
 }
 </style>
