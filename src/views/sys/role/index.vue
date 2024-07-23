@@ -143,7 +143,7 @@ const formValue = ref({
 .user_box {
   .user_sift {
     height: 80px;
-    background-color: #fff;
+    background-color: var(--primary-bgColor);
     display: flex;
     align-items: center;
     padding: 0 30px;
@@ -165,7 +165,7 @@ const formValue = ref({
 }
 .user_content {
   height: calc(100vh - 224px);
-  background-color: #fff;
+  background-color: var(--primary-bgColor);
   padding: 20px;
   box-sizing: border-box;
 }
