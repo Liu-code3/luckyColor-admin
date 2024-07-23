@@ -118,6 +118,7 @@
       height: 50px;
       border-bottom: 1px solid var(--primary-bColor);
       box-sizing: border-box;
+      color: var(--theme-color);
     }
   }
   .pie-chart {
