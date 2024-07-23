@@ -41,7 +41,7 @@ const menuStore = useMenuStore();
 
 <style lang="less">
 .n-scrollbar-content {
-  border-right: solid #dcdfe6 2px;
+  border-right: 2px solid var(--primary-bColor);
 }
 .n-content {
   height: calc(100vh - 111px);
@@ -49,7 +49,7 @@ const menuStore = useMenuStore();
   overflow-y: scroll;
   padding: 10px;
   box-sizing: border-box;
-  background-color: var(--theme-background);
+  background-color: var(--primary-main-bg);
 }
 .n-content::-webkit-scrollbar {
   display: none;
@@ -67,9 +67,9 @@ const menuStore = useMenuStore();
 
 .n-tabs {
   height: 50px;
-  background-color: #fff;
+  background-color: var(--primary-bgColor);
   padding: 8px;
-  border-bottom: solid #dcdfe6 1px;
+  border-bottom: 1px solid var(--primary-bColor);
 
   .n-tabs-nav__prefix,
   .n-tabs-nav__suffix,
@@ -84,18 +84,18 @@ const menuStore = useMenuStore();
 
   .n-tabs-tab {
     height: 34px;
-    border: #dcdfe6 solid 1px !important;
-    background-color: #fff !important;
-    border-radius: 4px !important;
+    border: 1px solid var(--primary-bColor);
+    background-color: var(--primary-bgColor);
+    border-radius: 4px;
   }
 
   .n-tabs-tab--active {
-    border: #588ff4 solid 1px !important;
-    color: #588ff4 !important;
-    background-color: rgba(88, 143, 244, 0.1) !important;
+    border: 1px solid var(--primary-bColor);
+    color: var(--primary-bgColor);
+    background-color: var(--primary-bgColor);
 
     .n-base-icon {
-      color: #588ff4 !important;
+      color: #588ff4;
     }
   }
 }

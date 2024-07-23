@@ -110,12 +110,13 @@
     height: 240px;
     border-radius: 6px;
     margin-right: 10px;
-    border: 1px solid #dde0e7;
+    border: 1px solid var(--primary-bColor);
     background-color: var(--primary-bgColor);
+    color: var(--primary-color);
     .area-chart-title {
       width: 100%;
       height: 50px;
-      border-bottom: #e4e7ed solid 1px;
+      border-bottom: 1px solid var(--primary-bColor);
       box-sizing: border-box;
       color: var(--theme-color);
     }
@@ -134,13 +135,12 @@
   height: 240px;
   border-radius: 6px;
   margin-top: 10px;
-  border: 1px solid #dde0e7;
-  background-color: var(--theme-background);
-  color: var(--theme-color);
+  border: 1px solid var(--primary-bColor);
+  background-color: var(--primary-bgColor);
   .area-chart-title {
     width: 100%;
     height: 50px;
-    border-bottom: #e4e7ed solid 1px;
+    border-bottom: 1px solid var(--primary-bColor);
     box-sizing: border-box;
   }
 }
@@ -152,14 +152,15 @@
     height: 240px;
     border-radius: 6px;
     margin-right: 10px;
-    border: #dde0e7 solid 1px;
-    color: var(--theme-color);
-    background-color: var(--theme-background);
+    border: 1px solid var(--primary-bColor);
+    color: var(--primary-color);
+    background-color: var(--primary-bgColor);
     .area-chart-title {
       width: 100%;
       height: 50px;
-      border-bottom: #e4e7ed solid 1px;
       box-sizing: border-box;
+      border-bottom: 1px solid var(--primary-bColor);
+      color: var(--primary-color);
     }
   }
   .area-chart:nth-child(2) {
@@ -173,10 +174,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  border: 1px solid #dde0e7;
+  border: 1px solid var(--primary-bColor);
   box-sizing: border-box;
   margin-top: 10px;
-  color: var(--theme-color);
-  background-color: var(--theme-background);
+  color: var(--primary-color);
+  background-color: var(--primary-bgColor);
 }
 </style>
