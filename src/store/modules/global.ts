@@ -13,7 +13,6 @@ interface IGlobalState {
   darkColor: string[];
   lightColor: string[];
 }
-
 enum Global {
   LOCK_SCREEN = 'LOCK_SCREEN',
   LAYOUT = 'layout',
@@ -43,8 +42,8 @@ export const useGlobalStore = defineStore('layout', {
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
-    lightColor: [ '#f5f6fb', '#333639', '#EFEFF5', '#ffffff', '#666666' ],
-    darkColor: [ '#121212', '#FFFFFFD1', 'rgba(255, 255, 255, 0.09)', '#18181C', '#000000' ]
+    lightColor: [ '#f5f6fb', '#000000', '#EFEFF5', '#ffffff', '#666666', '#316C72' ],
+    darkColor: [ '#121212', '#FFFFFFD1', 'rgba(255, 255, 255, 0.09)', '#18181C', '#000000', '#598B8E' ]
   }),
   actions: {
     updateIsLock(isLocked: boolean) {
@@ -68,7 +67,7 @@ export const useGlobalStore = defineStore('layout', {
       const bodyStyle = document.body.style;
       if (isDarkMode) {
         this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.darkColor[1],
+          primaryColor: this.darkColor[5],
           primaryColorHover: this.darkColor[4]
         });
         bodyStyle.setProperty('--primary-color', this.darkColor[1]);
@@ -79,7 +78,7 @@ export const useGlobalStore = defineStore('layout', {
       else {
         // https://www.naiveui.com/zh-CN/os-theme/docs/customize-theme naive-ui 配置主题色
         this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.lightColor[1],
+          primaryColor: this.lightColor[5],
           primaryColorHover: this.lightColor[4]
         });
         bodyStyle.setProperty('--primary-color', this.lightColor[1]);
