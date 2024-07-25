@@ -39,7 +39,7 @@ const menuStore = useMenuStore();
   </n-space>
 </template>
 
-<style lang="less">
+<style lang="less" scoped>
 .n-scrollbar-content {
   border-right: 2px solid var(--primary-bColor);
 }
