@@ -39,7 +39,7 @@ const menuStore = useMenuStore();
   </n-space>
 </template>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .n-scrollbar-content {
   border-right: 2px solid var(--primary-bColor);
 }
@@ -65,46 +65,11 @@ const menuStore = useMenuStore();
   margin: 0 0 0 10px;
 }
 
-.n-tabs {
-  height: 50px;
-  background-color: var(--primary-bgColor);
-  padding: 8px;
-  border-bottom: 1px solid var(--primary-bColor);
-
-  .n-tabs-nav__prefix,
-  .n-tabs-nav__suffix,
-  .n-tabs-pad,
-  .n-tabs-wrapper {
-    border: none !important;
-  }
-
-  .n-tab-pane {
-    display: none;
-  }
-
-  .n-tabs-tab {
-    height: 34px;
-    border: 1px solid var(--primary-bColor);
-    background-color: var(--primary-bgColor);
-    border-radius: 4px;
-  }
-
-  .n-tabs-tab--active {
-    border: 1px solid var(--primary-bColor);
-    color: var(--primary-bgColor);
-    background-color: var(--primary-bgColor);
-
-    .n-base-icon {
-      color: #588ff4;
-    }
-  }
-}
-
 .n-layout-scroll-container {
   background-color: #f6f8f9;
 }
 
 .n-layout-toggle-button {
-  display: none !important;
+  display: none;
 }
 </style>
