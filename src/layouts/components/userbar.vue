@@ -9,6 +9,7 @@ import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
+import setting from '@/layouts/components/setting.vue';
 
 const router = useRouter();
 const message = useMessage();
@@ -58,23 +59,9 @@ function handleLinkClick(link: string) {
 }
 
 const settingDrawer = ref(false);
-
-const layoutList = [
-  {
-    tips: '经典',
-    value: 'normal',
-    style: 'setting-layout-menu-classical'
-  },
-  {
-    tips: '内容全屏',
-    value: 'empty',
-    style: 'setting-layout-menu-doublerow'
-  }
-];
-
-function openSetting() {
-  settingDrawer.value = true;
-}
+const onUpdateSettingDrawer = (val: boolean) => {
+  settingDrawer.value = val;
+};
 </script>
 
 <template>
@@ -122,31 +109,11 @@ function openSetting() {
       <Icon
         class="cursor-pointer text-5 color-primary"
         icon="iwwa:settings"
-        @click="openSetting"
+        @click="onUpdateSettingDrawer(true)"
       />
 
       <!-- 整体风格设置抽屉 -->
-      <n-drawer v-model:show="settingDrawer" :width="480">
-        <n-drawer-content :native-scrollbar="false">
-          <h3>整体界面布局</h3>
-          <div class="setting-checkbox">
-            <template v-for="layoutModel of layoutList" :key="layoutModel.value">
-              <n-tooltip trigger="hover">
-                <template #trigger>
-                  <div :class="['setting-checkbox-item', layoutModel.style]">
-                    <div class="setting-layout-menu-doublerow-inner" />
-                    <Icon
-                      icon="emojione:white-heavy-check-mark"
-                      class="setting-checkbox-item-select-icon"
-                    />
-                  </div>
-                </template>
-                {{ layoutModel.tips }}
-              </n-tooltip>
-            </template>
-          </div>
-        </n-drawer-content>
-      </n-drawer>
+      <setting :setting-drawer="settingDrawer" @updateSettingDrawer="onUpdateSettingDrawer" />
     </div>
   </div>
 </template>
@@ -172,98 +139,5 @@ function openSetting() {
 .layout-content-right {
   display: flex;
   align-items: center;
-}
-
-.setting-checkbox {
-  display: flex;
-  margin-bottom: 20px;
-}
-
-.setting-checkbox-item {
-  position: relative;
-  width: 44px;
-  height: 36px;
-  margin-right: 16px;
-  overflow: hidden;
-  background-color: #ebeef1;
-  border-radius: 2px;
-  box-shadow: 0 1px 2.5px 0 rgb(0 0 0 / 18%);
-  cursor: pointer;
-}
-
-.setting-checkbox-item::before {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 33%;
-  height: 100%;
-  background-color: #fff;
-  content: '';
-}
-
-.setting-checkbox-item::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 25%;
-  background-color: #fff;
-  content: '';
-}
-
-.setting-layout-menu-doublerow-inner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  width: 33%;
-  height: 100%;
-  background-color: #fff;
-  content: '';
-}
-
-.setting-layout-menu-classical {
-  z-index: 1;
-  background-color: #ebeef1;
-  content: '';
-}
-
-.setting-layout-menu-classical::before {
-  z-index: 1;
-  background-color: #001529;
-  content: '';
-}
-
-.setting-layout-menu-classical::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 25%;
-  background-color: #fff;
-  content: '';
-}
-
-.setting-layout-menu-doublerow {
-  z-index: 1;
-  background-color: #ebeef1;
-  content: '';
-}
-
-.setting-layout-menu-doublerow::before {
-  z-index: 1;
-  width: 16%;
-  background-color: #001529;
-  content: '';
-}
-
-.setting-layout-menu-doublerow::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 25%;
-  background-color: #fff;
-  content: '';
 }
 </style>
