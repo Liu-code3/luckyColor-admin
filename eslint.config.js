@@ -17,7 +17,8 @@ export default antfu(
     typescript: true,
     vue: {
       overrides: {
-        'vue/v-on-event-hyphenation': 'off'
+        'vue/v-on-event-hyphenation': 'off',
+        'vue/prefer-separate-static-class': 'off'
       }
     },
     stylistic: {
