@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import { colorList } from '@/config/setting.ts';
+import {colorList, updateColorWeak} from '@/config/setting.ts';
 
 const props = defineProps({
   settingDrawer: {
@@ -41,7 +41,7 @@ const setSideStyle = (model: string) => {
 // 主题色
 const tagColor = (color: string) => {
   globalStore.setPrimaryColor(color);
-  globalStore.setThemeColor('', false);
+  console.log(globalStore.primaryColor, 'cc');
 };
 </script>
 
