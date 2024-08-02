@@ -28,9 +28,9 @@ function getLayout(name: string) {
   return layout;
 }
 
-watchEffect(() => {
-  globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark);
-});
+// watchEffect(() => {
+//   globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark);
+// });
 
 onActivated(() => {
   // 1. 调用时机为首次挂载

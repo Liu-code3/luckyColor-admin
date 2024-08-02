@@ -32,7 +32,8 @@ export default antfu(
       'antfu/if-newline': 'off',
       'style/comma-dangle': [ 'error', 'never' ],
       'style/array-bracket-spacing': [ 'error', 'always' ],
-      'antfu/top-level-function': 'off'
+      'antfu/top-level-function': 'off',
+      'style/quote-props': 'off'
     }
   }
 );

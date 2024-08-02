@@ -59,6 +59,12 @@ export const useGlobalStore = defineStore('layout', {
     },
     setPrimaryColor(color: string) {
       this.primaryColor = color;
+      this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
+        primaryColor: color,
+        primaryColorHover: this.lightColor[4]
+      });
+      tool.session.set(Global.PRIMARY_COLOR, color);
+      tool.session.set(Global.NaiveThemeOverrides, JSON.stringify(naiveThemeOverrides));
     },
     setThemeColor(color: string, isDark: boolean) {
       const primaryColor = color || this.primaryColor;
