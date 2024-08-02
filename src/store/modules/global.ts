@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import type { GlobalThemeOverrides } from 'naive-ui';
 import { useDark } from '@vueuse/core';
+import { colorBuilder } from '@kviewui/color-builder';
 import tool from '@/utils/tool.ts';
 import sysConfig, { naiveThemeOverrides } from '@/config';
 
@@ -10,8 +11,6 @@ interface IGlobalState {
   isDark: globalThis.WritableComputedRef<boolean>;
   primaryColor: string;
   naiveThemeOverrides: GlobalThemeOverrides;
-  darkColor: string[];
-  lightColor: string[];
 }
 enum Global {
   LOCK_SCREEN = 'LOCK_SCREEN',
@@ -19,21 +18,6 @@ enum Global {
   PRIMARY_COLOR = 'primaryColor',
   NaiveThemeOverrides = 'naiveThemeOverrides'
 }
-// 明亮主题
-/**
- * 大背景 #f5f6fb
- * 字体 #333639
- * 边框 rgb(239, 239, 245);
- * card #FFF
- */
-
-// 暗黑主题
-/**
- * 大背景 #121212
- * 字体 #FFFFFFD1
- * 边框 rgba(255, 255, 255, 0.09)
- * card rgb(24, 24, 28)
- */
 
 export const useGlobalStore = defineStore('layout', {
   state: (): IGlobalState => ({
@@ -41,9 +25,7 @@ export const useGlobalStore = defineStore('layout', {
     layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
-    naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
-    lightColor: [ '#f5f6fb', '#000000', '#EFEFF5', '#ffffff', '#666666', '#316C72' ],
-    darkColor: [ '#121212', '#FFFFFFD1', 'rgba(255, 255, 255, 0.09)', '#18181C', '#000000', '#598B8E' ]
+    naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides
   }),
   actions: {
     updateIsLock(isLocked: boolean) {
@@ -59,43 +41,31 @@ export const useGlobalStore = defineStore('layout', {
     },
     setPrimaryColor(color: string) {
       this.primaryColor = color;
-      this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-        primaryColor: color,
-        primaryColorHover: this.lightColor[4]
-      });
-      tool.session.set(Global.PRIMARY_COLOR, color);
-      tool.session.set(Global.NaiveThemeOverrides, JSON.stringify(naiveThemeOverrides));
     },
     setThemeColor(color: string, isDark: boolean) {
       const primaryColor = color || this.primaryColor;
       const isDarkMode = isDark || this.isDark;
 
+      // 生成暗黑模式下的色阶集合
+      const colorList = colorBuilder.generate(primaryColor, {
+        dark: isDarkMode, // 暗黑模式
+        list: true, // 生成色阶集合,
+        format: 'hex' // 颜色值格式
+      });
+
       const bodyStyle = document.body.style;
-      if (isDarkMode) {
-        this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.darkColor[5],
-          primaryColorHover: this.darkColor[4]
-        });
-        bodyStyle.setProperty('--primary-color', this.darkColor[1]);
-        bodyStyle.setProperty('--primary-bgColor', this.darkColor[3]);
-        bodyStyle.setProperty('--primary-bColor', this.darkColor[2]);
-        bodyStyle.setProperty('--primary-main-bg', this.darkColor[0]);
-      }
-      else {
-        // https://www.naiveui.com/zh-CN/os-theme/docs/customize-theme naive-ui 配置主题色
-        this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-          primaryColor: this.lightColor[5],
-          primaryColorHover: this.lightColor[4]
-        });
-        bodyStyle.setProperty('--primary-color', this.lightColor[1]);
-        bodyStyle.setProperty('--primary-bgColor', this.lightColor[3]);
-        bodyStyle.setProperty('--primary-bColor', this.lightColor[2]);
-        bodyStyle.setProperty('--primary-main-bg', this.lightColor[0]);
-      }
+      const rgbStr = colorBuilder.getRgbStr(colorList[5]);
+      bodyStyle.setProperty('--primary-color', rgbStr);
+      this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
+        primaryColor: colorList[5],
+        primaryColorHover: colorList[4],
+        primaryColorSuppl: colorList[4],
+        primaryColorPressed: colorList[6]
+      });
 
       tool.session.set(Global.PRIMARY_COLOR, primaryColor);
       tool.session.set('isDark', isDarkMode);
-      tool.session.set(Global.NaiveThemeOverrides, JSON.stringify(naiveThemeOverrides));
+      tool.session.set(Global.NaiveThemeOverrides, naiveThemeOverrides);
     }
   }
 });
