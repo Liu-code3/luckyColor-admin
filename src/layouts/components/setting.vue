@@ -41,7 +41,6 @@ const setSideStyle = (model: string) => {
 // 主题色
 const tagColor = (color: string) => {
   globalStore.setPrimaryColor(color);
-  console.log(globalStore.primaryColor, 'cc');
 };
 </script>
 
