@@ -41,7 +41,7 @@ const menuStore = useMenuStore();
 
 <style lang="scss" scoped>
 .n-scrollbar-content {
-  border-right: 2px solid var(--primary-bColor);
+  border-right: 2px solid #dcdfe6;
 }
 .n-content {
   height: calc(100vh - 111px);
@@ -49,7 +49,6 @@ const menuStore = useMenuStore();
   overflow-y: scroll;
   padding: 10px;
   box-sizing: border-box;
-  background-color: var(--primary-main-bg);
 }
 .n-content::-webkit-scrollbar {
   display: none;

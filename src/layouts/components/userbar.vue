@@ -125,8 +125,7 @@ const onUpdateSettingDrawer = (val: boolean) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--primary-bColor);
-  background-color: var(--primary-bgColor);
+  border-bottom: 1px solid #dcdfe6;
 
   .n-button__border {
     border: none;

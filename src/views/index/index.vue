@@ -68,7 +68,8 @@
   .home-page—show-box {
     width: 387px;
     height: 163px;
-    border: 1px solid var(--primary-bColor);
+    background-color: rgba(var(--primary-color), 0.1);
+    border: 1px solid rgba(var(--primary-color), 0.1);
     border-radius: 6px;
     margin-left: 10px;
     padding: 15px 15px 20px 15px;
@@ -76,8 +77,6 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: var(--primary-bgColor);
-    color: var(--primary-color);
     div:nth-child(1) {
       font-size: 14px;
     }
@@ -86,7 +85,7 @@
     }
   }
 
-  div.home-page—show {
+  .home-page—show {
     color: #fff;
     margin-left: 0;
     background: linear-gradient(
@@ -108,59 +107,54 @@
   .area-chart {
     width: 935px;
     height: 240px;
+    background-color: rgba(var(--primary-color), 0.2);
     border-radius: 6px;
     margin-right: 10px;
-    border: 1px solid var(--primary-bColor);
-    background-color: var(--primary-bgColor);
-    color: var(--primary-color);
+    border: 1px solid rgba(var(--primary-color), 0.2);
     .area-chart-title {
       width: 100%;
       height: 50px;
-      border-bottom: 1px solid var(--primary-bColor);
+      border-bottom: 1px solid rgba(var(--primary-color), 0.2);
       box-sizing: border-box;
-      color: var(--theme-color);
     }
   }
   .pie-chart {
-    flex: 1;
     height: 240px;
+    background-color: rgba(var(--primary-color), 0.1);
     border-radius: 6px;
-    border: 1px solid var(--primary-bgColor);
-    color: var(--primary-color);
-    background-color: var(--primary-bgColor);
+    flex: 1;
+    border: 1px solid rgba(var(--primary-color), 0.2);
   }
 }
 .home-page-area-chart {
   width: 100%;
   height: 240px;
+  background-color: rgba(var(--primary-color), 0.1);;
   border-radius: 6px;
   margin-top: 10px;
-  border: 1px solid var(--primary-bColor);
-  background-color: var(--primary-bgColor);
+  border: 1px solid rgba(var(--primary-color), 0.2);
   .area-chart-title {
     width: 100%;
     height: 50px;
-    border-bottom: 1px solid var(--primary-bColor);
+    border-bottom: 1px solid rgba(var(--primary-color), 0.2);
     box-sizing: border-box;
   }
 }
-.home-page-bottom {
+.home-page-buttom {
   display: flex;
   margin-top: 10px;
   .area-chart {
     width: 935px;
     height: 240px;
+    background-color: rgba(var(--primary-color), 0.1);
     border-radius: 6px;
     margin-right: 10px;
-    border: 1px solid var(--primary-bColor);
-    color: var(--primary-color);
-    background-color: var(--primary-bgColor);
+    border: 1px solid rgba(var(--primary-color), 0.2);
     .area-chart-title {
       width: 100%;
       height: 50px;
+      border-bottom: 1px solid rgba(var(--primary-color), 0.2);
       box-sizing: border-box;
-      border-bottom: 1px solid var(--primary-bColor);
-      color: var(--primary-color);
     }
   }
   .area-chart:nth-child(2) {
@@ -170,14 +164,14 @@
 .home-page-tail {
   width: 100%;
   height: 50px;
+  background-color: rgba(var(--primary-color), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--primary-color), 0.2);
+  box-sizing: border-box;
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  border: 1px solid var(--primary-bColor);
-  box-sizing: border-box;
-  margin-top: 10px;
-  color: var(--primary-color);
-  background-color: var(--primary-bgColor);
+  color: rgb(var(--primary-color));
 }
 </style>
