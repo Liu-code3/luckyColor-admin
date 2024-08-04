@@ -65,11 +65,11 @@ const onUpdateSettingDrawer = (val: boolean) => {
 </script>
 
 <template>
-  <div class="layout-content-luckHeader">
+  <div class="layout-content-luckHeader" border="1px solid light_border dark:dark_border">
     <div class="layout-content-left">
       <Icon
         :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
-        class="mr-10px h-20px w-20px color-primary"
+        class="mr-10px h-20px w-20px"
         @click="fold_fn"
       />
       <Breadcrumb />
@@ -77,22 +77,22 @@ const onUpdateSettingDrawer = (val: boolean) => {
     <div class="layout-content-right">
       <SwitchTheme />
       <Icon
-        class="mx-3 cursor-pointer text-5 color-primary"
+        class="mx-3 cursor-pointer text-5"
         icon="hugeicons:github"
         @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
-        class="cursor-pointer text-5 color-primary"
+        class="cursor-pointer text-5"
         icon="tabler:lock-filled"
         @click="JumpLock"
       />
       <Icon
-        class="mx-3 cursor-pointer text-5 color-primary"
+        class="mx-3 cursor-pointer text-5"
         :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
         @click="toggle"
       />
       <Icon
-        class="cursor-pointer text-5 color-primary"
+        class="cursor-pointer text-5"
         icon="mdi:circular-arrows"
         @click="refresh"
       />
@@ -101,13 +101,13 @@ const onUpdateSettingDrawer = (val: boolean) => {
         <div class="mx-2.5 flex cursor-pointer items-center">
           <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
           <div class="ml-1px flex-shrink-0 flex-col items-center">
-            <span class="ml-4px text-14px text-primary">用户资料</span>
+            <span class="ml-4px text-14px">用户资料</span>
           </div>
         </div>
       </n-dropdown>
 
       <Icon
-        class="cursor-pointer text-5 color-primary"
+        class="cursor-pointer text-5"
         icon="iwwa:settings"
         @click="onUpdateSettingDrawer(true)"
       />
@@ -125,7 +125,6 @@ const onUpdateSettingDrawer = (val: boolean) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #dcdfe6;
 
   .n-button__border {
     border: none;

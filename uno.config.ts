@@ -1,7 +1,7 @@
-import { defineConfig, presetUno } from 'unocss';
+import { defineConfig, presetAttributify, presetUno } from 'unocss';
 
 export default defineConfig({
-  presets: [ presetUno() ],
+  presets: [ presetUno(), presetAttributify() ],
   shortcuts: [
     { 'card-border': 'border border-solid border-light_border dark:border-dark_border' },
     { 'auto-bg': 'bg-white dark:bg-dark' },
@@ -15,7 +15,7 @@ export default defineConfig({
   ],
   theme: {
     colors: {
-      primary: 'var(--primary-color)',
+      primary: 'rgba(var(--primary-color))',
       dark: '#18181c',
       light_border: '#efeff5',
       dark_border: '#2d2d30'

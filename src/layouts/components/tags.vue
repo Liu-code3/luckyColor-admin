@@ -24,6 +24,7 @@ function handleClose(path: string) {
       :value="tabStore.activeTab"
       type="card"
       :closable="tabStore.tabs.length > 1"
+      border="1px solid light_border dark:dark_border"
       @close="handleClose"
       @update:value="tabSwitching"
     >
