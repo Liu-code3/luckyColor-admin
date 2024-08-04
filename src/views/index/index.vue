@@ -5,55 +5,43 @@
 <template>
   <div class="home-page-box">
     <div class="home-page-top">
-      <div class="home-page—show-box home-page—show">
+      <div class="home-page—show-box home-page—show" border="1px solid light_border dark:dark_border">
         <div>指标名称</div>
         <div>9,053,089</div>
         <div>自上周以来</div>
       </div>
-      <div class="home-page—show-box">
+      <div class="home-page—show-box" border="1px solid light_border dark:dark_border">
         <div>指标名称</div>
         <div>5,089</div>
         <div>自上周以来</div>
       </div>
-      <div class="home-page—show-box">
+      <div class="home-page—show-box" border="1px solid light_border dark:dark_border">
         <div>指标名称</div>
         <div>9,053,089</div>
         <div>自上周以来</div>
       </div>
-      <div class="home-page—show-box">
+      <div class="home-page—show-box" border="1px solid light_border dark:dark_border">
         <div>指标名称</div>
         <div>9,053,089</div>
         <div>自上周以来</div>
       </div>
     </div>
     <div class="home-page-middle">
-      <div class="area-chart">
-        <div class="area-chart-title layout-center pl-20px">
+      <div class="area-chart" border="1px solid light_border dark:dark_border">
+        <div class="area-chart-title layout-center pl-20px" border-b="1px solid light_border dark:dark_border">
           指标名称-面积图
         </div>
       </div>
-      <div class="pie-chart">
+      <div class="pie-chart" border="1px solid light_border dark:dark_border">
         2
       </div>
     </div>
-    <div class="home-page-area-chart">
-      <div class="area-chart-title layout-center pl-20px">
+    <div class="home-page-area-chart" border="1px solid light_border dark:dark_border">
+      <div class="area-chart-title layout-center pl-20px" border-b="1px solid light_border dark:dark_border">
         指标名称-面积图
       </div>
     </div>
-    <div class="home-page-bottom">
-      <div class="area-chart">
-        <div class="area-chart-title layout-center pl-20px">
-          指标名称-面积图
-        </div>
-      </div>
-      <div class="area-chart">
-        <div class="area-chart-title layout-center pl-20px">
-          指标名称-面积图
-        </div>
-      </div>
-    </div>
-    <div class="home-page-tail">
+    <div class="home-page-tail" border="1px solid light_border dark:dark_border">
       敏公主: 1998888777
     </div>
   </div>
@@ -68,8 +56,6 @@
   .home-page—show-box {
     width: 387px;
     height: 163px;
-    background-color: rgba(var(--primary-color), 0.1);
-    border: 1px solid rgba(var(--primary-color), 0.1);
     border-radius: 6px;
     margin-left: 10px;
     padding: 15px 15px 20px 15px;
@@ -107,36 +93,28 @@
   .area-chart {
     width: 935px;
     height: 240px;
-    background-color: rgba(var(--primary-color), 0.2);
     border-radius: 6px;
     margin-right: 10px;
-    border: 1px solid rgba(var(--primary-color), 0.2);
     .area-chart-title {
       width: 100%;
       height: 50px;
-      border-bottom: 1px solid rgba(var(--primary-color), 0.2);
       box-sizing: border-box;
     }
   }
   .pie-chart {
     height: 240px;
-    background-color: rgba(var(--primary-color), 0.1);
     border-radius: 6px;
     flex: 1;
-    border: 1px solid rgba(var(--primary-color), 0.2);
   }
 }
 .home-page-area-chart {
   width: 100%;
   height: 240px;
-  background-color: rgba(var(--primary-color), 0.1);;
   border-radius: 6px;
   margin-top: 10px;
-  border: 1px solid rgba(var(--primary-color), 0.2);
   .area-chart-title {
     width: 100%;
     height: 50px;
-    border-bottom: 1px solid rgba(var(--primary-color), 0.2);
     box-sizing: border-box;
   }
 }
@@ -146,14 +124,11 @@
   .area-chart {
     width: 935px;
     height: 240px;
-    background-color: rgba(var(--primary-color), 0.1);
     border-radius: 6px;
     margin-right: 10px;
-    border: 1px solid rgba(var(--primary-color), 0.2);
     .area-chart-title {
       width: 100%;
       height: 50px;
-      border-bottom: 1px solid rgba(var(--primary-color), 0.2);
       box-sizing: border-box;
     }
   }
@@ -164,14 +139,11 @@
 .home-page-tail {
   width: 100%;
   height: 50px;
-  background-color: rgba(var(--primary-color), 0.1);
   border-radius: 4px;
-  border: 1px solid rgba(var(--primary-color), 0.2);
   box-sizing: border-box;
   margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgb(var(--primary-color));
 }
 </style>

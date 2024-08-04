@@ -24,6 +24,7 @@ function handleClose(path: string) {
       :value="tabStore.activeTab"
       type="card"
       :closable="tabStore.tabs.length > 1"
+      border="1px solid light_border dark:dark_border"
       @close="handleClose"
       @update:value="tabSwitching"
     >
@@ -44,7 +45,6 @@ function handleClose(path: string) {
 .tabs_list :deep(.n-tabs) {
   height: 50px;
   padding: 8px;
-  border-bottom: 1px solid rgba(var(--primary-color), 0.2);
 
   .n-tabs-nav__prefix,
   .n-tabs-nav__suffix,

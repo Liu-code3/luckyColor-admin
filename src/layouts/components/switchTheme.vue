@@ -35,50 +35,7 @@ function toggleTheme(event: Event) {
 <template>
   <Icon
     :icon="globalStore.isDark ? 'ph:moon' : 'ph:sun'"
-    class="h-5 w-5 color-primary"
+    class="h-5 w-5"
     @click="toggleTheme"
   />
 </template>
-
-<style scoped lang="scss">
-.toggle {
-  background-color: rgba(24, 160, 88, 0.5);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  box-shadow: 0 0 50px 20px rgba(0, 0, 0, 0.1);
-  line-height: 1;
-}
-
-.input {
-  display: none;
-}
-
-.icon {
-  grid-column: 1 / 1;
-  grid-row: 1 / 1;
-  transition: transform 500ms;
-}
-
-.icon--moon {
-  transition-delay: 200ms;
-  color: black;
-}
-
-.icon--sun {
-  transform: scale(0);
-  color: yellow;
-}
-
-#switch:checked + .icon--moon {
-  transform: rotate(360deg) scale(0);
-}
-
-#switch:checked ~ .icon--sun {
-  transition-delay: 200ms;
-  transform: scale(1) rotate(360deg);
-}
-</style>
