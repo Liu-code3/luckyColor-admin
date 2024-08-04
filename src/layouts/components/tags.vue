@@ -45,6 +45,7 @@ function handleClose(path: string) {
 .tabs_list :deep(.n-tabs) {
   height: 50px;
   padding: 8px;
+  border-bottom: 1px solid rgba(var(--primary-color), 0.2);
 
   .n-tabs-nav__prefix,
   .n-tabs-nav__suffix,
