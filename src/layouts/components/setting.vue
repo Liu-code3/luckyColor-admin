@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import {colorList, updateColorWeak} from '@/config/setting.ts';
+import { colorList } from '@/config/setting.ts';
 
 const props = defineProps({
   settingDrawer: {
@@ -31,7 +31,7 @@ const layoutList = [
   {
     tips: '内容全屏',
     value: 'empty',
-    style: 'setting-layout-menu-doublerow'
+    style: 'setting-layout-menu-double-row'
   }
 ];
 const setSideStyle = (model: string) => {
@@ -57,10 +57,11 @@ const tagColor = (color: string) => {
                   :class="['setting-checkbox-item', layoutModel.style]"
                   @click="setSideStyle(layoutModel.value)"
                 >
-                  <div class="setting-layout-menu-doublerow-inner" />
+                  <div class="setting-layout-menu-double-row-inner" />
                   <template v-if="globalStore.layout === layoutModel.value">
                     <Icon
                       icon="emojione:white-heavy-check-mark"
+                      class="setting-checkbox-item-select-icon"
                     />
                   </template>
                 </div>
@@ -141,7 +142,7 @@ const tagColor = (color: string) => {
   background-color: #fff;
 }
 
-.setting-layout-menu-doublerow-inner {
+.setting-layout-menu-double-row-inner {
   position: absolute;
   top: 0;
   left: 0;
@@ -172,20 +173,20 @@ const tagColor = (color: string) => {
   background-color: #fff;
 }
 
-.setting-layout-menu-doublerow {
+.setting-layout-menu-double-row {
   content: '';
   z-index: 1;
   background-color: #ebeef1;
 }
 
-.setting-layout-menu-doublerow::before {
+.setting-layout-menu-double-row::before {
   content: '';
   z-index: 1;
   width: 16%;
   background-color: #001529;
 }
 
-.setting-layout-menu-doublerow::after {
+.setting-layout-menu-double-row::after {
   content: '';
   position: absolute;
   top: 0;
