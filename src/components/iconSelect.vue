@@ -85,6 +85,5 @@ function selectIcon(value: string) {
 .xn-icon-select-list ul li.active {
   cursor: pointer;
   color: #ffffff;
-  background-color: pink;
 }
 </style>

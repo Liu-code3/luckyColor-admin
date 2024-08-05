@@ -15,13 +15,13 @@ import { viteMockServe } from 'vite-plugin-mock';
 import Icons from 'unplugin-icons/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 
-export const r = (...args: string[]) => resolve(__dirname, '.', ...args);
+export const resolvePath = (...args: string[]) => resolve(__dirname, '.', ...args);
 
 export default defineConfig(({ mode }) => {
   const envConfig = loadEnv(mode, './');
   const alias = {
-    '~': `${resolve(__dirname, './')}`,
-    '@/': `${resolve(__dirname, 'src')}/`
+    '~': `${resolvePath('./')}`,
+    '@/': `${resolvePath('src')}/`
   };
   // 环境变量在被加载后总是被当作字符串处理。这是因为环境变量本质上是通过操作系统或 Node.js 的环境接口来存储和管理，而这些接口只支持字符串类型。
   // 所有这里需要手动转换为number类型
@@ -66,7 +66,7 @@ export default defineConfig(({ mode }) => {
             ]
           }
         ],
-        dts: r('src/auto-imports.d.ts')
+        dts: resolvePath('src/auto-imports.d.ts')
       }),
       Components({
         resolvers: [
@@ -78,7 +78,7 @@ export default defineConfig(({ mode }) => {
             // enabledCollections: ['ep'] // 这是可选的，默认启用 Iconify 支持的所有集合['mdi']
           })
         ],
-        dirs: [ r('src/components') ],
+        dirs: [ resolvePath('src/components') ],
         dts: false
       }),
       viteMockServe({

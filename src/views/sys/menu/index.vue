@@ -133,11 +133,8 @@ const add_role = () => {
       <n-form
         ref="formRef"
         require-mark-placement="right-hanging"
-        :style="{
-          maxWidth: '640px',
-        }"
       >
-        <n-form-item label="显示名称：" path="uadminName">
+        <n-form-item label="显示名称：" path="adminName">
           <n-input v-model:value="formValue.adminName" placeholder="输入显示名称" />
         </n-form-item>
         <n-form-item label="密码：" path="password">
@@ -191,7 +188,6 @@ const add_role = () => {
 .user_box {
   .user_sift {
     height: 80px;
-    background-color: #fff;
     display: flex;
     align-items: center;
     padding: 0 30px;
@@ -213,7 +209,7 @@ const add_role = () => {
 }
 .user_content {
   height: calc(100vh - 224px);
-  background-color: #fff;
+  background-color: var(--primary-bgColor);
   padding: 20px;
   box-sizing: border-box;
 }

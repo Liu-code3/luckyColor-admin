@@ -39,9 +39,9 @@ const menuStore = useMenuStore();
   </n-space>
 </template>
 
-<style lang="less">
+<style lang="scss" scoped>
 .n-scrollbar-content {
-  border-right: solid #dcdfe6 2px;
+  border-right: 2px solid #dcdfe6;
 }
 .n-content {
   height: calc(100vh - 111px);
@@ -49,7 +49,6 @@ const menuStore = useMenuStore();
   overflow-y: scroll;
   padding: 10px;
   box-sizing: border-box;
-  background-color: var(--theme-background);
 }
 .n-content::-webkit-scrollbar {
   display: none;
@@ -65,46 +64,11 @@ const menuStore = useMenuStore();
   margin: 0 0 0 10px;
 }
 
-.n-tabs {
-  height: 50px;
-  background-color: #fff;
-  padding: 8px;
-  border-bottom: solid #dcdfe6 1px;
-
-  .n-tabs-nav__prefix,
-  .n-tabs-nav__suffix,
-  .n-tabs-pad,
-  .n-tabs-wrapper {
-    border: none !important;
-  }
-
-  .n-tab-pane {
-    display: none;
-  }
-
-  .n-tabs-tab {
-    height: 34px;
-    border: #dcdfe6 solid 1px !important;
-    background-color: #fff !important;
-    border-radius: 4px !important;
-  }
-
-  .n-tabs-tab--active {
-    border: #588ff4 solid 1px !important;
-    color: #588ff4 !important;
-    background-color: rgba(88, 143, 244, 0.1) !important;
-
-    .n-base-icon {
-      color: #588ff4 !important;
-    }
-  }
-}
-
 .n-layout-scroll-container {
   background-color: #f6f8f9;
 }
 
 .n-layout-toggle-button {
-  display: none !important;
+  display: none;
 }
 </style>

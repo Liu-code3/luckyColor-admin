@@ -17,7 +17,8 @@ export default antfu(
     typescript: true,
     vue: {
       overrides: {
-        'vue/v-on-event-hyphenation': 'off'
+        'vue/v-on-event-hyphenation': 'off',
+        'vue/prefer-separate-static-class': 'off'
       }
     },
     stylistic: {
@@ -31,7 +32,8 @@ export default antfu(
       'antfu/if-newline': 'off',
       'style/comma-dangle': [ 'error', 'never' ],
       'style/array-bracket-spacing': [ 'error', 'always' ],
-      'antfu/top-level-function': 'off'
+      'antfu/top-level-function': 'off',
+      'style/quote-props': 'off'
     }
   }
 );

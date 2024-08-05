@@ -9,6 +9,7 @@ import tool from '@/utils/tool.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
+import setting from '@/layouts/components/setting.vue';
 
 const router = useRouter();
 const message = useMessage();
@@ -34,7 +35,7 @@ const options = ref([
   }
 ]);
 
-function xuanzhong(key: string | number) {
+function onSelected(key: string | number) {
   if (key === 'signOut')
     signOut();
 }
@@ -47,7 +48,6 @@ const fold_fn = () => {
 function signOut() {
   tool.data.clear();
   tabStore.$reset();
-  // tool.data.remove('TOKEN');
   router.push('/login');
   message.success(
     '退出登录成功'
@@ -57,19 +57,28 @@ function signOut() {
 function handleLinkClick(link: string) {
   window.open(link, '_blank');
 }
+
+const settingDrawer = ref(false);
+const onUpdateSettingDrawer = (val: boolean) => {
+  settingDrawer.value = val;
+};
 </script>
 
 <template>
-  <div class="layout-content-luckHeader">
+  <div class="layout-content-luckHeader" border="1px solid light_border dark:dark_border">
     <div class="layout-content-left">
-      <Icon :icon=" menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'" class="mr-10px h-20px w-20px" @click="fold_fn" />
+      <Icon
+        :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
+        class="mr-10px h-20px w-20px"
+        @click="fold_fn"
+      />
       <Breadcrumb />
     </div>
     <div class="layout-content-right">
       <SwitchTheme />
       <Icon
         class="mx-3 cursor-pointer text-5"
-        icon="logos:github-icon"
+        icon="hugeicons:github"
         @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
@@ -79,37 +88,44 @@ function handleLinkClick(link: string) {
       />
       <Icon
         class="mx-3 cursor-pointer text-5"
-        color="#595959"
         :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
         @click="toggle"
       />
       <Icon
-        class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
+        class="cursor-pointer text-5"
+        icon="mdi:circular-arrows"
         @click="refresh"
       />
 
-      <n-dropdown :options="options" @select="xuanzhong">
-        <div class="flex cursor-pointer items-center">
+      <n-dropdown :options="options" @select="onSelected">
+        <div class="mx-2.5 flex cursor-pointer items-center">
           <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
           <div class="ml-1px flex-shrink-0 flex-col items-center">
-            <span class="ml-4px text-14px text-#606297">用户资料</span>
+            <span class="ml-4px text-14px">用户资料</span>
           </div>
         </div>
       </n-dropdown>
+
+      <Icon
+        class="cursor-pointer text-5"
+        icon="iwwa:settings"
+        @click="onUpdateSettingDrawer(true)"
+      />
+
+      <!-- 整体风格设置抽屉 -->
+      <setting :setting-drawer="settingDrawer" @updateSettingDrawer="onUpdateSettingDrawer" />
     </div>
   </div>
 </template>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .layout-content-luckHeader {
   padding: 0 20px;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #dcdfe6;
-  color: var(--theme-color);
-  background-color: var(--theme-background);
+
   .n-button__border {
     border: none;
   }

@@ -16,34 +16,64 @@ function tabSwitching(value: string) {
 function handleClose(path: string) {
   tabStore.removeTab(path);
 }
-
-onMounted(() => {
-});
 </script>
 
 <template>
-  <n-tabs
-    :value="tabStore.activeTab"
-    type="card"
-    :closable="tabStore.tabs.length > 1"
-    class="tabs-container"
-    @close="handleClose"
-    @update:value="tabSwitching"
-  >
-    <template #prefix>
-      <Icon class="text-12px" color="#595959" icon="ep:arrow-left" />
-    </template>
-    <n-tab-pane
-      v-for="item in tabStore.tabs"
-      :key="item.key"
-      :name="item.key"
-      :tab="item.label"
-    />
-  </n-tabs>
+  <div class="tabs_list">
+    <n-tabs
+      :value="tabStore.activeTab"
+      type="card"
+      :closable="tabStore.tabs.length > 1"
+      border="1px solid light_border dark:dark_border"
+      @close="handleClose"
+      @update:value="tabSwitching"
+    >
+      <template #prefix>
+        <Icon class="text-12px text-primary" icon="ep:arrow-left" />
+      </template>
+      <n-tab-pane
+        v-for="item in tabStore.tabs"
+        :key="item.key"
+        :name="item.key"
+        :tab="item.label"
+      />
+    </n-tabs>
+  </div>
 </template>
 
-<style lang="less" scoped>
-.tabs-container {
-  background-color: var(--theme-background);
+<style lang="scss" scoped>
+.tabs_list :deep(.n-tabs) {
+  height: 50px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(var(--primary-color), 0.2);
+
+  .n-tabs-nav__prefix,
+  .n-tabs-nav__suffix,
+  .n-tabs-pad,
+  .n-tabs-wrapper {
+    border: none !important;
+  }
+
+  .n-tab-pane {
+    display: none;
+  }
+
+  .n-tabs-tab {
+    height: 34px;
+    border-radius: 4px !important;
+  }
+
+  .n-tabs-tab:hover {
+    border: 1px solid rgb(var(--primary-color)) !important;
+  }
+
+  .n-tabs-tab--active {
+    border: 1px solid rgb(var(--primary-color)) !important;
+    background-color: rgba(var(--primary-color), 0.1) !important;
+
+    .n-base-icon {
+      color: rgb(var(--primary-color)) !important;
+    }
+  }
 }
 </style>
