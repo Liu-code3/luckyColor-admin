@@ -16,6 +16,7 @@ function tabSwitching(value: string) {
 function handleClose(path: string) {
   tabStore.removeTab(path);
 }
+
 onMounted(() => {
 });
 </script>
@@ -41,7 +42,7 @@ onMounted(() => {
   </n-tabs>
 </template>
 
-<style scoped>
+<style lang="less" scoped>
 .tabs-container {
   background-color: var(--theme-background);
 }

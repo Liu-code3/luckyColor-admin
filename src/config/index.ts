@@ -21,7 +21,7 @@ const DEFAULT_CONFIG = {
   REQUEST_CACHE: true,
 
   // 布局
-  LUCK_LAYOUT: 'normal',
+  LUCK_LAYOUT: 'modular',
 
   // 菜单是否折叠
   LUCK_MENU_COLLAPSE: false,
