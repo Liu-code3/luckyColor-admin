@@ -51,7 +51,6 @@ const gridOptions = ref<VxeGridProps<RowVO>>({
   data: []
 });
 
-// const tableData: Ref<App.GlobalMenuOption[]> = ref([]);
 onMounted(async () => {
   const res = await menuListApi({ token: '111111111111111' });
   gridOptions.value.data = [ ...handlMenuList(res.data) ];
@@ -80,21 +79,21 @@ const add_role = () => {
         </div> <n-input type="text" placeholder="请输入 菜单名" />
       </div>
 
-      <NButton type="primary" class="ml-20px mr-10px">
+      <n-button type="primary" class="ml-20px mr-10px">
         <Icon icon="simple-line-icons:magnifier" class="mr-5px" /> 查询
-      </NButton>
-      <NButton type="primary" ghost>
+      </n-button>
+      <n-button type="primary" ghost>
         重置
-      </NButton>
+      </n-button>
     </div>
     <div class="user_content">
       <div class="mb-15px">
-        <NButton type="primary" class="mr-10px" @click="add_role">
+        <n-button type="primary" class="mr-10px" @click="add_role">
           <Icon icon="material-symbols:add" class="mr-5px" />增加新菜单
-        </NButton>
-        <NButton type="error" ghost>
+        </n-button>
+        <n-button type="error" ghost>
           批量删除
-        </NButton>
+        </n-button>
       </div>
       <VxeGrid v-bind="gridOptions">
         <template #icon="{ row }">
