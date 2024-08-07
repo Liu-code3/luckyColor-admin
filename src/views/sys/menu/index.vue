@@ -95,7 +95,9 @@ const add_role = () => {
           批量删除
         </n-button>
       </div>
-      <VxeGrid v-bind="gridOptions">
+      <VxeGrid
+        v-bind="gridOptions"
+      >
         <template #icon="{ row }">
           <div>
             <Icon class="h-4 w-4" :icon="row.icon" />

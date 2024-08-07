@@ -4,6 +4,7 @@ import { useDark } from '@vueuse/core';
 import { colorBuilder } from '@kviewui/color-builder';
 import tool from '@/utils/tool.ts';
 import sysConfig, { naiveThemeOverrides } from '@/config';
+import VxeUI from '@/config/vxeTable.ts';
 
 interface IGlobalState {
   isLocked: boolean;
@@ -56,6 +57,8 @@ export const useGlobalStore = defineStore('layout', {
       const bodyStyle = document.body.style;
       const rgbStr = colorBuilder.getRgbStr(colorList[5]);
       bodyStyle.setProperty('--primary-color', rgbStr);
+      VxeUI.setTheme(isDarkMode ? 'dark' : 'light');
+
       this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
         primaryColor: colorList[5],
         primaryColorHover: colorList[4],
