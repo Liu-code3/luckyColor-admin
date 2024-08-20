@@ -3,9 +3,11 @@ import type { RouteRecordRaw } from 'vue-router';
 import { useIconRender } from '@/hooks/iconRender.ts';
 import tool from '@/utils/tool.ts';
 import router from '@/router';
+import config from '@/config/index';
 
 interface IMenuState {
-  menuOptions: LayoutT.TransformedMenuItem[];
+  menuOptions: LayoutT.TransformedMenuItem[] | [];
+  switchModulesList: LayoutT.TransformedMenuItem[];
   accessedRouters: RouteRecordRaw[];
   collapsed: boolean;
 }
@@ -33,6 +35,7 @@ const iconRender = useIconRender();
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
     menuOptions: [], // 侧边栏菜单列表
+    switchModulesList: [], // 模块
     accessedRouters: [], // 权限路由列表
     collapsed: false
   }),
@@ -59,6 +62,8 @@ export const useMenuStore = defineStore('menu', {
     },
     defaultLoading() {
       const menuData = tool.data.get('MENU') as LayoutT.MenuItem[];
+      this.switchModulesList = this.transformMenuData(menuData);
+      if (config.LUCK_LAYOUT === 'modular') return;
       this.menuOptions = this.transformMenuData(menuData);
     },
     addRoutesWithMenu() {
@@ -98,5 +103,6 @@ export const useMenuStore = defineStore('menu', {
       if (component.includes('/')) return modules[`/src/views/${component}.vue`];
       return modules[`/src/views/${component}/index.vue`];
     }
+
   }
 });

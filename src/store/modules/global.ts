@@ -13,6 +13,7 @@ interface IGlobalState {
   primaryColor: string;
   naiveThemeOverrides: GlobalThemeOverrides;
 }
+
 enum Global {
   LOCK_SCREEN = 'LOCK_SCREEN',
   LAYOUT = 'layout',
@@ -29,21 +30,29 @@ export const useGlobalStore = defineStore('layout', {
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides
   }),
   actions: {
-    updateIsLock(isLocked: boolean) {
+    updateIsLock(isLocked:
+                             boolean
+    ) {
       this.isLocked = isLocked;
       tool.session.set(Global.LOCK_SCREEN, isLocked);
     },
-    updateLayout(layout: string) {
+    updateLayout(layout:
+                             string
+    ) {
       this.layout = layout;
       tool.session.set(Global.LAYOUT, layout);
     },
     toggleDark() {
       this.isDark = !this.isDark;
     },
-    setPrimaryColor(color: string) {
+    setPrimaryColor(color:
+                                string
+    ) {
       this.primaryColor = color;
     },
-    setThemeColor(color: string, isDark: boolean) {
+    setThemeColor(color:
+                              string, isDark:
+                              boolean) {
       const primaryColor = color || this.primaryColor;
       const isDarkMode = isDark || this.isDark;
 
@@ -71,4 +80,5 @@ export const useGlobalStore = defineStore('layout', {
       tool.session.set(Global.NaiveThemeOverrides, naiveThemeOverrides);
     }
   }
-});
+})
+;
