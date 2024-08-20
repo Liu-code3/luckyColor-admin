@@ -140,17 +140,22 @@ const menuList = [
     meta: {
       keepAlive: true
     }
+  },
+  {
+    pid: 9,
+    id: 12,
+    title: '编辑表格',
+    name: 'editTablist',
+    type: 2,
+    path: '/icomponent/editTablist',
+    key: 'icomponent_editTablist',
+    icon: 'arcticons:colordict',
+    isVisible: true,
+    component: 'icomponent/editTablist/index',
+    meta: {
+      keepAlive: true
+    }
   }
-  // {
-  //   pid: 9,
-  //   id: 11,
-  //   title: '商品信息',
-  //   type: 2,
-  //   path: '/main/product/info',
-  //   key: 'main_product_info',
-  //   icon: 'ep:info-filled',
-  //   component: 'goods/info'
-  // }
 ];
 
 export default {
