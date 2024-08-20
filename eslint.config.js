@@ -5,8 +5,8 @@ export default antfu(
     ignores: [
       '.vscode',
       'build/',
-      'src/assets',
-      'public',
+      'src/assets/',
+      'public/',
       'dist/',
       'node_modules/',
       'pnpm-lock.yaml',
