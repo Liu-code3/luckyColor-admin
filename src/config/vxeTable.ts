@@ -30,3 +30,5 @@ VxeUI.component(VxePager);
 
 VxeUI.component(VxeTable);
 VxeUI.component(VxeToolbar);
+
+export default VxeUI;

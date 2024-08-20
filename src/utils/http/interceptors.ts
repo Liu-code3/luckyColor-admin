@@ -16,7 +16,7 @@ const error = () => {
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
   function reqResolve(config: InternalAxiosRequestConfig) {
-    const token = tool.data.get('TOKEN');
+    const token = tool.data.get(sysConfig.TOKEN_NAME);
 
     if (token)
       config.headers[sysConfig.TOKEN_NAME] = sysConfig.TOKEN_PREFIX + token;

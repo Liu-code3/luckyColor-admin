@@ -4,7 +4,6 @@ import { message } from '@/utils/message.ts';
 // 以下这些code需要重新登录
 const reloadCodes: number[] = [ 401, 1011007, 1011008 ];
 const errorCodeMap: { [key: number]: string } = {
-  200: '请求成功',
   400: '发出的请求有错误，服务器没有进行新建或修改数据的操作。',
   401: '用户没有权限（令牌、用户名、密码错误）。',
   403: '用户得到授权，但是访问是被禁止的。',

@@ -4,11 +4,11 @@
     "jsx": "preserve",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,
-    "baseUrl": ".",
     "module": "ESNext",
     /* Bundler mode */
     "moduleResolution": "node",
     /* vscode中使用 @ 引入文件 更好的提示 */
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
