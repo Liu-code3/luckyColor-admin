@@ -67,7 +67,7 @@ watch(
         >
           <div class="trigger">
             <Icon :icon="isString(item.meta?.icon)" class="mr-5px text-18px" />
-            <span>{{ item.meta.title }}</span>
+            {{ item.meta.title }}
           </div>
         </n-dropdown>
       </n-breadcrumb-item>
