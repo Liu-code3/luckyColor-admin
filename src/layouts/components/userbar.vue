@@ -1,19 +1,19 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue';
-import { useMessage } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { useFullscreen } from '@vueuse/core';
+import {Icon} from '@iconify/vue';
+import {useMessage} from 'naive-ui';
+import {useRouter} from 'vue-router';
+import {useFullscreen} from '@vueuse/core';
 import Breadcrumb from './breadcrumb.vue';
-import { useGlobalStore } from '@/store/modules/global.ts';
+import {useGlobalStore} from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
-import { useTabStore } from '@/store/modules/tab.ts';
-import { useMenuStore } from '@/store/modules/menu.ts';
+import {useTabStore} from '@/store/modules/tab.ts';
+import {useMenuStore} from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
 import setting from '@/layouts/components/setting.vue';
 
 const router = useRouter();
 const message = useMessage();
-const { isFullscreen, toggle } = useFullscreen();
+const {isFullscreen, toggle} = useFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
 const menuStore = useMenuStore();
@@ -51,7 +51,7 @@ function signOut() {
   tabStore.$reset();
   router.push('/login');
   message.success(
-    '退出登录成功'
+      '退出登录成功'
   );
 }
 
@@ -69,38 +69,41 @@ const onUpdateSettingDrawer = (val: boolean) => {
   <div class="layout-content-luckHeader" border="1px solid light_border dark:dark_border">
     <div class="layout-content-left">
       <Icon
-        :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
-        class="mr-10px h-20px w-20px cursor-pointer"
-        @click="fold_fn"
+          :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
+          class="mr-10px h-20px w-20px cursor-pointer"
+          @click="fold_fn"
       />
-      <Breadcrumb />
+      <Breadcrumb v-if="globalStore.control.crumbs"/>
     </div>
     <div class="layout-content-right">
-      <SwitchTheme />
+      <SwitchTheme v-if="globalStore.control.dark"/>
       <Icon
-        class="mx-3 cursor-pointer text-5"
-        icon="hugeicons:github"
-        @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
+          class="mx-3 cursor-pointer text-5"
+          icon="hugeicons:github"
+          @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
-        class="cursor-pointer text-5"
-        icon="tabler:lock-filled"
-        @click="JumpLock"
+          class="cursor-pointer text-5"
+          icon="tabler:lock-filled"
+          @click="JumpLock"
+          v-if="globalStore.control.lockScreen"
       />
       <Icon
-        class="mx-3 cursor-pointer text-5"
-        :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
-        @click="toggle"
+          class="mx-3 cursor-pointer text-5"
+          :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
+          @click="toggle"
+          v-if="globalStore.control.fullScreen"
       />
       <Icon
-        class="cursor-pointer text-5"
-        icon="mdi:circular-arrows"
-        @click="refresh"
+          class="cursor-pointer text-5"
+          icon="mdi:circular-arrows"
+          @click="refresh"
+          v-if="globalStore.control.flushed"
       />
 
       <n-dropdown :options="options" @select="onSelected">
         <div class="mx-2.5 flex cursor-pointer items-center">
-          <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
+          <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg"/>
           <div class="ml-1px flex-shrink-0 flex-col items-center">
             <span class="ml-4px text-14px">用户资料</span>
           </div>
@@ -108,13 +111,13 @@ const onUpdateSettingDrawer = (val: boolean) => {
       </n-dropdown>
 
       <Icon
-        class="cursor-pointer text-5"
-        icon="iwwa:settings"
-        @click="onUpdateSettingDrawer(true)"
+          class="cursor-pointer text-5"
+          icon="iwwa:settings"
+          @click="onUpdateSettingDrawer(true)"
       />
 
       <!-- 整体风格设置抽屉 -->
-      <setting :setting-drawer="settingDrawer" @updateSettingDrawer="onUpdateSettingDrawer" />
+      <setting :setting-drawer="settingDrawer" @updateSettingDrawer="onUpdateSettingDrawer"/>
     </div>
   </div>
 </template>

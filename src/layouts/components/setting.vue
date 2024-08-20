@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-import { useGlobalStore } from '@/store/modules/global.ts';
-import { colorList } from '@/config/setting.ts';
+import {Icon} from '@iconify/vue';
+import {useGlobalStore} from '@/store/modules/global.ts';
+import {colorList} from '@/config/setting.ts';
+import tool from '@/utils/tool.ts';
 
 const props = defineProps({
   settingDrawer: {
@@ -9,8 +10,7 @@ const props = defineProps({
     default: false
   }
 });
-
-const emits = defineEmits([ 'updateSettingDrawer' ]);
+const emits = defineEmits(['updateSettingDrawer']);
 
 const isDrawer = computed({
   get: () => props.settingDrawer,
@@ -20,6 +20,7 @@ const isDrawer = computed({
 });
 
 const globalStore = useGlobalStore();
+const {control} = storeToRefs(globalStore)
 
 // 设置整体风格主题
 const layoutList = [
@@ -34,6 +35,7 @@ const layoutList = [
     style: 'setting-layout-menu-threecolumns'
   }
 ];
+
 const setSideStyle = (model: string) => {
   globalStore.updateLayout(model);
 };
@@ -42,6 +44,34 @@ const setSideStyle = (model: string) => {
 const tagColor = (color: string) => {
   globalStore.setPrimaryColor(color);
 };
+
+const operationalStructure = ref([
+  {
+    title: '锁屏',
+    field: 'lockScreen'
+  },
+  {
+    title: '标签',
+    field: 'label'
+  },
+  {
+    title: '刷新',
+    field: 'flushed'
+  },
+  {
+    title: '全屏',
+    field: 'fullScreen'
+  },
+  {
+    title: '暗黑组件',
+    field: 'dark'
+  },
+  {
+    title: '面包屑',
+    field: 'crumbs'
+  }
+])
+
 </script>
 
 <template>
@@ -54,13 +84,13 @@ const tagColor = (color: string) => {
             <n-tooltip trigger="hover">
               <template #trigger>
                 <div
-                  :class="['setting-checkbox-item', layoutModel.style]"
-                  @click="setSideStyle(layoutModel.value)"
+                    :class="['setting-checkbox-item', layoutModel.style]"
+                    @click="setSideStyle(layoutModel.value)"
                 >
-                  <div class="setting-layout-menu-doublerow-inner" />
+                  <div class="setting-layout-menu-doublerow-inner"/>
                   <template v-if="globalStore.layout === layoutModel.value">
                     <Icon
-                      icon="emojione:white-heavy-check-mark"
+                        icon="emojione:white-heavy-check-mark"
                     />
                   </template>
                 </div>
@@ -69,24 +99,24 @@ const tagColor = (color: string) => {
             </n-tooltip>
           </template>
         </div>
-        <n-divider />
+        <n-divider/>
         <div>
           <h3>主题色</h3>
           <div class="setting-theme-color-colorBlock">
             <template
-              v-for="item of colorList" :key="item.color"
+                v-for="item of colorList" :key="item.color"
             >
               <n-tooltip trigger="hover">
                 <template #trigger>
                   <n-tag
-                    class="h-5 w-5"
-                    :color="{ color: item.color }"
-                    @click="tagColor(item.color)"
+                      class="h-5 w-5"
+                      :color="{ color: item.color }"
+                      @click="tagColor(item.color)"
                   >
                     <template v-if="globalStore.primaryColor === item.color">
                       <Icon
-                        icon="emojione:white-heavy-check-mark"
-                        class="setting-checkbox-item-select-icon"
+                          icon="emojione:white-heavy-check-mark"
+                          class="setting-checkbox-item-select-icon"
                       />
                     </template>
                   </n-tag>
@@ -96,11 +126,11 @@ const tagColor = (color: string) => {
             </template>
           </div>
         </div>
-        <n-divider />
+        <n-divider/>
         <div>
-          <div class="displayed">
-            <div>锁屏</div>
-            <n-switch />
+          <div class="displayed" v-for="item in operationalStructure">
+            <div>{{ item.title }}</div>
+            <n-switch v-model:value="control[item.field]"/>
           </div>
         </div>
       </n-drawer-content>
@@ -227,5 +257,6 @@ const tagColor = (color: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
 </style>

@@ -70,7 +70,7 @@ const menuStore = useMenuStore();
 }
 
 .n-content {
-  height: calc(100vh - 111px);
+  height: calc(100vh - 112px);
   overflow: hidden;
   overflow-y: scroll;
   padding: 10px;
