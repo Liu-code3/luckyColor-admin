@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue';
+import {Icon} from '@iconify/vue';
 import Tags from '@/layouts/components/tags.vue';
-import SwitchModules from '@/layouts/components/switchModules.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
 import Modular from '@/layouts/components/modular.vue';
-import { useMenuStore } from '@/store/modules/menu.ts';
+import {useMenuStore} from '@/store/modules/menu.ts';
+import UserBar from "@/layouts/components/userbar.vue";
 
 const menuStore = useMenuStore();
 </script>
@@ -15,14 +15,14 @@ const menuStore = useMenuStore();
       <n-layout has-sider>
         <div class="modular">
           <div class="logo-bar">
-            <Icon icon="cryptocurrency-color:ltc" />
+            <Icon icon="cryptocurrency-color:ltc"/>
           </div>
-          <Modular class="mt-7" />
+          <Modular class="mt-7"/>
         </div>
         <n-layout-sider
-          :collapsed="menuStore.collapsed"
-          bordered show-trigger collapse-mode="width" :collapsed-width="0" :width="220"
-          :native-scrollbar="false"
+            :collapsed="menuStore.collapsed"
+            bordered show-trigger collapse-mode="width" :collapsed-width="0" :width="220"
+            :native-scrollbar="false"
         >
           <div class="logo-bar">
             <div class="pl-9px">
@@ -30,18 +30,16 @@ const menuStore = useMenuStore();
             </div>
           </div>
           <div>
-            <NavMenu />
+            <NavMenu/>
           </div>
         </n-layout-sider>
         <n-layout-content>
           <!-- 头部 -->
-          <SwitchModules />
+          <UserBar/>
           <!-- 标签页 -->
-          <div class="Tags">
-            <Tags />
-          </div>
+          <Tags/>
           <div class="n-content">
-            <slot />
+            <slot/>
           </div>
         </n-layout-content>
       </n-layout>
@@ -49,7 +47,7 @@ const menuStore = useMenuStore();
   </n-space>
 </template>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 .n-scrollbar-content {
   border-right: solid #dcdfe6 2px;
 }
@@ -101,41 +99,7 @@ const menuStore = useMenuStore();
 .n-layout-toggle-button {
   display: none !important;
 }
-
-.Tags {
-  :deep(.n-tabs) {
-    height: 50px;
-    background-color: #fff;
-    padding: 8px;
-    border-bottom: solid #dcdfe6 1px;
-
-    .n-tabs-nav__prefix,
-    .n-tabs-nav__suffix,
-    .n-tabs-pad,
-    .n-tabs-wrapper {
-      border: none !important;
-    }
-
-    .n-tab-pane {
-      display: none;
-    }
-
-    .n-tabs-tab {
-      height: 34px;
-      border: #dcdfe6 solid 1px !important;
-      background-color: #fff !important;
-      border-radius: 4px !important;
-    }
-
-    .n-tabs-tab--active {
-      border: #588ff4 solid 1px !important;
-      color: #588ff4 !important;
-      background-color: rgba(88, 143, 244, 0.1) !important;
-
-      .n-base-icon {
-        color: #588ff4 !important;
-      }
-    }
-  }
+:deep(.n-layout-toggle-button){
+  display: none;
 }
 </style>

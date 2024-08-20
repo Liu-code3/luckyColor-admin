@@ -41,6 +41,7 @@ function onSelected(key: string | number) {
 }
 
 const fold_fn = () => {
+  if (menuStore.menuOptions.length === 0) return;
   menuStore.collapsed = !menuStore.collapsed;
 };
 
@@ -69,7 +70,7 @@ const onUpdateSettingDrawer = (val: boolean) => {
     <div class="layout-content-left">
       <Icon
         :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
-        class="mr-10px h-20px w-20px"
+        class="mr-10px h-20px w-20px cursor-pointer"
         @click="fold_fn"
       />
       <Breadcrumb />
@@ -130,10 +131,12 @@ const onUpdateSettingDrawer = (val: boolean) => {
     border: none;
   }
 }
+
 .layout-content-left {
   display: flex;
   align-items: center;
 }
+
 .layout-content-right {
   display: flex;
   align-items: center;

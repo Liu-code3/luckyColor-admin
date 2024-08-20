@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import {colorList, updateColorWeak} from '@/config/setting.ts';
+import { colorList } from '@/config/setting.ts';
 
 const props = defineProps({
   settingDrawer: {
@@ -29,9 +29,9 @@ const layoutList = [
     style: 'setting-layout-menu-classical'
   },
   {
-    tips: '内容全屏',
-    value: 'empty',
-    style: 'setting-layout-menu-doublerow'
+    tips: '三栏布局',
+    value: 'modular',
+    style: 'setting-layout-menu-threecolumns'
   }
 ];
 const setSideStyle = (model: string) => {
@@ -46,7 +46,7 @@ const tagColor = (color: string) => {
 
 <template>
   <div>
-    <n-drawer v-model:show="isDrawer" :width="480">
+    <n-drawer v-model:show="isDrawer" :width="340">
       <n-drawer-content :native-scrollbar="false">
         <h3>整体界面布局</h3>
         <div class="setting-checkbox">
@@ -69,9 +69,7 @@ const tagColor = (color: string) => {
             </n-tooltip>
           </template>
         </div>
-
         <n-divider />
-
         <div>
           <h3>主题色</h3>
           <div class="setting-theme-color-colorBlock">
@@ -96,6 +94,13 @@ const tagColor = (color: string) => {
                 {{ item.key }}
               </n-tooltip>
             </template>
+          </div>
+        </div>
+        <n-divider />
+        <div>
+          <div class="displayed">
+            <div>锁屏</div>
+            <n-switch />
           </div>
         </div>
       </n-drawer-content>
@@ -175,17 +180,23 @@ const tagColor = (color: string) => {
 .setting-layout-menu-doublerow {
   content: '';
   z-index: 1;
+  background-color: #fff;
+}
+
+.setting-layout-menu-threecolumns {
+  content: '';
+  z-index: 1;
   background-color: #ebeef1;
 }
 
-.setting-layout-menu-doublerow::before {
+.setting-layout-menu-threecolumns::before {
   content: '';
   z-index: 1;
   width: 16%;
   background-color: #001529;
 }
 
-.setting-layout-menu-doublerow::after {
+.setting-layout-menu-threecolumns::after {
   content: '';
   position: absolute;
   top: 0;
@@ -210,5 +221,11 @@ const tagColor = (color: string) => {
   flex-direction: row;
   gap: 15px;
   cursor: pointer;
+}
+
+.displayed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

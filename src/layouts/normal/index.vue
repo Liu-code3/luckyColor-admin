@@ -71,4 +71,7 @@ const menuStore = useMenuStore();
 .n-layout-toggle-button {
   display: none;
 }
+:deep(.n-layout-toggle-button){
+  display: none;
+}
 </style>
