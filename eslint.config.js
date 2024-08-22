@@ -5,8 +5,8 @@ export default antfu(
     ignores: [
       '.vscode',
       'build/',
-      'src/assets',
-      'public',
+      'src/assets/',
+      'public/',
       'dist/',
       'node_modules/',
       'pnpm-lock.yaml',
@@ -18,7 +18,8 @@ export default antfu(
     vue: {
       overrides: {
         'vue/v-on-event-hyphenation': 'off',
-        'vue/prefer-separate-static-class': 'off'
+        'vue/prefer-separate-static-class': 'off',
+        'vue/attribute-hyphenation': 'off'
       }
     },
     stylistic: {

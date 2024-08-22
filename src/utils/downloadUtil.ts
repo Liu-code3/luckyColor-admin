@@ -17,14 +17,14 @@ export default {
     if (headers['content-type'] === 'application/json') {
       // 错误以及无权限
       const reader = new FileReader();
-      reader.readAsText(new Blob([data]));
+      reader.readAsText(new Blob([ data ]));
       reader.onload = function () {
         const result = JSON.parse(reader.result as string);
         message.error(result.msg);
       };
     }
     else {
-      const blob = new Blob([res.data], { type: 'application/octet-stream;charset=UTF-8' });
+      const blob = new Blob([ res.data ], { type: 'application/octet-stream;charset=UTF-8' });
       const contentDisposition = res.headers['content-disposition'];
       const patt = /filename=([^;]+\\.[^.;]+);*/;
       const match = patt.exec(contentDisposition);
