@@ -20,10 +20,7 @@ const Type = [
   'DEFAULT_TYPE',
   'INPUT_TEXT_TYPE',
   'SELECT_TYPE',
-  'TIME_PICKER_TYPE',
-  'DATE_PICKER_TYPE',
-  'DATE_TIME_PICKER_TYPE',
-  'SWITCH_TYPE'
+  'SLOT_TYPE'
 ] as const;
 
 type LoaderType = typeof Type[number];
@@ -152,7 +149,6 @@ function handleSelectChange(val: string, field: string, rowData: RowData) {
     return item;
   });
 }
-
 function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
   const { rowData, colData } = props;
   // const componentsMap: Record<typeof Type[number], string> = {
@@ -168,10 +164,7 @@ function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
     'DEFAULT_TYPE': renderDefault,
     'INPUT_TEXT_TYPE': renderInput,
     'SELECT_TYPE': renderSelect,
-    'TIME_PICKER_TYPE': renderDefault,
-    'DATE_PICKER_TYPE': renderDefault,
-    'DATE_TIME_PICKER_TYPE': renderDefault,
-    'SWITCH_TYPE': renderDefault
+    'SLOT_TYPE': renderSlot
   };
 
   function renderDefault() {
@@ -199,6 +192,12 @@ function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
         defaultValue={rowData[colData.field]}
         onUpdateValue={(val: string) => handleSelectChange(val, colData.field, rowData)}
       />
+    );
+  }
+
+  function renderSlot(rowData: RowData) {
+    return (
+      <slot name={colData.field} rowData={rowData}></slot>
     );
   }
 
