@@ -1,4 +1,7 @@
 <script lang="tsx" setup>
+import { NInput, NSelect } from 'naive-ui';
+import { useSlots } from 'vue';
+
 const props = defineProps<{
   structure: StructureItem[];
   dataArr: RowData[];
@@ -138,6 +141,7 @@ function handleInputChange(val: string, field: string, rowData: RowData) {
     return item;
   });
 }
+
 function handleSelectChange(val: string, field: string, rowData: RowData) {
   matchDataArr.value = matchDataArr.value.map((item) => {
     if (item.id === rowData.id) {
@@ -149,17 +153,8 @@ function handleSelectChange(val: string, field: string, rowData: RowData) {
     return item;
   });
 }
-function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
-  const { rowData, colData } = props;
-  // const componentsMap: Record<typeof Type[number], string> = {
-  //   DEFAULT_TYPE: 'div',
-  //   INPUT_TYPE: 'n-input',
-  //   SELECT_TYPE: 'n-select',
-  //   TIME_PICKER_TYPE: 'n-time-picker',
-  //   DATE_PICKER_TYPE: 'n-date-picker',
-  //   DATE_TIME_PICKER_TYPE: 'n-date-picker',
-  //   SWITCH_TYPE: 'n-switch'
-  // };
+
+function getComponent(col: StructureItem, row: RowData) {
   const viewMap: Record<LoaderType, Function> = {
     'DEFAULT_TYPE': renderDefault,
     'INPUT_TEXT_TYPE': renderInput,
@@ -167,47 +162,40 @@ function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
     'SLOT_TYPE': renderSlot
   };
 
-  function renderDefault() {
-    return (
-      <div>
-        { rowData[colData.field] }
-      </div>
-    );
+  function renderDefault(col: StructureItem, row: RowData) {
+    return h('div', null, row[col.field]);
   }
 
-  function renderInput(rowData: RowData) {
-    return (
-      <n-input
-        type="text"
-        defaultValue={rowData[colData.field]}
-        onInput={(val: string) => handleInputChange(val, colData.field, rowData)}
-      />
-    );
-  }
-
-  function renderSelect(rowData: RowData) {
-    return (
-      <n-select
-        options={colData.children}
-        defaultValue={rowData[colData.field]}
-        onUpdateValue={(val: string) => handleSelectChange(val, colData.field, rowData)}
-      />
-    );
-  }
-
-  function renderSlot(rowData: RowData) {
-    return (
-      <slot name={colData.field} rowData={rowData}></slot>
-    );
-  }
-
-  return (
-    <>
+  function renderInput(col: StructureItem, row: RowData) {
+    return h(
+      NInput,
       {
-        viewMap[colData.loaderType](rowData)
+        'type': 'text',
+        'value': row[col.field],
+        'onUpdate:value': (val: string) => handleInputChange(val, col.field, row)
       }
-    </>
-  );
+    );
+  }
+
+  function renderSelect(col: StructureItem, row: RowData) {
+    return h(
+      NSelect,
+      {
+        'value': row[col.field],
+        'onUpdate:value': (val: string) => handleSelectChange(val, col.field, row),
+        'options': col.children
+      }
+    );
+  }
+
+  function renderSlot(col: StructureItem, row: RowData) {
+    const slotName = col.field;
+    const slotObj = useSlots();
+    const slotFn = slotObj[slotName];
+    return slotFn ? () => slotFn({ rowData: row }) : h('div', null); // 调用插槽函数并传递参数
+  }
+
+  return viewMap[col.loaderType](col, row);
 }
 </script>
 
@@ -243,7 +231,7 @@ function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
             :style="{ width: `${item.width}px`, flex: item.width > 120 ? 'none' : 1 }"
             class="scrollable"
           >
-            <DynamicComponent :rowData="row" :colData="item" />
+            <component :is="getComponent(item, row)" />
           </td>
           <td v-if="reveal" class="rightFixed fixed">
             <!-- <PlusSquareOutlined v-if="!row.baocun" @click="addfn(row.id)" /> -->

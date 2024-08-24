@@ -11,8 +11,8 @@ const colList: StructureItem[] = [
 ];
 
 const tableData: Ref<RowData[]> = ref([
-  { id: 1, name: '张三', age: 18, sex: 1, address: '北京', createTime: '2023-02-19' },
-  { id: 2, name: '李四', age: 20, sex: 0, address: '江苏', createTime: '2024-08-22' }
+  { id: 1, name: '张三', age: 18, sex: 0, address: '北京', createTime: '2023-02-19' },
+  { id: 2, name: '李四', age: 20, sex: 1, address: '江苏', createTime: '2024-08-22' }
 ]);
 
 const updateDataArr = (val: RowData[]) => {
@@ -28,9 +28,8 @@ const updateDataArr = (val: RowData[]) => {
       :data-arr="tableData"
       @updateDataArr="updateDataArr"
     >
-      <template #createTime="rowData">
-        <div>2023-02-19</div>
-        <span>{{ rowData }}</span>
+      <template #createTime="{ rowData }">
+        <div>Slot Content: {{ rowData.createTime }}</div>
       </template>
     </EditTable>
   </div>
