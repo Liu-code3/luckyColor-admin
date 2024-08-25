@@ -6,7 +6,7 @@ const colList: StructureItem[] = [
   { title: '名称', field: 'name', width: 100, loaderType: 'INPUT_TEXT_TYPE' },
   { title: '年龄', field: 'age', width: 100, loaderType: 'DEFAULT_TYPE' },
   { title: '性别', field: 'sex', width: 100, loaderType: 'SELECT_TYPE', children: [ { value: 1, label: '男' }, { value: 0, label: '女' } ] },
-  { title: '籍贯', field: 'address', width: 100, loaderType: 'DEFAULT_TYPE' },
+  { title: '籍贯', field: 'address', width: 100, loaderType: 'SLOT_TYPE' },
   { title: '创建时间', field: 'createTime', width: 100, loaderType: 'SLOT_TYPE' }
 ];
 
