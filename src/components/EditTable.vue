@@ -1,6 +1,5 @@
 <script lang="tsx" setup>
 import { NInput, NSelect } from 'naive-ui';
-import { useSlots } from 'vue';
 
 const props = defineProps<{
   structure: StructureItem[];
@@ -154,7 +153,8 @@ function handleSelectChange(val: string, field: string, rowData: RowData) {
   });
 }
 
-function getComponent(col: StructureItem, row: RowData) {
+function getComponent(props: { col: StructureItem; row: RowData }) {
+  const { col, row } = props;
   const viewMap: Record<LoaderType, Function> = {
     'DEFAULT_TYPE': renderDefault,
     'INPUT_TEXT_TYPE': renderInput,
@@ -162,11 +162,13 @@ function getComponent(col: StructureItem, row: RowData) {
     'SLOT_TYPE': renderSlot
   };
 
-  function renderDefault(col: StructureItem, row: RowData) {
+  function renderDefault(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
     return h('div', null, row[col.field]);
   }
 
-  function renderInput(col: StructureItem, row: RowData) {
+  function renderInput(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
     return h(
       NInput,
       {
@@ -177,7 +179,8 @@ function getComponent(col: StructureItem, row: RowData) {
     );
   }
 
-  function renderSelect(col: StructureItem, row: RowData) {
+  function renderSelect(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
     return h(
       NSelect,
       {
@@ -188,14 +191,15 @@ function getComponent(col: StructureItem, row: RowData) {
     );
   }
 
-  function renderSlot(col: StructureItem, row: RowData) {
+  function renderSlot(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
     const slotName = col.field;
     const slotObj = useSlots();
     const slotFn = slotObj[slotName];
-    return slotFn ? () => slotFn({ rowData: row }) : h('div', null); // 调用插槽函数并传递参数
+    return slotFn ? () => slotFn({ rowData: row }) : h('div', null, '已定义插槽未使用'); // 调用插槽函数并传递参数
   }
 
-  return viewMap[col.loaderType](col, row);
+  return viewMap[col.loaderType]({ col, row });
 }
 </script>
 
@@ -231,7 +235,7 @@ function getComponent(col: StructureItem, row: RowData) {
             :style="{ width: `${item.width}px`, flex: item.width > 120 ? 'none' : 1 }"
             class="scrollable"
           >
-            <component :is="getComponent(item, row)" />
+            <component :is="getComponent({ col: item, row })" />
           </td>
           <td v-if="reveal" class="rightFixed fixed">
             <!-- <PlusSquareOutlined v-if="!row.baocun" @click="addfn(row.id)" /> -->
