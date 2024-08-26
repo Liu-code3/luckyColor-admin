@@ -1,4 +1,6 @@
 <script lang="tsx" setup>
+import { NInput, NSelect } from 'naive-ui';
+
 const props = defineProps<{
   structure: StructureItem[];
   dataArr: RowData[];
@@ -20,10 +22,7 @@ const Type = [
   'DEFAULT_TYPE',
   'INPUT_TEXT_TYPE',
   'SELECT_TYPE',
-  'TIME_PICKER_TYPE',
-  'DATE_PICKER_TYPE',
-  'DATE_TIME_PICKER_TYPE',
-  'SWITCH_TYPE'
+  'SLOT_TYPE'
 ] as const;
 
 type LoaderType = typeof Type[number];
@@ -141,6 +140,7 @@ function handleInputChange(val: string, field: string, rowData: RowData) {
     return item;
   });
 }
+
 function handleSelectChange(val: string, field: string, rowData: RowData) {
   matchDataArr.value = matchDataArr.value.map((item) => {
     if (item.id === rowData.id) {
@@ -153,62 +153,53 @@ function handleSelectChange(val: string, field: string, rowData: RowData) {
   });
 }
 
-function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
-  const { rowData, colData } = props;
-  // const componentsMap: Record<typeof Type[number], string> = {
-  //   DEFAULT_TYPE: 'div',
-  //   INPUT_TYPE: 'n-input',
-  //   SELECT_TYPE: 'n-select',
-  //   TIME_PICKER_TYPE: 'n-time-picker',
-  //   DATE_PICKER_TYPE: 'n-date-picker',
-  //   DATE_TIME_PICKER_TYPE: 'n-date-picker',
-  //   SWITCH_TYPE: 'n-switch'
-  // };
+function getComponent(props: { col: StructureItem; row: RowData }) {
+  const { col, row } = props;
   const viewMap: Record<LoaderType, Function> = {
     'DEFAULT_TYPE': renderDefault,
     'INPUT_TEXT_TYPE': renderInput,
     'SELECT_TYPE': renderSelect,
-    'TIME_PICKER_TYPE': renderDefault,
-    'DATE_PICKER_TYPE': renderDefault,
-    'DATE_TIME_PICKER_TYPE': renderDefault,
-    'SWITCH_TYPE': renderDefault
+    'SLOT_TYPE': renderSlot
   };
 
-  function renderDefault() {
-    return (
-      <div>
-        { rowData[colData.field] }
-      </div>
-    );
+  function renderDefault(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
+    return h('div', null, row[col.field]);
   }
 
-  function renderInput(rowData: RowData) {
-    return (
-      <n-input
-        type="text"
-        defaultValue={rowData[colData.field]}
-        onInput={(val: string) => handleInputChange(val, colData.field, rowData)}
-      />
-    );
-  }
-
-  function renderSelect(rowData: RowData) {
-    return (
-      <n-select
-        options={colData.children}
-        defaultValue={rowData[colData.field]}
-        onUpdateValue={(val: string) => handleSelectChange(val, colData.field, rowData)}
-      />
-    );
-  }
-
-  return (
-    <>
+  function renderInput(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
+    return h(
+      NInput,
       {
-        viewMap[colData.loaderType](rowData)
+        'type': 'text',
+        'value': row[col.field],
+        'onUpdate:value': (val: string) => handleInputChange(val, col.field, row)
       }
-    </>
-  );
+    );
+  }
+
+  function renderSelect(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
+    return h(
+      NSelect,
+      {
+        'value': row[col.field],
+        'onUpdate:value': (val: string) => handleSelectChange(val, col.field, row),
+        'options': col.children
+      }
+    );
+  }
+
+  function renderSlot(props: { col: StructureItem; row: RowData }) {
+    const { col, row } = props;
+    const slotName = col.field;
+    const slotObj = useSlots();
+    const slotFn = slotObj[slotName];
+    return slotFn ? () => slotFn({ rowData: row }) : h('div', null, '已定义插槽未使用'); // 调用插槽函数并传递参数
+  }
+
+  return viewMap[col.loaderType]({ col, row });
 }
 </script>
 
@@ -244,7 +235,7 @@ function DynamicComponent(props: { rowData: RowData; colData: StructureItem }) {
             :style="{ width: `${item.width}px`, flex: item.width > 120 ? 'none' : 1 }"
             class="scrollable"
           >
-            <DynamicComponent :rowData="row" :colData="item" />
+            <component :is="getComponent({ col: item, row })" />
           </td>
           <td v-if="reveal" class="rightFixed fixed">
             <!-- <PlusSquareOutlined v-if="!row.baocun" @click="addfn(row.id)" /> -->
