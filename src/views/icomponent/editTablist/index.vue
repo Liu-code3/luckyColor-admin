@@ -5,14 +5,27 @@ import type { RowData, StructureItem } from '@/components/EditTable.vue';
 const colList: StructureItem[] = [
   { title: '名称', field: 'name', width: 100, loaderType: 'INPUT_TEXT_TYPE' },
   { title: '年龄', field: 'age', width: 100, loaderType: 'DEFAULT_TYPE' },
-  { title: '性别', field: 'sex', width: 100, loaderType: 'SELECT_TYPE', children: [ { value: 1, label: '男' }, { value: 0, label: '女' } ] },
-  { title: '籍贯', field: 'address', width: 100, loaderType: 'SLOT_TYPE' },
+  { title: '性别', field: 'sex', width: 100, loaderType: 'SELECT_TYPE', options: [ { value: 1, label: '男' }, { value: 0, label: '女' } ] },
+  { title: '省市区', children: [
+    {
+      title: '省',
+      field: 'province',
+      width: 100,
+      loaderType: 'DEFAULT_TYPE'
+    },
+    {
+      title: '市',
+      field: 'city',
+      width: 100,
+      loaderType: 'DEFAULT_TYPE'
+    }
+  ] },
   { title: '创建时间', field: 'createTime', width: 100, loaderType: 'SLOT_TYPE' }
 ];
 
 const tableData: Ref<RowData[]> = ref([
-  { id: 1, name: '张三', age: 18, sex: 0, address: '北京', createTime: '2023-02-19' },
-  { id: 2, name: '李四', age: 20, sex: 1, address: '江苏', createTime: '2024-08-22' }
+  { id: 1, name: '张三', age: 18, sex: 0, province: '广东省', city: '深圳市', createTime: '2023-02-19' },
+  { id: 2, name: '李四', age: 20, sex: 1, province: '江苏省', city: '苏州市', createTime: '2024-08-22' }
 ]);
 
 const updateDataArr = (val: RowData[]) => {
@@ -23,6 +36,7 @@ const updateDataArr = (val: RowData[]) => {
 <template>
   <div>
     <EditTable
+      checkStrictly
       :reveal="false"
       :structure="colList"
       :data-arr="tableData"
