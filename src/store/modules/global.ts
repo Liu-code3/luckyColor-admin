@@ -1,102 +1,102 @@
-import {defineStore} from 'pinia';
-import type {GlobalThemeOverrides} from 'naive-ui';
-import {useDark} from '@vueuse/core';
-import {colorBuilder} from '@kviewui/color-builder';
+import { defineStore } from 'pinia';
+import type { GlobalThemeOverrides } from 'naive-ui';
+import { useDark } from '@vueuse/core';
+import { colorBuilder } from '@kviewui/color-builder';
 import tool from '@/utils/tool.ts';
-import sysConfig, {naiveThemeOverrides} from '@/config';
+import sysConfig, { naiveThemeOverrides } from '@/config';
 import VxeUI from '@/config/vxeTable.ts';
 
 interface IGlobalState {
-    isLocked: boolean;
-    layout: string;
-    isDark: globalThis.WritableComputedRef<boolean>;
-    primaryColor: string;
-    naiveThemeOverrides: GlobalThemeOverrides;
-    control: Control
+  isLocked: boolean;
+  layout: string;
+  isDark: globalThis.WritableComputedRef<boolean>;
+  primaryColor: string;
+  naiveThemeOverrides: GlobalThemeOverrides;
+  control: Control;
 }
 
 enum Global {
-    LOCK_SCREEN = 'LOCK_SCREEN',
-    LAYOUT = 'layout',
-    PRIMARY_COLOR = 'primaryColor',
-    NaiveThemeOverrides = 'naiveThemeOverrides'
+  LOCK_SCREEN = 'LOCK_SCREEN',
+  LAYOUT = 'layout',
+  PRIMARY_COLOR = 'primaryColor',
+  NaiveThemeOverrides = 'naiveThemeOverrides'
 }
 
 interface Control {
-    lockScreen: boolean,
-    label: boolean,
-    flushed: boolean,
-    fullScreen: boolean,
-    dark: boolean,
-    crumbs: boolean
+  lockScreen: boolean;
+  label: boolean;
+  flushed: boolean;
+  fullScreen: boolean;
+  dark: boolean;
+  crumbs: boolean;
 }
 
 export const useGlobalStore = defineStore('layout', {
-        state: (): IGlobalState => ({
-            isLocked: tool.session.get(Global.LOCK_SCREEN) ?? false,
-            layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
-            isDark: useDark(),
-            primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
-            naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
-            control: {
-                lockScreen: true,
-                label: true,
-                flushed: true,
-                fullScreen: true,
-                dark: true,
-                crumbs: true
-            }
-        }),
-        actions: {
-            updateIsLock(isLocked:
+  state: (): IGlobalState => ({
+    isLocked: tool.session.get(Global.LOCK_SCREEN) ?? false,
+    layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
+    isDark: useDark(),
+    primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
+    naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
+    control: {
+      lockScreen: true,
+      label: true,
+      flushed: true,
+      fullScreen: true,
+      dark: true,
+      crumbs: true
+    }
+  }),
+  actions: {
+    updateIsLock(isLocked:
                              boolean
-            ) {
-                this.isLocked = isLocked;
-                tool.session.set(Global.LOCK_SCREEN, isLocked);
-            },
-            updateLayout(layout:
+    ) {
+      this.isLocked = isLocked;
+      tool.session.set(Global.LOCK_SCREEN, isLocked);
+    },
+    updateLayout(layout:
                              string
-            ) {
-                this.layout = layout;
-                tool.session.set(Global.LAYOUT, layout);
-            },
-            toggleDark() {
-                this.isDark = !this.isDark;
-            },
-            setPrimaryColor(color:
+    ) {
+      this.layout = layout;
+      tool.session.set(Global.LAYOUT, layout);
+    },
+    toggleDark() {
+      this.isDark = !this.isDark;
+    },
+    setPrimaryColor(color:
                                 string
-            ) {
-                this.primaryColor = color;
-            },
-            setThemeColor(color:
+    ) {
+      this.primaryColor = color;
+    },
+    setThemeColor(color:
                               string, isDark:
                               boolean) {
-                const primaryColor = color || this.primaryColor;
-                const isDarkMode = isDark || this.isDark;
+      const primaryColor = color || this.primaryColor;
+      const isDarkMode = isDark || this.isDark;
 
-                // 生成暗黑模式下的色阶集合
-                const colorList = colorBuilder.generate(primaryColor, {
-                    dark: isDarkMode, // 暗黑模式
-                    list: true, // 生成色阶集合,
-                    format: 'hex' // 颜色值格式
-                });
+      // 生成暗黑模式下的色阶集合
+      const colorList = colorBuilder.generate(primaryColor, {
+        dark: isDarkMode, // 暗黑模式
+        list: true, // 生成色阶集合,
+        format: 'hex' // 颜色值格式
+      });
 
-                const bodyStyle = document.body.style;
-                const rgbStr = colorBuilder.getRgbStr(colorList[5]);
-                bodyStyle.setProperty('--primary-color', rgbStr);
-                VxeUI.setTheme(isDarkMode ? 'dark' : 'light');
+      const bodyStyle = document.body.style;
+      const rgbStr = colorBuilder.getRgbStr(colorList[5]);
+      bodyStyle.setProperty('--primary-color', rgbStr);
+      VxeUI.setTheme(isDarkMode ? 'dark' : 'light');
 
-                this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
-                    primaryColor: colorList[5],
-                    primaryColorHover: colorList[4],
-                    primaryColorSuppl: colorList[4],
-                    primaryColorPressed: colorList[6]
-                });
+      this.naiveThemeOverrides.common = Object.assign(this.naiveThemeOverrides.common || {}, {
+        primaryColor: colorList[5],
+        primaryColorHover: colorList[4],
+        primaryColorSuppl: colorList[4],
+        primaryColorPressed: colorList[6]
+      });
 
-                tool.session.set(Global.PRIMARY_COLOR, primaryColor);
-                tool.session.set('isDark', isDarkMode);
-                tool.session.set(Global.NaiveThemeOverrides, naiveThemeOverrides);
-            }
-        }
-    })
+      tool.session.set(Global.PRIMARY_COLOR, primaryColor);
+      tool.session.set('isDark', isDarkMode);
+      tool.session.set(Global.NaiveThemeOverrides, naiveThemeOverrides);
+    }
+  }
+})
 ;
