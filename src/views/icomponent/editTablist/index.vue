@@ -36,8 +36,6 @@ const updateDataArr = (val: RowData[]) => {
 <template>
   <div>
     <EditTable
-      checkStrictly
-      :reveal="false"
       :structure="colList"
       :data-arr="tableData"
       @updateDataArr="updateDataArr"
