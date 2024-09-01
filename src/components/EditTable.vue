@@ -1,5 +1,5 @@
 <script lang="tsx" setup>
-import { NInput, NSelect } from 'naive-ui';
+import { NCheckbox, NInput, NSelect } from 'naive-ui';
 
 const props = withDefaults(defineProps<{
   structure: StructureItem[];
@@ -10,12 +10,9 @@ const props = withDefaults(defineProps<{
 });
 
 const emits = defineEmits<{
-  (e: 'soloDel', item: RowData): void;
-  (e: 'arrDel', items: RowData[]): void;
-  (e: 'transformData', data: RowData[]): void;
-  (e: 'change', item: RowData): void;
-  (e: 'soloAdd', item: RowData): void;
   (e: 'updateDataArr', data: RowData[]): void;
+  (e: 'checkedItem', data: RowData): void;
+  (e: 'checkedList', data: RowData[]): void;
 }>();
 
 // 定义接口来约束 props 的类型
@@ -49,8 +46,8 @@ export interface RowData {
   baocun?: string;
 }
 
-type PropType = 'selection' | 'index';
-
+const TdType = [ 'selection', 'index' ] as const;
+type PropType = typeof TdType[number];
 // 监听 props.dataArr 的变化并更新 dataArr
 const matchDataArr = computed({
   get: () => props.dataArr,
@@ -59,6 +56,7 @@ const matchDataArr = computed({
   }
 });
 
+// 处理type为‘selection’ 全选状态的部分选中状态
 const indeterminate = ref(false);
 const handleChecked = () => {
   const len = matchDataArr.value.filter(item => item.isCheck).length;
@@ -115,14 +113,84 @@ const handleChecked = () => {
 // };
 
 // 计算全选状态
-const checkAlls = computed({
+const checkAlls = {
   get() {
     return matchDataArr.value.every(item => item.isCheck);
   },
   set(newVal: boolean) {
-    matchDataArr.value.forEach(item => (item.isCheck = newVal));
+    matchDataArr.value.forEach(item => item.isCheck = newVal);
+    const checkedList = matchDataArr.value.filter(item => item.isCheck);
+    emits('checkedList', checkedList);
   }
-});
+};
+
+function firstTh(rowIndex: number) {
+  if (rowIndex !== 0) return;
+
+  const firstThType = {
+    [TdType[0]]: renderCheckbox,
+    [TdType[1]]: renderIndex
+  };
+
+  function renderCheckbox() {
+    return h(
+      NCheckbox,
+      {
+        checked: checkAlls.get(),
+        onUpdateChecked: (val: boolean) => checkAlls.set(val),
+        indeterminate: indeterminate.value
+      }
+    );
+  }
+
+  function renderIndex() {
+    return '序号';
+  }
+
+  return h(
+    'th',
+    {
+      class: 'luck_th',
+      rowspan: '2'
+    },
+    firstThType[props.type]()
+  );
+}
+
+function firstTd(rowData: RowData, rowIndex: number) {
+  const firstTdType = {
+    [TdType[0]]: renderCheckbox,
+    [TdType[1]]: renderIndex
+  };
+
+  function renderCheckbox() {
+    return h(
+      NCheckbox,
+      {
+        checked: rowData.isCheck,
+        onUpdateChecked: (val: boolean) => {
+          rowData.isCheck = val;
+          handleChecked();
+          emits('checkedItem', rowData);
+          const checkedList = matchDataArr.value.filter(item => item.isCheck);
+          emits('checkedList', checkedList);
+        }
+      }
+    );
+  }
+
+  function renderIndex() {
+    return (rowIndex + 1);
+  }
+
+  return h(
+    'td',
+    {
+      class: 'luck_td leftFixed fixed'
+    },
+    firstTdType[props.type]()
+  );
+}
 
 function handleInputChange(val: string, field: string, rowData: RowData) {
   matchDataArr.value = matchDataArr.value.map((item) => {
@@ -309,9 +377,10 @@ const flatColumns = computed(() => {
       <thead class="luck_thead">
         <template v-for="(row, rowIndex) in headerRows" :key="rowIndex">
           <tr class="luck_tr">
-            <th v-if="rowIndex === 0" class="luck_th" rowspan="2">
-              <n-checkbox v-model:checked="checkAlls" :indeterminate="indeterminate" />
-            </th>
+            <!--            <th v-if="rowIndex === 0" class="luck_th" rowspan="2"> -->
+            <!--              <n-checkbox v-model:checked="checkAlls" :indeterminate="indeterminate" /> -->
+            <!--            </th> -->
+            <component :is="firstTh(rowIndex)" />
             <template v-for="column in row" :key="column.key">
               <th
                 class="luck_th"
@@ -328,9 +397,7 @@ const flatColumns = computed(() => {
       </thead>
       <tbody class="luck_tbody">
         <tr v-for="(row, index) of matchDataArr" :key="index" class="luck_tr">
-          <td class="luck_td leftFixed fixed">
-            <n-checkbox v-model:checked="row.isCheck" :onUpdateChecked="handleChecked" />
-          </td>
+          <component :is="firstTd(row, index)" />
           <td
             v-for="item of flatColumns"
             :key="item.field"

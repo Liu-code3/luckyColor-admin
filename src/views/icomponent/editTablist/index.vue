@@ -31,14 +31,25 @@ const tableData: Ref<RowData[]> = ref([
 const updateDataArr = (val: RowData[]) => {
   tableData.value = [ ...val ];
 };
+
+const onCheckedItem = (row: RowData) => {
+  console.log(row, 'row');
+}
+
+const onCheckedList = (rowList: RowData[]) => {
+  console.log(rowList, 'list')
+}
 </script>
 
 <template>
   <div>
     <EditTable
+      type="selection"
       :structure="colList"
       :data-arr="tableData"
       @updateDataArr="updateDataArr"
+      @checkedItem="onCheckedItem"
+      @checkedList="onCheckedList"
     >
       <template #createTime="{ rowData }">
         <div>Slot Content: {{ rowData.createTime }}</div>
