@@ -3,6 +3,8 @@ import type { SelectRenderTag } from 'naive-ui';
 import { NTag } from 'naive-ui';
 
 import { Icon } from '@iconify/vue';
+import { userListApi } from '@/api';
+import tool from '@/utils/tool.ts';
 
 const genders = ref([
   { label: '男', value: 1 },
@@ -99,6 +101,17 @@ const generalOptions = [ '管理员', '质检员' ].map(
     value: v
   })
 );
+const userList = ref({});
+
+onMounted(() => {
+  userListFn();
+});
+
+const userListFn = async () => {
+  const res = await userListApi({ token: `${tool.data.get('TOKEN')}` });
+  userList.value = { ...res.data };
+  console.log(res, 'user');
+};
 </script>
 
 <template>
@@ -107,33 +120,39 @@ const generalOptions = [ '管理员', '质检员' ].map(
       <div class="user_sift_item">
         <div class="user_sift_title">
           用户名
-        </div> <n-input type="text" placeholder="请输入用户名" />
+        </div>
+        <n-input type="text" placeholder="请输入用户名" />
       </div>
       <div class="user_sift_item">
         <div class="user_sift_title">
           用户性别
-        </div> <n-space vertical>
+        </div>
+        <n-space vertical>
           <n-select v-model:value="sex" :options="genders" />
         </n-space>
       </div>
       <div class="user_sift_item">
         <div class="user_sift_title">
           用户状态
-        </div> <n-space vertical>
+        </div>
+        <n-space vertical>
           <n-select v-model:value="values" :options="option" />
         </n-space>
       </div>
       <NButton type="primary" class="ml-20px mr-10px">
-        <Icon icon="simple-line-icons:magnifier" class="mr-5px" /> 查询
+        <Icon icon="simple-line-icons:magnifier" class="mr-5px" />
+        查询
       </NButton>
       <NButton type="primary" ghost>
-        <Icon icon="system-uicons:reset" class="mr-5px" /> 重置
+        <Icon icon="system-uicons:reset" class="mr-5px" />
+        重置
       </NButton>
     </div>
     <div class="user_content">
       <div class="mb-15px">
         <NButton type="primary" class="mr-10px" @click="add_users">
-          <Icon icon="material-symbols:add" class="mr-5px" />增加新用户
+          <Icon icon="material-symbols:add" class="mr-5px" />
+          增加新用户
         </NButton>
       </div>
       <n-table>
@@ -153,17 +172,15 @@ const generalOptions = [ '管理员', '质检员' ].map(
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr v-for="item in userList.list" :key="item.id">
             <td>1</td>
-            <td>admin</td>
+            <td>{{ item.accountNumber }}</td>
             <td>
-              超管
+              {{ item.name }}
             </td>
             <td>
-              <NTag type="primary">
-                超级管理员
-              </NTag>  <NTag type="success">
-                质检员
+              <NTag v-for="role in item.role" :key="role" type="primary">
+                {{ role }}
               </NTag>
             </td>
             <td />
@@ -181,13 +198,16 @@ const generalOptions = [ '管理员', '质检员' ].map(
             </td>
             <td>
               <n-button strong secondary type="primary" @click="assign_roles_fn">
-                <Icon icon="carbon:user-role" class="mr-10px" /> 分配角色
+                <Icon icon="carbon:user-role" class="mr-10px" />
+                分配角色
               </n-button>
               <n-button type="primary" class="mx-10px">
-                <Icon icon="radix-icons:reset" class="mr-10px" /> 重置密码
+                <Icon icon="radix-icons:reset" class="mr-10px" />
+                重置密码
               </n-button>
               <n-button type="error">
-                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />  删除
+                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />
+                删除
               </n-button>
             </td>
           </tr>
@@ -215,12 +235,14 @@ const generalOptions = [ '管理员', '质检员' ].map(
       <div class="layout-abs-center mb-20px">
         <div class="w-60px">
           用户名
-        </div> <n-input disabled type="text" placeholder="请输入用户名" />
+        </div>
+        <n-input disabled type="text" placeholder="请输入用户名" />
       </div>
       <div class="layout-abs-center">
         <div class="w-60px">
           角色
-        </div> <n-select
+        </div>
+        <n-select
           v-model:value="value"
           multiple
           :render-tag="renderTag"
@@ -341,19 +363,23 @@ const generalOptions = [ '管理员', '质检员' ].map(
     }
   }
 }
+
 .user_content {
   height: calc(100vh - 224px);
   background-color: var(--primary-bgColor);
   padding: 20px;
   box-sizing: border-box;
 }
+
 .n-space {
   flex: 1;
 }
+
 .n-form {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+
   .n-form-item {
     width: 48%;
   }

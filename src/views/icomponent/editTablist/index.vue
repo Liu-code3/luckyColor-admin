@@ -5,22 +5,32 @@ import type { RowData, StructureItem } from '@/components/EditTable.vue';
 const colList: StructureItem[] = [
   { title: '名称', field: 'name', width: 100, loaderType: 'INPUT_TEXT_TYPE' },
   { title: '年龄', field: 'age', width: 100, loaderType: 'DEFAULT_TYPE' },
-  { title: '性别', field: 'sex', width: 100, loaderType: 'SELECT_TYPE', options: [ { value: 1, label: '男' }, { value: 0, label: '女' } ] },
-  { title: '省市区', children: [
-    {
-      title: '省',
-      field: 'province',
-      width: 100,
-      loaderType: 'DEFAULT_TYPE'
-    },
-    {
-      title: '市',
-      field: 'city',
-      width: 100,
-      loaderType: 'DEFAULT_TYPE'
-    }
-  ] },
-  { title: '创建时间', field: 'createTime', width: 100, loaderType: 'SLOT_TYPE' }
+  {
+    title: '性别',
+    field: 'sex',
+    width: 100,
+    loaderType: 'SELECT_TYPE',
+    options: [ { value: 1, label: '男' }, { value: 0, label: '女' } ]
+  },
+  {
+    title: '省市区',
+    children: [
+      {
+        title: '省',
+        field: 'province',
+        width: 100,
+        loaderType: 'DEFAULT_TYPE'
+      },
+      {
+        title: '市',
+        field: 'city',
+        width: 100,
+        loaderType: 'DEFAULT_TYPE'
+      }
+    ]
+  },
+  { title: '创建时间', field: 'createTime', width: 100, loaderType: 'SLOT_TYPE' },
+  { title: '操作', field: 'operation', width: 100, loaderType: 'SLOT_TYPE' }
 ];
 
 const tableData: Ref<RowData[]> = ref([

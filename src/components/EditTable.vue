@@ -1,6 +1,5 @@
 <script lang="tsx" setup>
 import { NInput, NSelect } from 'naive-ui';
-import {FunctionalComponent} from "vue";
 
 const props = defineProps<{
   structure: StructureItem[];

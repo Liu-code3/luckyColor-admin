@@ -17,3 +17,11 @@ export function menuListApi<T>(data: T) {
     data
   });
 }
+
+export function userListApi<T>(data: T) {
+  return request({
+    url: '/mock/userList',
+    method: 'POST',
+    data
+  });
+}
