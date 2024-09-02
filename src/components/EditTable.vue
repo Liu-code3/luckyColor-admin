@@ -1,24 +1,21 @@
 <script lang="tsx" setup>
-import { NInput, NSelect } from 'naive-ui';
+import { NCheckbox, NInput, NSelect } from 'naive-ui';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   structure: StructureItem[];
   dataArr: RowData[];
-  reveal: boolean;
-  checkStrictly: boolean;
-}>();
+  type?: PropType;
+}>(), {
+  type: 'selection'
+});
 
 const emits = defineEmits<{
-  (e: 'reveal', val: boolean): void;
-  (e: 'soloDel', item: RowData): void;
-  (e: 'arrDel', items: RowData[]): void;
-  (e: 'transformData', data: RowData[]): void;
-  (e: 'change', item: RowData): void;
-  (e: 'soloAdd', item: RowData): void;
   (e: 'updateDataArr', data: RowData[]): void;
+  (e: 'checkedItem', data: RowData): void;
+  (e: 'checkedList', data: RowData[]): void;
 }>();
-// 定义接口来约束 props 的类型
 
+// 定义接口来约束 props 的类型
 const Type = [
   'DEFAULT_TYPE',
   'INPUT_TEXT_TYPE',
@@ -45,13 +42,12 @@ export type StructureItem = StructureItemWithField | BaseItem;
 export interface RowData {
   [key: string]: any;
   id: number;
-  show?: boolean;
+  isCheck?: boolean;
   baocun?: string;
 }
 
-// const packup = ref<boolean>(true);
-// const changedItems = ref<RowData[]>([]);
-
+const TdType = [ 'selection', 'index' ] as const;
+type PropType = typeof TdType[number];
 // 监听 props.dataArr 的变化并更新 dataArr
 const matchDataArr = computed({
   get: () => props.dataArr,
@@ -60,23 +56,13 @@ const matchDataArr = computed({
   }
 });
 
-// 根据 loaderType 返回对应的组件类型
-// const getComponentType = (loaderType: string) => {
-//   const componentsMap: Record<string, any> = {
-//     FLOW_INPUT_TYPR: 'input',
-//     FLOW_SELECTOR_TYPEDISABLED: 'span',
-//     FLOW_SELECTOR_TYPE: 'n-select',
-//     FLOW_DISABLES_TYPE: 'span',
-//     FLOW_DATE_TYPR: 'n-date-picker',
-//     FLOW_TIMEELEMENT_TYPE: 'n-time-picker',
-//     FLOW_SWITCH_TYPE: 'n-switch',
-//     DISPLAY_DIV: 'div',
-//     DISPLAY_SPAN: 'span'
-//   };
-//
-//   return componentsMap[loaderType] || componentsMap.DISPLAY_DIV;
-// };
-
+// 处理type为‘selection’ 全选状态的部分选中状态
+const indeterminate = ref(false);
+const handleChecked = () => {
+  const len = matchDataArr.value.filter(item => item.isCheck).length;
+  const totalLen = matchDataArr.value.length;
+  indeterminate.value = len > 0 && len < totalLen;
+};
 // 处理输入事件
 // const handleInput = (event: Event, index: number, field: string) => {
 //   const target = event.target as HTMLElement;
@@ -127,14 +113,84 @@ const matchDataArr = computed({
 // };
 
 // 计算全选状态
-const checkAlls = computed({
+const checkAlls = {
   get() {
-    return matchDataArr.value.every(item => item.show);
+    return matchDataArr.value.every(item => item.isCheck);
   },
   set(newVal: boolean) {
-    matchDataArr.value.forEach(item => (item.show = newVal));
+    matchDataArr.value.forEach(item => item.isCheck = newVal);
+    const checkedList = matchDataArr.value.filter(item => item.isCheck);
+    emits('checkedList', checkedList);
   }
-});
+};
+
+function firstTh(rowIndex: number) {
+  if (rowIndex !== 0) return;
+
+  const firstThType = {
+    [TdType[0]]: renderCheckbox,
+    [TdType[1]]: renderIndex
+  };
+
+  function renderCheckbox() {
+    return h(
+      NCheckbox,
+      {
+        checked: checkAlls.get(),
+        onUpdateChecked: (val: boolean) => checkAlls.set(val),
+        indeterminate: indeterminate.value
+      }
+    );
+  }
+
+  function renderIndex() {
+    return '序号';
+  }
+
+  return h(
+    'th',
+    {
+      class: 'luck_th',
+      rowspan: '2'
+    },
+    firstThType[props.type]()
+  );
+}
+
+function firstTd(rowData: RowData, rowIndex: number) {
+  const firstTdType = {
+    [TdType[0]]: renderCheckbox,
+    [TdType[1]]: renderIndex
+  };
+
+  function renderCheckbox() {
+    return h(
+      NCheckbox,
+      {
+        checked: rowData.isCheck,
+        onUpdateChecked: (val: boolean) => {
+          rowData.isCheck = val;
+          handleChecked();
+          emits('checkedItem', rowData);
+          const checkedList = matchDataArr.value.filter(item => item.isCheck);
+          emits('checkedList', checkedList);
+        }
+      }
+    );
+  }
+
+  function renderIndex() {
+    return (rowIndex + 1);
+  }
+
+  return h(
+    'td',
+    {
+      class: 'luck_td leftFixed fixed'
+    },
+    firstTdType[props.type]()
+  );
+}
 
 function handleInputChange(val: string, field: string, rowData: RowData) {
   matchDataArr.value = matchDataArr.value.map((item) => {
@@ -210,11 +266,7 @@ function getComponent(props: { col: StructureItemWithField; row: RowData }) {
 }
 
 /**
- * 计算列的跨度
- * 此函数用于计算给定列（作为结构项）在表格或布局中的跨度该函数考虑了列的递归结构，如果列有子列，
- * 它将递归计算所有子列的跨度之和；如果没有子列，则列的跨度为1
- * @param column StructureItem类型的列对象列对象可以包含子列信息
- * @returns 返回计算得到的列跨度，作为数字
+ * @remarks 计算行的rowSpan
  */
 function calculateColSpan(column: BaseItem): number {
   // 判断当前列是否包含子列以及子列数组是否为空
@@ -229,19 +281,7 @@ function calculateColSpan(column: BaseItem): number {
 }
 
 /**
- * 计算行跨度的函数
- * 根据当前结构项和层级信息，计算在复杂结构的表格中，当前单元格应该跨越的行数
- * @param column StructureItem类型的参数column，表示当前正在处理的结构项
- *               该结构项包含有关表格中单元格的信息，可能包括子项，形成树状结构
- * @param level 数字类型的参数level，表示当前结构项在树状结构中的层级（从0开始）
- * @param maxLevel 数字类型的参数maxLevel，表示树状结构中的最大层级数
- *                 这用于确定表格的深度，以计算行跨度
- * @returns 返回一个数字，表示当前单元格应该跨越的行数
- * 注解：
- * 1. 如果当前结构项包含子项，则其行跨度固定为1，因为子项会单独占据行，不需要合并
- * 2. 如果当前结构项没有子项，则其行跨度为maxLevel - level + 1
- *    这是因为在没有子项的情况下，当前项将与其所有上级层级的项合并，直到最大层级
- *    这种情况下，行跨度等于从当前层级到最大层级的行数
+ * @remarks 生成表头行的递归函数
  */
 function calculateRowSpan(column: BaseItem, level: number, maxLevel: number) {
   if (column.children && column.children.length > 0) {
@@ -253,13 +293,7 @@ function calculateRowSpan(column: BaseItem, level: number, maxLevel: number) {
 }
 
 /**
- * 递归生成表头行数据
- * 该函数用于根据给定的列配置生成表头的行数据，以支持复杂表头的创建
- * @param {Array} columns 列配置数组，包含表头的列定义和嵌套关系
- * @param {number} level 当前处理的层级，默认为0，即顶级表头
- * @param {Array} rows 表头行数据数组，初始为空数组
- * @param {number} maxLevel 表头结构的最大层级，默认为0，用于计算行跨度
- * @returns {Array} 返回生成的表头行数据数组
+ * @remarks 生成表头行的递归函数
  */
 function createHeaderRows(columns: BaseItem[], level = 0, rows: any[] = [], maxLevel = 0) {
   // 如果当前层级的行数据不存在，则初始化为空数组
@@ -292,14 +326,7 @@ function createHeaderRows(columns: BaseItem[], level = 0, rows: any[] = [], maxL
 }
 
 /**
- * 计算给定结构体中最大的嵌套层级
- * @param columns 结构体数组，每个元素包含基本信息和可能的子结构体
- * @param level 当前处理的层级，初始值为0，表示顶级结构体
- * @returns 返回结构体中的最大嵌套层级
- * @remarks
- * 此函数使用递归和数组的reduce方法来查找最大嵌套层级
- * 对于每个结构体，如果它有子结构体且子结构体非空，则递归计算子结构体的最大嵌套层级
- * 最终返回整个结构体中的最大嵌套层级
+ * @remarks 计算最大嵌套层级
  */
 function getMaxLevel(columns: BaseItem[], level = 0): number {
   return columns.reduce((max: number, column: BaseItem) => {
@@ -348,28 +375,29 @@ const flatColumns = computed(() => {
   <div class="dynamic_tables_box">
     <table class="luck_table">
       <thead class="luck_thead">
-        <tr v-for="(row, rowIndex) in headerRows" :key="rowIndex" class="luck_tr">
-          <th v-if="rowIndex === 0 && checkStrictly" class="luck_th" rowspan="2">
-            <n-checkbox v-model:checked="checkAlls" />
-          </th>
-          <template v-for="column in row" :key="column.key">
-            <th
-              class="luck_th"
-              :colspan="column.colSpan"
-              :rowspan="column.rowSpan"
-              :style="{ width: `${column.width}px` }"
-              :class="{ luck_operate: column.field === 'operation' }"
-            >
-              {{ column.title }}
-            </th>
-          </template>
-        </tr>
+        <template v-for="(row, rowIndex) in headerRows" :key="rowIndex">
+          <tr class="luck_tr">
+            <!--            <th v-if="rowIndex === 0" class="luck_th" rowspan="2"> -->
+            <!--              <n-checkbox v-model:checked="checkAlls" :indeterminate="indeterminate" /> -->
+            <!--            </th> -->
+            <component :is="firstTh(rowIndex)" />
+            <template v-for="column in row" :key="column.key">
+              <th
+                class="luck_th"
+                :colspan="column.colSpan"
+                :rowspan="column.rowSpan"
+                :style="{ width: `${column.width}px` }"
+                :class="{ luck_operate: column.field === 'operation' }"
+              >
+                {{ column.title }}
+              </th>
+            </template>
+          </tr>
+        </template>
       </thead>
       <tbody class="luck_tbody">
         <tr v-for="(row, index) of matchDataArr" :key="index" class="luck_tr">
-          <td class="luck_td leftFixed fixed">
-            <n-checkbox v-model:checked="row.show" />
-          </td>
+          <component :is="firstTd(row, index)" />
           <td
             v-for="item of flatColumns"
             :key="item.field"
@@ -377,12 +405,6 @@ const flatColumns = computed(() => {
             :class="['luck_td', { q_operate: item.field === 'operation' }]"
           >
             <component :is="getComponent({ col: item, row })" />
-          </td>
-          <td v-if="reveal" class="rightFixed fixed">
-            <!-- <PlusSquareOutlined v-if="!row.baocun" @click="addfn(row.id)" /> -->
-            <span v-if="!row.baocun" class="pipeSymbol" />
-            <!-- <MinusSquareOutlined v-if="!row.baocun" @click="delfn(row)" /> -->
-            <slot name="controls" :content="row" />
           </td>
         </tr>
       </tbody>
@@ -489,7 +511,7 @@ const flatColumns = computed(() => {
   flex: none;
 }
 
-.pipeSymbol {
+.pipe_symbol {
   display: inline-block;
   width: 1px;
   height: 23px;
