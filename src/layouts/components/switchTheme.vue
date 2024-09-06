@@ -6,8 +6,8 @@ import { useGlobalStore } from '@/store/modules/global.ts';
 const globalStore = useGlobalStore();
 const isDark = useDark();
 
-function toggleTheme(event: Event) {
-  const { clientX, clientY } = event as MouseEvent;
+function toggleTheme(event: MouseEvent) {
+  const { clientX, clientY } = event;
   const maxRadius = Math.hypot(
     Math.max(clientX, window.innerWidth - clientX),
     Math.max(clientY, window.innerHeight - clientY)
