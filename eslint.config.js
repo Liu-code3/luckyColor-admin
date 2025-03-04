@@ -14,7 +14,11 @@ export default antfu(
     ],
     formatters: true,
     unocss: true,
-    typescript: true,
+    typescript: {
+      overrides: {
+        'ts/no-use-before-define': 'off'
+      }
+    },
     vue: {
       overrides: {
         'vue/v-on-event-hyphenation': 'off',

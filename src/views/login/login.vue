@@ -42,7 +42,6 @@ const slideImages = ref([
 ]);
 // 验证成功回调
 const handleVerifySuccess = (state: boolean) => {
-  console.log("=>(login.vue:45) state", state);
   if (!state) {
     message.error('验证失败');
     return;

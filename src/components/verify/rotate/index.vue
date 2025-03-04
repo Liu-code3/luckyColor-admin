@@ -1,7 +1,4 @@
-// src/components/RotateVerify.vue
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
-
 // Props 类型定义
 interface VerifyProps {
   slideImage: string[];
@@ -34,21 +31,6 @@ let ctx: CanvasRenderingContext2D | null = null;
 const canvasSize = 200;
 const img = new Image();
 
-// 初始化Canvas
-const initCanvas = () => {
-  if (!canvasRef.value) return;
-
-  ctx = canvasRef.value.getContext('2d');
-  if (!ctx) return;
-
-  // 设置随机旋转角度
-  state.randRot = Math.floor(Math.random() * 240) + 30; // 30-270度之间
-
-  // 加载图片
-  img.onload = () => drawRotatedImage(state.randRot);
-  img.src = props.slideImage[Math.floor(Math.random() * props.slideImage.length)];
-};
-
 // 绘制旋转后的图片
 const drawRotatedImage = (degrees: number) => {
   if (!ctx || !canvasRef.value) return;
@@ -76,18 +58,19 @@ const drawRotatedImage = (degrees: number) => {
   ctx.restore();
 };
 
-// 处理鼠标按下事件
-const handleMouseDown = (e: MouseEvent) => {
-  if (state.verifyState) return;
+// 初始化Canvas
+const initCanvas = () => {
+  if (!canvasRef.value) return;
 
-  state.isDragging = true;
-  state.startX = e.clientX - (dragBtnRef.value?.offsetLeft || 0);
+  ctx = canvasRef.value.getContext('2d');
+  if (!ctx) return;
 
-  dragBtnRef.value?.classList.add('active');
-  controlBorRef.value?.classList.add('active');
+  // 设置随机旋转角度
+  state.randRot = Math.floor(Math.random() * 240) + 30; // 30-270度之间
 
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+  // 加载图片
+  img.onload = () => drawRotatedImage(state.randRot);
+  img.src = props.slideImage[Math.floor(Math.random() * props.slideImage.length)];
 };
 
 // 处理鼠标移动事件
@@ -127,6 +110,20 @@ const handleMouseUp = () => {
 
   // 验证
   checkVerification();
+};
+
+// 处理鼠标按下事件
+const handleMouseDown = (e: MouseEvent) => {
+  if (state.verifyState) return;
+
+  state.isDragging = true;
+  state.startX = e.clientX - (dragBtnRef.value?.offsetLeft || 0);
+
+  dragBtnRef.value?.classList.add('active');
+  controlBorRef.value?.classList.add('active');
+
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
 };
 
 // 验证结果
@@ -189,7 +186,7 @@ const show = () => {
   // 这样确保DOM已更新且有足够时间加载图片
   setTimeout(() => {
     resetVerify();
-  }, 1000)
+  }, 1000);
 };
 
 // 隐藏验证码
