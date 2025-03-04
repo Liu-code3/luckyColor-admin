@@ -7,6 +7,8 @@ import { handlMenuList } from '@/utils/handlerMenu';
 // import { addRoutesWithMenu } from '@/router';
 import { Encrypt } from '@/utils/crypto-md5';
 import { useMenuStore } from '@/store/modules/menu.ts';
+import RotateVerify from '@/components/verify/rotate/index.vue';
+import { message } from '@/utils/message.ts';
 
 const router = useRouter();
 const menuStore = useMenuStore();
@@ -28,10 +30,24 @@ const rules = {
     trigger: [ 'input', 'blur' ]
   }
 };
+const rotateVerifyRef = ref<InstanceType<typeof RotateVerify>>();
+const setVerify = () => {
+  // 使用暴露的show方法
+  rotateVerifyRef.value?.show();
+};
+const slideImages = ref([
+  'http://codegen.caihongy.cn/20231007/1bd4fe88e21a4641a3208a7d783cbf6d.jpg',
+  'http://codegen.caihongy.cn/20231007/605d68174b8a49959b82f364194a9ba0.jpg',
+  'http://codegen.caihongy.cn/20231007/6e13a48b74c940118f00f2d28de337c3.jpg'
+]);
+// 验证成功回调
+const handleVerifySuccess = (state: boolean) => {
+  console.log("=>(login.vue:45) state", state);
+  if (!state) {
+    message.error('验证失败');
+    return;
+  }
 
-type FnClick = (e: MouseEvent) => void;
-const handleValidateClick: FnClick = (e: MouseEvent) => {
-  e.preventDefault();
   formRef.value?.validate(async (errors) => {
     if (!errors) {
       const res = await loginApi(formValue);
@@ -52,6 +68,13 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
       // console.log(errors);
     }
   });
+  // 延迟关闭验证框
+  setTimeout(() => {
+    rotateVerifyRef.value?.hide();
+  }, 2500);
+};
+const handleValidateClick = () => {
+  setVerify();
 };
 </script>
 
@@ -93,6 +116,12 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
         </n-form>
       </div>
     </div>
+
+    <RotateVerify
+      ref="rotateVerifyRef"
+      :slide-image="slideImages"
+      @success="handleVerifySuccess"
+    />
   </div>
 </template>
 
@@ -227,5 +256,15 @@ const handleValidateClick: FnClick = (e: MouseEvent) => {
       }
     }
   }
+}
+
+.verify_fixed {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  bottom: 100px;
+  right: 100px;
+  background-color: #4e88f2;
+  z-index: 999;
 }
 </style>

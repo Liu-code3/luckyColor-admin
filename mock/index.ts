@@ -9,5 +9,5 @@ export default [
   login,
   menuList,
   dictTree,
-  dictPage,
+  dictPage
 ] as MockMethod[];

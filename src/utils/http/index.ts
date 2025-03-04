@@ -4,7 +4,7 @@ import { setupInterceptors } from '@/utils/http/interceptors.ts';
 
 export function createAxios(options = {}) {
   const defaultOptions = {
-    baseURL: <string>sysConfig.API_URL,
+    baseURL: sysConfig.API_URL,
     timeout: sysConfig.TIMEOUT
   };
 

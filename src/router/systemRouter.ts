@@ -17,7 +17,7 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    component: () => import('../views/errorPage/404.vue'),
+    component: () => import('@/views/errorPage/404.vue'),
     meta: {
       layout: 'empty'
     }
