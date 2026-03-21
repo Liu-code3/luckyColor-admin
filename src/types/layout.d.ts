@@ -1,4 +1,12 @@
 declare namespace LayoutT {
+  interface MenuRouteMeta {
+    type?: 'iframe' | 'link' | 'route';
+    url?: string;
+    keepAlive?: boolean;
+    hidden?: boolean;
+    [key: string]: string | number | boolean | undefined;
+  }
+
   interface MenuItem {
     pid: number;
     id: number;
@@ -9,6 +17,10 @@ declare namespace LayoutT {
     key: string;
     icon: string;
     layout: string;
+    component: string;
+    redirect?: string;
+    isVisible?: boolean;
+    meta?: MenuRouteMeta;
     children?: MenuItem[];
   }
 

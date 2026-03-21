@@ -13,24 +13,6 @@ interface IMenuState {
   collapsed: boolean;
 }
 
-interface MenuItem {
-  pid: number;
-  id: number;
-  title: string;
-  name: string;
-  type: number;
-  path: string;
-  key: string;
-  icon: string;
-  layout: string;
-  component: string;
-  meta?: {
-    [key: string]: string;
-  };
-  redirect?: string;
-  children?: MenuItem[];
-}
-
 const modules = import.meta.glob('/src/views/**/*.vue');
 const iconRender = useIconRender();
 export const useMenuStore = defineStore('menu', {
@@ -68,11 +50,11 @@ export const useMenuStore = defineStore('menu', {
       this.menuOptions = this.transformMenuData(menuData);
     },
     addRoutesWithMenu() {
-      const apiMenu = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as MenuItem[] || [];
+      const apiMenu = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[] || [];
       const menuRouter = this.filterAsyncRouter(apiMenu);
       menuRouter.forEach(route => router.addRoute(route));
     },
-    filterAsyncRouter(routerMap: MenuItem[]): RouteRecordRaw[] {
+    filterAsyncRouter(routerMap: LayoutT.MenuItem[]): RouteRecordRaw[] {
       const accessedRouters: RouteRecordRaw[] = [];
       routerMap.forEach((item) => {
         item.meta = item.meta || {};
