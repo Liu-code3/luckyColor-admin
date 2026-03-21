@@ -1,17 +1,21 @@
 import type { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import sysConfig from '@/config';
-import { getAccessToken } from '@/utils/auth';
+import { clearLoginSession, getAccessToken } from '@/utils/auth';
 import { message } from '@/utils/message.ts';
 import { handlerError, reloadCodes } from '@/utils/http/config.ts';
 
-// 定义一个重新登录弹出窗的变量
+// Avoid repeated messages and redirect loops when the session expires.
 const loginBack = ref(false);
 
-// 保持重新登录Modal的唯一性
-const error = () => {
+const redirectToLogin = () => {
   loginBack.value = true;
-  // 重新登陆提示弹窗
-  loginBack.value = false;
+  clearLoginSession();
+  message.warning('登录已失效，请重新登录');
+  window.setTimeout(() => {
+    if (window.location.pathname !== '/login')
+      window.location.replace('/login');
+    loginBack.value = false;
+  }, 300);
 };
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
@@ -39,7 +43,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
 
     if (reloadCodes.includes(code)) {
       if (!loginBack.value)
-        error();
+        redirectToLogin();
 
       return Promise.reject(data);
     }
@@ -50,7 +54,6 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
       return Promise.reject(response);
     }
     else {
-      // 请求成功
       const msg = data.msg || '请求成功';
       message.success(msg);
       return Promise.resolve(data);
@@ -58,6 +61,12 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
   }
 
   function resReject(error: AxiosError) {
+    if (error.response?.status === 401) {
+      if (!loginBack.value)
+        redirectToLogin();
+      return Promise.reject(error);
+    }
+
     if (error) {
       handlerError(error);
       return Promise.reject(error);
