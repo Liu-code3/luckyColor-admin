@@ -4,8 +4,7 @@ import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useFullscreen } from '@vueuse/core';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import tool from '@/utils/tool.ts';
-import { getCurrentUserInfo } from '@/utils/auth';
+import { clearLoginSession, getCurrentUserInfo } from '@/utils/auth';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
@@ -46,9 +45,8 @@ const fold_fn = () => {
 
 // 退出登录
 function signOut() {
-  tool.data.clear();
+  clearLoginSession();
   tabStore.$reset();
-  // tool.data.remove(AUTH_STORAGE_KEYS.accessToken);
   router.push('/login');
   message.success(
     '退出登录成功'

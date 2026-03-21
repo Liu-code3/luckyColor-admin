@@ -28,3 +28,7 @@ export function getCurrentUserInfo() {
 export function removeCurrentUserInfo() {
   tool.data.remove(AUTH_STORAGE_KEYS.userInfo);
 }
+
+export function clearLoginSession() {
+  tool.data.clear();
+}
