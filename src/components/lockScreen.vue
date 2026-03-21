@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { Encrypt } from '@/utils/crypto-md5';
 import tool from '@/utils/tool';
 import { message } from '@/utils/message';
@@ -11,7 +12,7 @@ const lockPwd = ref('');
 const globalStore = useGlobalStore();
 const onEnLock: () => void = () => {
   const pwd = Encrypt(lockPwd.value);
-  const oldPwd = tool.data.get<string>('lockPassword') ?? '';
+  const oldPwd = tool.data.get<string>(AUTH_STORAGE_KEYS.lockScreenPassword) ?? '';
   if (pwd === oldPwd) {
     emits('unlock');
     globalStore.updateIsLock(false);

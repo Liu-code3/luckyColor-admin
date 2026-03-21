@@ -46,7 +46,7 @@ const fold_fn = () => {
 function signOut() {
   tool.data.clear();
   tabStore.$reset();
-  // tool.data.remove('TOKEN');
+  // tool.data.remove(AUTH_STORAGE_KEYS.accessToken);
   router.push('/login');
   message.success(
     '退出登录成功'

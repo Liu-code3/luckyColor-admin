@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useRoute } from 'vue-router';
 import tool from '@/utils/tool.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
@@ -16,7 +17,7 @@ const identification = ref<string>('');
 // 监听路由变化并初始化数据
 watch(() => route.fullPath, async () => {
   try {
-    switchModulesList.value = await tool.data.get('MENU') as LayoutT.MenuItem[];
+    switchModulesList.value = await tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[];
     selectedKeys.value = [ route.fullPath ];
     identification.value = getBeforeSecondSlash(route.fullPath);
     switchModulesList.value.forEach((item) => {

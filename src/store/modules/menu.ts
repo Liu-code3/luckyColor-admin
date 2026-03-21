@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import type { RouteRecordRaw } from 'vue-router';
+import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useIconRender } from '@/hooks/iconRender.ts';
 import tool from '@/utils/tool.ts';
 import router from '@/router';
@@ -61,13 +62,13 @@ export const useMenuStore = defineStore('menu', {
       });
     },
     defaultLoading() {
-      const menuData = tool.data.get('MENU') as LayoutT.MenuItem[];
+      const menuData = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[];
       this.switchModulesList = this.transformMenuData(menuData);
       if (config.LUCK_LAYOUT === 'modular') return;
       this.menuOptions = this.transformMenuData(menuData);
     },
     addRoutesWithMenu() {
-      const apiMenu = tool.data.get('MENU') as MenuItem[] || [];
+      const apiMenu = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as MenuItem[] || [];
       const menuRouter = this.filterAsyncRouter(apiMenu);
       menuRouter.forEach(route => router.addRoute(route));
     },

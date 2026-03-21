@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import router from '@/router';
 import tool from '@/utils/tool.ts';
 
@@ -9,8 +10,8 @@ interface TabState {
 
 export const useTabStore = defineStore('tab', {
   state: (): TabState => ({
-    tabs: tool.data.get('tabs') || [],
-    activeTab: tool.data.get('LAST_VIEWS_PATH') || ''
+    tabs: tool.data.get(AUTH_STORAGE_KEYS.tabs) || [],
+    activeTab: tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) || ''
   }),
   getters: {
     activeIndex(): number {
@@ -22,11 +23,11 @@ export const useTabStore = defineStore('tab', {
     async setActiveTab(path: string) {
       await nextTick(); // tab栏dom更新完再设置激活，让tab栏定位到新增的tab上生效
       this.activeTab = path;
-      tool.data.set('LAST_VIEWS_PATH', path);
+      tool.data.set(AUTH_STORAGE_KEYS.lastViewPath, path);
     },
     setTabs(tabs: LayoutT.ITab[]) {
       this.tabs = tabs;
-      tool.data.set('tabs', tabs);
+      tool.data.set(AUTH_STORAGE_KEYS.tabs, tabs);
     },
     addTab(tab: LayoutT.ITab) {
       const findIndex = this.tabs.findIndex(item => item.key === tab.key);

@@ -2,6 +2,7 @@
 import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { loginApi, menuListApi } from '@/api';
+import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import tool from '@/utils/tool';
 import { handlMenuList } from '@/utils/handlerMenu';
 // import { addRoutesWithMenu } from '@/router';
@@ -53,12 +54,12 @@ const handleVerifySuccess = (state: boolean) => {
       // TODO 理解VO 于 TO 的区别 返回值类型做一下
       const { code, data } = res;
       if (code === 200) {
-        tool.data.set('TOKEN', data);
+        tool.data.set(AUTH_STORAGE_KEYS.accessToken, data);
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
-        tool.data.set('MENU', handlMenuList(res.data));
+        tool.data.set(AUTH_STORAGE_KEYS.menuTree, handlMenuList(res.data));
         const md5Password = Encrypt(formValue.password);
-        tool.data.set('lockPassword', md5Password);
+        tool.data.set(AUTH_STORAGE_KEYS.lockScreenPassword, md5Password);
         menuStore.addRoutesWithMenu();
         await router.push('/');
       }
