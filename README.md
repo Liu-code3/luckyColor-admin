@@ -1,86 +1,163 @@
 # luckyColor-admin
 
-当前仓库已经拆成两部分：
+LuckyColor 的后台管理前端项目，负责登录鉴权、动态菜单、权限路由、系统管理页面以及常用业务组件示例展示。
 
-- 前端：根目录，`Vue 3 + Vite + Pinia + Naive UI`
-- 后端：`D:\zl\luckyColor-admin-serve\server`，`NestJS + Prisma + MySQL`
+项目基于 `Vue 3`、`Vite`、`TypeScript`、`Pinia`、`Naive UI` 构建，开发环境通过 Vite 代理将 `/api` 请求转发到同级目录的后端服务 `luckyColor-admin-serve`。
+
+![luckyColor-admin 预览图](./src/assets/images/luckColor.png)
+
+## 项目概览
+
+- 当前仓库为管理后台前端项目，目录位于 `D:\zl\luckyColor-admin`
+- 配套后端项目位于 `D:\zl\luckyColor-admin-serve`
+- `mock/` 目录中的数据仅作为历史迁移参考保留，当前联调以真实后端接口为主
+- 开发环境默认端口为 `9900`，后端代理目标默认为 `http://127.0.0.1:3001`
+
+## 功能模块
+
+- 登录页与滑块验证
+- 基于接口返回结果的动态菜单与权限路由
+- 多标签页、模块切换、主题切换、锁屏等后台基础交互
+- 系统管理：用户管理、部门管理、菜单管理、角色管理
+- 组件示例：富文本编辑器、数据字典、可编辑表格
+
+## 技术栈
+
+- `Vue 3`
+- `TypeScript`
+- `Vite`
+- `Pinia`
+- `Vue Router`
+- `Naive UI`
+- `UnoCSS`
+- `Axios`
+- `vxe-table`
+- `wangEditor`
 
 ## 目录结构
 
 ```text
 luckyColor-admin/
-├─ src/                  # 前端源码
-└─ mock/                 # 旧 mock 数据，当前仅作为迁移数据来源保留
+├─ public/                 静态资源
+├─ mock/                   历史 mock 数据与迁移参考
+├─ src/
+│  ├─ api/                 接口封装
+│  ├─ components/          通用组件
+│  ├─ config/              系统配置
+│  ├─ layouts/             后台布局
+│  ├─ router/              路由与动态菜单处理
+│  ├─ store/               Pinia 状态管理
+│  ├─ utils/               工具函数与请求封装
+│  └─ views/               页面模块
+├─ .env.development        开发环境变量
+├─ .env.production         生产环境变量
+├─ package.json
+└─ README.md
 ```
 
-## 前端启动
+## 环境要求
+
+- `Node.js >= 18`
+- `pnpm >= 8`
+
+## 快速开始
+
+### 1. 安装前端依赖
 
 ```bash
 pnpm install
+```
+
+### 2. 启动前端项目
+
+```bash
 pnpm dev
 ```
 
-前端开发环境会把 `/api` 代理到 `http://127.0.0.1:3001`。
+启动后默认访问地址：
 
-## 后端启动
-
-1. 安装依赖
-
-```bash
-pnpm --dir ../luckyColor-admin-serve/server install
+```text
+http://127.0.0.1:9900
 ```
 
-2. 准备环境变量
+### 3. 构建与预览
 
 ```bash
-cp ../luckyColor-admin-serve/server/.env.example ../luckyColor-admin-serve/server/.env
+pnpm build
+pnpm preview
+```
+
+## 配套后端启动
+
+后端项目默认放在当前仓库同级目录：`../luckyColor-admin-serve`
+
+### 1. 安装后端依赖
+
+```bash
+pnpm --dir ../luckyColor-admin-serve install
+```
+
+### 2. 准备环境变量
+
+```bash
+cp ../luckyColor-admin-serve/.env.example ../luckyColor-admin-serve/.env
 ```
 
 Windows PowerShell:
 
 ```powershell
-Copy-Item ..\luckyColor-admin-serve\server\.env.example ..\luckyColor-admin-serve\server\.env
+Copy-Item ..\luckyColor-admin-serve\.env.example ..\luckyColor-admin-serve\.env
 ```
 
-3. 启动 MySQL
+### 3. 初始化数据库
 
 ```bash
-cd ../luckyColor-admin-serve/server
-docker compose up -d
+pnpm --dir ../luckyColor-admin-serve prisma:generate
+pnpm --dir ../luckyColor-admin-serve prisma:db:push
+pnpm --dir ../luckyColor-admin-serve prisma:seed
 ```
 
-4. 初始化 Prisma 与种子数据
+### 4. 启动后端服务
 
 ```bash
-pnpm --dir ../luckyColor-admin-serve/server prisma:generate
-pnpm --dir ../luckyColor-admin-serve/server prisma:db:push
-pnpm --dir ../luckyColor-admin-serve/server prisma:seed
+pnpm --dir ../luckyColor-admin-serve dev
 ```
 
-5. 启动后端
+默认端口：
 
-```bash
-pnpm --dir ../luckyColor-admin-serve/server dev
+```text
+http://127.0.0.1:3001
 ```
 
-默认端口：`3001`
+## 联调说明
 
-## 已迁移接口
-
-- `POST /api/auth/login`
-- `POST /api/auth/menu-list`
-- `GET /api/dict/tree`
-- `GET /api/dict/page`
-
-这些接口已经兼容当前前端页面使用的数据结构，前端不再依赖 `vite-plugin-mock`。
+- 开发环境下，前端会将 `/api` 请求代理到 `VITE_API_PROXY_TARGET`
+- 当前默认代理地址为 `http://127.0.0.1:3001`
+- 已对接并兼容当前页面结构的接口包括：
+  - `POST /api/auth/login`
+  - `POST /api/auth/menu-list`
+  - `GET /api/dict/tree`
+  - `GET /api/dict/page`
+- 当前页面运行不再依赖 `vite-plugin-mock` 提供接口数据
 
 ## 默认账号
 
 - 用户名：`admin`
 - 密码：`123456`
 
-## 数据说明
+## Git 提交约定
 
-- 字典数据来自原 `mock/dict/dictTreeData.ts`
-- 菜单数据来自原 mock 菜单结构，已写入 Prisma seed
-- 当前后端以“先兼容现有管理台页面”为目标，后续可以继续扩展租户、角色、权限、JWT、审计日志等 SaaS 能力
+为便于后续学习和回顾，本项目从现在开始遵循以下提交规则：
+
+- 每完成一个独立功能，立即提交一次，不把多个功能混在同一个提交中
+- 提交信息使用简洁中文，直接描述本次改动
+- 文档、功能、新增配置、问题修复尽量分别提交，保持提交历史清晰
+
+提交信息示例：
+
+```text
+新增用户管理筛选
+修复菜单路由刷新丢失
+优化登录页交互
+完善项目说明文档
+```
