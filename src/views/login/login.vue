@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { loginApi, menuListApi } from '@/api';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import tool from '@/utils/tool';
-import { setAccessToken } from '@/utils/auth';
+import { setAccessToken, setCurrentUserInfo } from '@/utils/auth';
 import { handlMenuList } from '@/utils/handlerMenu';
 // import { addRoutesWithMenu } from '@/router';
 import { Encrypt } from '@/utils/crypto-md5';
@@ -56,6 +56,11 @@ const handleVerifySuccess = (state: boolean) => {
       const { code, data } = res;
       if (code === 200) {
         setAccessToken(data);
+        setCurrentUserInfo({
+          username: formValue.adminName,
+          displayName: formValue.adminName,
+          buttonCodeList: []
+        });
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
         tool.data.set(AUTH_STORAGE_KEYS.menuTree, handlMenuList(res.data));

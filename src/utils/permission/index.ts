@@ -1,8 +1,4 @@
-import tool from '@/utils/tool';
-
-interface UserInfo {
-  buttonCodeList: string[];
-}
+import { getCurrentUserInfo } from '@/utils/auth';
 
 /**
  * 权限判断是否能看到这个按钮，同时后端也做了校验，前端只是显示与不显示
@@ -17,7 +13,7 @@ interface UserInfo {
 export function hasPerm(data: Array<string> | string, rlue = 'or') {
   if (!data) return false;
 
-  const userInfo = tool.data.get('USER_INFO') as UserInfo | null;
+  const userInfo = getCurrentUserInfo();
 
   if (!userInfo) return false;
 

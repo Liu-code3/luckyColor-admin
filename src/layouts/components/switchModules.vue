@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { useFullscreen } from '@vueuse/core';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import tool from '@/utils/tool.ts';
+import { getCurrentUserInfo } from '@/utils/auth';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
@@ -15,6 +16,7 @@ const { isFullscreen, toggle } = useFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
 const menuStore = useMenuStore();
+const currentUserInfo = computed(() => getCurrentUserInfo());
 
 // 锁屏
 function JumpLock() {
@@ -95,9 +97,9 @@ onMounted(() => {
 
       <n-dropdown :options="options" @select="xuanzhong">
         <div class="flex cursor-pointer items-center">
-          <n-avatar round size="medium" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
+          <n-avatar round size="medium" :src="currentUserInfo?.avatar || 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'" />
           <div class="ml-1px flex-shrink-0 flex-col items-center">
-            <span class="ml-4px text-14px text-#606297">用户资料</span>
+            <span class="ml-4px text-14px text-#606297">{{ currentUserInfo?.displayName || '用户资料' }}</span>
           </div>
         </div>
       </n-dropdown>
