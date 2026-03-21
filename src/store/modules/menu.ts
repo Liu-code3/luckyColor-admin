@@ -44,15 +44,26 @@ export const useMenuStore = defineStore('menu', {
       });
     },
     defaultLoading() {
-      const menuData = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[];
+      const menuData = this.getCachedMenuTree();
       this.switchModulesList = this.transformMenuData(menuData);
       if (config.LUCK_LAYOUT === 'modular') return;
       this.menuOptions = this.transformMenuData(menuData);
     },
-    addRoutesWithMenu() {
-      const apiMenu = tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[] || [];
+    getCachedMenuTree() {
+      return tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[] || [];
+    },
+    cacheMenuTree(menuData: LayoutT.MenuItem[]) {
+      tool.data.set(AUTH_STORAGE_KEYS.menuTree, menuData);
+    },
+    initializeRoutesWithMenu(menuData: LayoutT.MenuItem[]) {
+      this.cacheMenuTree(menuData);
+      return this.addRoutesWithMenu(menuData);
+    },
+    addRoutesWithMenu(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
+      const apiMenu = menuData || [];
       const menuRouter = this.filterAsyncRouter(apiMenu);
       menuRouter.forEach(route => router.addRoute(route));
+      return menuRouter;
     },
     filterAsyncRouter(routerMap: LayoutT.MenuItem[]): RouteRecordRaw[] {
       const accessedRouters: RouteRecordRaw[] = [];

@@ -63,10 +63,10 @@ const handleVerifySuccess = (state: boolean) => {
         });
         // 获取用户的菜单
         const res = await menuListApi({ token: data });
-        tool.data.set(AUTH_STORAGE_KEYS.menuTree, handlMenuList(res.data));
+        const menuTree = handlMenuList(res.data);
         const md5Password = Encrypt(formValue.password);
         tool.data.set(AUTH_STORAGE_KEYS.lockScreenPassword, md5Password);
-        menuStore.addRoutesWithMenu();
+        menuStore.initializeRoutesWithMenu(menuTree);
         await router.push('/');
       }
     }
