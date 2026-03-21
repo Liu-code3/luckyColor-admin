@@ -30,5 +30,10 @@ export function removeCurrentUserInfo() {
 }
 
 export function clearLoginSession() {
-  tool.data.clear();
+  removeAccessToken();
+  removeCurrentUserInfo();
+  tool.data.remove(AUTH_STORAGE_KEYS.menuTree);
+  tool.data.remove(AUTH_STORAGE_KEYS.lastViewPath);
+  tool.data.remove(AUTH_STORAGE_KEYS.lockScreenPassword);
+  tool.data.remove(AUTH_STORAGE_KEYS.tabs);
 }
