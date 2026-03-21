@@ -1,7 +1,6 @@
 import type { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { AUTH_STORAGE_KEYS } from '@/constants/auth';
-import tool from '@/utils/tool.ts';
 import sysConfig from '@/config';
+import { getAccessToken } from '@/utils/auth';
 import { message } from '@/utils/message.ts';
 import { handlerError, reloadCodes } from '@/utils/http/config.ts';
 
@@ -17,7 +16,7 @@ const error = () => {
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
   function reqResolve(config: InternalAxiosRequestConfig) {
-    const token = tool.data.get(AUTH_STORAGE_KEYS.accessToken);
+    const token = getAccessToken();
 
     if (token)
       config.headers[sysConfig.TOKEN_NAME] = sysConfig.TOKEN_PREFIX + token;

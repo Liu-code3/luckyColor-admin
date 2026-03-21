@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
 import sysConfig from '@/config';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
+import { getAccessToken } from '@/utils/auth';
 import { useLoading } from '@/utils/nprogress';
 import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
@@ -23,7 +24,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   start();
-  const token = tool.data.get(AUTH_STORAGE_KEYS.accessToken);
+  const token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
 
   if (to.path === '/login') {
