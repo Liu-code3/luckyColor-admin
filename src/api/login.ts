@@ -3,7 +3,7 @@ import { request } from '@/utils/http';
 // 登录示例
 export function loginApi<T>(data: T) {
   return request({
-    url: '/mock/login',
+    url: '/auth/login',
     method: 'POST',
     data
   });
@@ -12,7 +12,7 @@ export function loginApi<T>(data: T) {
 // 获取用户的菜单
 export function menuListApi<T>(data: T) {
   return request({
-    url: '/mock/menuList',
+    url: '/auth/menu-list',
     method: 'POST',
     data
   });

@@ -13,6 +13,8 @@ dist-ssr
 *.local
 auto-imports.d.ts
 components.d.ts
+server/dist
+server/.env
 
 # Editor directories and files
 .vscode/*

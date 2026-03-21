@@ -1,19 +1,14 @@
-// vite.config.ts
 import { resolve } from 'node:path';
-import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import VueJSX from '@vitejs/plugin-vue-jsx';
 import AutoImport from 'unplugin-auto-import/vite';
+import IconsResolver from 'unplugin-icons/resolver';
+import Icons from 'unplugin-icons/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import UnoCSS from 'unocss/vite';
-import { VxeResolver, lazyImport } from 'vite-plugin-lazy-import';
-
-import { viteMockServe } from 'vite-plugin-mock';
-
-// 以下icon图标的引入也需要使用 unplugin-vue-components/vite
-import Icons from 'unplugin-icons/vite';
-import IconsResolver from 'unplugin-icons/resolver';
+import { defineConfig, loadEnv } from 'vite';
+import { lazyImport, VxeResolver } from 'vite-plugin-lazy-import';
 
 export const resolvePath = (...args: string[]) => resolve(__dirname, '.', ...args);
 
@@ -81,11 +76,6 @@ export default defineConfig(({ mode }) => {
         dirs: [ resolvePath('src/components') ],
         dts: false
       }),
-      viteMockServe({
-        watchFiles: true, // 监视 mockPath文件夹内文件的修改
-        enable: mode === 'development', // 开发环境下启用
-        logger: true // 是否在控制台显示请求日志
-      }),
       Icons({
         // scale: 1, // 缩放
         autoInstall: true,
@@ -97,12 +87,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port,
       proxy: {
-        // 代理
         '/api': {
-          target: envConfig.VITE_API_BASEURL,
+          target: envConfig.VITE_API_PROXY_TARGET || 'http://127.0.0.1:3001',
           // 修改请求头中的host为目标地址的host
-          changeOrigin: true,
-          rewrite: path => path.replace(/\^api/, '')
+          changeOrigin: true
         }
       }
     },
