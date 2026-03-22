@@ -5,7 +5,7 @@ import { request } from '@/utils/http';
  */
 function getDictTreeApi() {
   return request({
-    url: '/mock/dict/tree',
+    url: '/dict/tree',
     method: 'get'
   });
 }
@@ -15,7 +15,7 @@ function getDictTreeApi() {
  */
 function getTableDataApi(params: IDict.ITbParams) {
   return request({
-    url: '/mock/dict/page',
+    url: '/dict/page',
     method: 'get',
     params
   });
