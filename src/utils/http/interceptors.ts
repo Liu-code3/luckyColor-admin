@@ -40,6 +40,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
   function resResolve(response: AxiosResponse) {
     const code: number = response.data.code;
     const data = response.data;
+    const method = response.config.method?.toLowerCase();
 
     if (reloadCodes.includes(code)) {
       if (!loginBack.value)
@@ -53,11 +54,13 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
       message.error(customErrorMessage || data.msg);
       return Promise.reject(response);
     }
-    else {
+
+    if (method && method !== 'get') {
       const msg = data.msg || '请求成功';
       message.success(msg);
-      return Promise.resolve(data);
     }
+
+    return Promise.resolve(data);
   }
 
   function resReject(error: AxiosError) {
