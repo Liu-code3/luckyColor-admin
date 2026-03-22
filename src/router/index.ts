@@ -9,6 +9,7 @@ import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
+import { ensureAuthState } from '@/utils/auth-bootstrap';
 
 // 进度条配置
 const { start, done } = useLoading();
@@ -28,7 +29,7 @@ function isWhiteListRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
   return matchedRoutes.some(route => Boolean(route.meta?.whiteList));
 }
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   start();
   const token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
@@ -48,6 +49,13 @@ router.beforeEach((to) => {
 
   // 防止动态路由刷新丢失
   const menuStore = useMenuStore();
+  try {
+    await ensureAuthState(menuStore);
+  }
+  catch {
+    return false;
+  }
+
   if (!menuStore.accessedRouters.length) {
     menuStore.addRoutesWithMenu(); // 确保路由添加完成
     return ({ ...to, replace: true }); // 确保重新导航到目标路径
