@@ -2,8 +2,7 @@
 import { Icon } from '@iconify/vue';
 import type { VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
-import { handlMenuList } from '@/utils/handlerMenu';
-import { menuListApi } from '@/api';
+import { getMenuTreeApi } from '@/api';
 
 const page = ref(1);
 const formRef = ref(null);
@@ -52,8 +51,8 @@ const gridOptions = ref<VxeGridProps<RowVO>>({
 });
 
 onMounted(async () => {
-  const res = await menuListApi({ token: '111111111111111' });
-  gridOptions.value.data = [ ...handlMenuList(res.data) ];
+  const res = await getMenuTreeApi();
+  gridOptions.value.data = [ ...res.data ];
 });
 
 const generalOptions = [ '管理员', '质检员' ].map(

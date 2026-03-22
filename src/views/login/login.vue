@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { loginApi, menuListApi } from '@/api';
+import { getMenuTreeApi, loginApi } from '@/api';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import tool from '@/utils/tool';
 import { setAccessToken, setCurrentUserInfo } from '@/utils/auth';
-import { handlMenuList } from '@/utils/handlerMenu';
-// import { addRoutesWithMenu } from '@/router';
 import { Encrypt } from '@/utils/crypto-md5';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import RotateVerify from '@/components/verify/rotate/index.vue';
@@ -29,20 +27,22 @@ const rules = {
   password: {
     required: true,
     message: '请输入密码',
-    trigger: [ 'input', 'blur' ]
+    trigger: ['input', 'blur']
   }
 };
+
 const rotateVerifyRef = ref<InstanceType<typeof RotateVerify>>();
+
 const setVerify = () => {
-  // 使用暴露的show方法
   rotateVerifyRef.value?.show();
 };
+
 const slideImages = ref([
   'http://codegen.caihongy.cn/20231007/1bd4fe88e21a4641a3208a7d783cbf6d.jpg',
   'http://codegen.caihongy.cn/20231007/605d68174b8a49959b82f364194a9ba0.jpg',
   'http://codegen.caihongy.cn/20231007/6e13a48b74c940118f00f2d28de337c3.jpg'
 ]);
-// 验证成功回调
+
 const handleVerifySuccess = (state: boolean) => {
   if (!state) {
     message.error('验证失败');
@@ -50,35 +50,37 @@ const handleVerifySuccess = (state: boolean) => {
   }
 
   formRef.value?.validate(async (errors) => {
-    if (!errors) {
-      const res = await loginApi(formValue);
-      // TODO 理解VO 于 TO 的区别 返回值类型做一下
-      const { code, data } = res;
-      if (code === 200) {
-        setAccessToken(data);
-        setCurrentUserInfo({
-          username: formValue.adminName,
-          displayName: formValue.adminName,
-          buttonCodeList: []
-        });
-        // 获取用户的菜单
-        const res = await menuListApi({ token: data });
-        const menuTree = handlMenuList(res.data);
-        const md5Password = Encrypt(formValue.password);
-        tool.data.set(AUTH_STORAGE_KEYS.lockScreenPassword, md5Password);
-        menuStore.initializeRoutesWithMenu(menuTree);
-        await router.push('/');
-      }
-    }
-    else {
-      // console.log(errors);
-    }
+    if (errors)
+      return;
+
+    const res = await loginApi({
+      username: formValue.adminName,
+      password: formValue.password
+    });
+    const { code, data } = res;
+
+    if (code !== 200)
+      return;
+
+    setAccessToken(data.accessToken);
+    setCurrentUserInfo({
+      username: data.user.username,
+      displayName: data.user.nickname || data.user.username,
+      buttonCodeList: []
+    });
+
+    const menuTreeRes = await getMenuTreeApi();
+    const md5Password = Encrypt(formValue.password);
+    tool.data.set(AUTH_STORAGE_KEYS.lockScreenPassword, md5Password);
+    menuStore.initializeRoutesWithMenu(menuTreeRes.data);
+    await router.push('/');
   });
-  // 延迟关闭验证框
+
   setTimeout(() => {
     rotateVerifyRef.value?.hide();
   }, 2500);
 };
+
 const handleValidateClick = () => {
   setVerify();
 };
@@ -97,7 +99,7 @@ const handleValidateClick = () => {
       <div class="login-form">
         <div class="login-header">
           <div>hello !</div>
-          <div>欢迎来到luckyColor-admin</div>
+          <div>欢迎来到 luckyColor-admin</div>
         </div>
         <n-form ref="formRef" inline :label-width="80" :model="formValue" :rules="rules">
           <n-form-item path="adminName">
@@ -112,10 +114,10 @@ const handleValidateClick = () => {
           <n-form-item>
             <div class="login_button">
               <n-button attr-type="button" @click="handleValidateClick">
-                登 录
+                登录
               </n-button>
               <n-button attr-type="button" @click="handleValidateClick">
-                注 册
+                注册
               </n-button>
             </div>
           </n-form-item>
