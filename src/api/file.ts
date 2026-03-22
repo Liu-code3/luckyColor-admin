@@ -14,7 +14,7 @@ class FileAPI {
     const formData = new FormData();
     formData.append('file', file);
     return request<any, FileInfo>({
-      url: '/api/file/upload',
+      url: '/file/upload',
       method: 'post',
       data: formData,
       headers: {
@@ -29,7 +29,7 @@ class FileAPI {
    */
   static deleteByPath(filePath: string) {
     return request({
-      url: '/api/file/delete',
+      url: '/file/delete',
       method: 'get',
       params: { filePath }
     });
