@@ -11,6 +11,7 @@ const routes = [
     name: 'login',
     component: () => import('@/views/login/login.vue'),
     meta: {
+      whiteList: true,
       title: '登录页',
       layout: 'empty'
     }

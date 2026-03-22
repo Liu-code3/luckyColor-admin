@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteLocationMatched, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
 import sysConfig from '@/config';
@@ -12,6 +12,7 @@ import { useTabStore } from '@/store/modules/tab.ts';
 
 // 进度条配置
 const { start, done } = useLoading();
+const ROUTE_WHITE_LIST = [ '/login' ];
 
 export const routes: Array<RouteRecordRaw> = [
   ...systemRouter
@@ -22,12 +23,18 @@ const router = createRouter({
   routes
 });
 
+function isWhiteListRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
+  if (ROUTE_WHITE_LIST.includes(path)) return true;
+  return matchedRoutes.some(route => Boolean(route.meta?.whiteList));
+}
+
 router.beforeEach((to) => {
   start();
   const token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
+  const whiteListed = isWhiteListRoute(to.path, to.matched);
 
-  if (to.path === '/login') {
+  if (whiteListed) {
     if (token) {
       const targetPath = lastPath || '/';
       return ({ path: targetPath, replace: true });
