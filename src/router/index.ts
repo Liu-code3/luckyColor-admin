@@ -5,6 +5,7 @@ import sysConfig from '@/config';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { getAccessToken } from '@/utils/auth';
 import { useLoading } from '@/utils/nprogress';
+import { syncDashboardVisit } from '@/utils/dashboard-tracker';
 import tool from '@/utils/tool';
 import { notification } from '@/utils/message';
 import { useMenuStore } from '@/store/modules/menu.ts';
@@ -82,6 +83,7 @@ router.afterEach((to) => {
   };
   const tabStore = useTabStore();
   !(EXCLUDE_TAB.includes(to.path)) && tabStore.addTab(tab);
+  syncDashboardVisit(to);
   done();
 });
 
