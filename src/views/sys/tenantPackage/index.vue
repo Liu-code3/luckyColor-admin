@@ -9,6 +9,8 @@ import {
   updateTenantPackageApi,
   type TenantPackageRecord
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
@@ -28,6 +30,9 @@ interface SummaryCard {
   value: number;
   tone: 'primary' | 'success' | 'warning' | 'info';
 }
+
+const packageButtonCodes = BUTTON_PERMISSION_CODES.tenantPackage;
+const { hasPermission } = usePermission();
 
 const knownFeatureLabels: Record<string, string> = {
   watermark: '水印',
@@ -96,6 +101,11 @@ const featureFlagsPreview = computed(() => {
 
   return toFeatureFlagEntries(parsed);
 });
+const canCreatePackage = computed(() => hasPermission(packageButtonCodes.create));
+const canUpdatePackage = computed(() => hasPermission(packageButtonCodes.update));
+const canDeletePackage = computed(() => hasPermission(packageButtonCodes.delete));
+const hasPackageActions = computed(() => canUpdatePackage.value || canDeletePackage.value);
+const packageTableColumnCount = computed(() => hasPackageActions.value ? 7 : 6);
 
 const packageFormRules: FormRules = {
   code: [
@@ -384,8 +394,12 @@ onMounted(() => {
     </div>
 
     <div class="content-card">
-      <div class="content-actions">
-        <n-button type="primary" @click="openCreateDrawer">
+      <div v-if="canCreatePackage" class="content-actions">
+        <n-button
+          v-permission="packageButtonCodes.create"
+          type="primary"
+          @click="openCreateDrawer"
+        >
           <template #icon>
             <Icon icon="material-symbols:add" />
           </template>
@@ -403,7 +417,9 @@ onMounted(() => {
               <th>配额</th>
               <th>能力开关</th>
               <th>更新时间</th>
-              <th>操作</th>
+              <th v-if="hasPackageActions">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -437,17 +453,27 @@ onMounted(() => {
                 <span v-else>-</span>
               </td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
-              <td class="operation-cell">
-                <n-button quaternary type="primary" @click="openEditDrawer(item)">
+              <td v-if="hasPackageActions" class="operation-cell">
+                <n-button
+                  v-permission="packageButtonCodes.update"
+                  quaternary
+                  type="primary"
+                  @click="openEditDrawer(item)"
+                >
                   编辑
                 </n-button>
-                <n-button quaternary type="error" @click="handleDeletePackage(item)">
+                <n-button
+                  v-permission="packageButtonCodes.delete"
+                  quaternary
+                  type="error"
+                  @click="handleDeletePackage(item)"
+                >
                   删除
                 </n-button>
               </td>
             </tr>
             <tr v-if="!packageList.length">
-              <td colspan="7">
+              <td :colspan="packageTableColumnCount">
                 <n-empty description="暂无租户套餐数据" />
               </td>
             </tr>

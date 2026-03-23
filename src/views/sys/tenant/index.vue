@@ -12,6 +12,8 @@ import {
   type TenantRecord,
   type TenantStatus
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { message } from '@/utils/message';
 
 interface TenantFormState {
@@ -34,6 +36,9 @@ interface SummaryCard {
   value: number;
   tone: 'primary' | 'success' | 'warning' | 'info';
 }
+
+const tenantButtonCodes = BUTTON_PERMISSION_CODES.tenantManage;
+const { hasPermission } = usePermission();
 
 const tenantStatusOptions: Array<{ label: string; value: TenantStatus }> = [
   { label: '启用', value: 'ACTIVE' },
@@ -85,6 +90,9 @@ const tenantPackageOptions = computed(() =>
 const selectedPackage = computed(() =>
   tenantPackages.value.find(item => item.id === tenantForm.packageId) || null
 );
+const canCreateTenant = computed(() => hasPermission(tenantButtonCodes.create));
+const canUpdateTenant = computed(() => hasPermission(tenantButtonCodes.update));
+const tenantTableColumnCount = computed(() => canUpdateTenant.value ? 8 : 7);
 
 const summaryCards = computed<SummaryCard[]>(() => {
   const now = Date.now();
@@ -442,8 +450,12 @@ onMounted(async () => {
     </div>
 
     <div class="content-card">
-      <div class="content-actions">
-        <n-button type="primary" @click="openCreateDrawer">
+      <div v-if="canCreateTenant" class="content-actions">
+        <n-button
+          v-permission="tenantButtonCodes.create"
+          type="primary"
+          @click="openCreateDrawer"
+        >
           <template #icon>
             <Icon icon="material-symbols:add" />
           </template>
@@ -462,7 +474,9 @@ onMounted(async () => {
               <th>联系人</th>
               <th>到期时间</th>
               <th>更新时间</th>
-              <th>操作</th>
+              <th v-if="canUpdateTenant">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -499,14 +513,19 @@ onMounted(async () => {
               </td>
               <td>{{ formatExpiresAt(item.expiresAt) }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
-              <td class="operation-cell">
-                <n-button quaternary type="primary" @click="openEditDrawer(item)">
+              <td v-if="canUpdateTenant" class="operation-cell">
+                <n-button
+                  v-permission="tenantButtonCodes.update"
+                  quaternary
+                  type="primary"
+                  @click="openEditDrawer(item)"
+                >
                   编辑
                 </n-button>
               </td>
             </tr>
             <tr v-if="!tenantList.length">
-              <td colspan="8">
+              <td :colspan="tenantTableColumnCount">
                 <n-empty description="暂无租户数据" />
               </td>
             </tr>
