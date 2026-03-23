@@ -1,45 +1,87 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
-import { darkTheme, dateZhCN, zhCN } from 'naive-ui';
-import lockScreen from '@/components/lockScreen.vue';
-import { useGlobalStore } from '@/store/modules/global.ts';
-import { isString } from '@/utils/is.ts';
+import { useRoute } from 'vue-router'
+import { darkTheme, dateZhCN, zhCN } from 'naive-ui'
+import lockScreen from '@/components/lockScreen.vue'
+import { useGlobalStore } from '@/store/modules/global.ts'
+import {
+  clearLoginSession,
+  initializeAuthSession,
+  onAccessTokenRemoved
+} from '@/utils/auth'
+import { isString } from '@/utils/is.ts'
+import { message } from '@/utils/message.ts'
 
-const route = useRoute();
-const globalStore = useGlobalStore();
+const route = useRoute()
+const globalStore = useGlobalStore()
 if (globalStore.layout === 'default') {
-  globalStore.updateLayout('default');
+  globalStore.updateLayout('default')
 }
 const Layout = computed(() => {
   if (!route.matched.length) {
-    return null;
+    return null
   }
-  return getLayout(isString(route.meta.layout) || globalStore.layout);
-});
+  return getLayout(isString(route.meta.layout) || globalStore.layout)
+})
 
-const layouts = new Map();
+const layouts = new Map()
 function getLayout(name: string) {
-  // 利用map将加载过的layout缓存起来，防止重新加载layout导致页面闪烁
   if (layouts.get(name)) {
-    return layouts.get(name);
+    return layouts.get(name)
   }
-  const layout = markRaw(defineAsyncComponent(() => import(`@/layouts/${name}/index.vue`)));
-  layouts.set(name, layout);
-  return layout;
+  const layout = markRaw(
+    defineAsyncComponent(() => import(`@/layouts/${name}/index.vue`))
+  )
+  layouts.set(name, layout)
+  return layout
 }
 
 watchEffect(() => {
-  globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark);
-});
+  globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark)
+})
 
-onActivated(() => {
-  // 1. 调用时机为首次挂载
-  // 2. 以及每次从缓存中被重新插入时
-});
-onDeactivated(() => {
-  // 3. 在从 DOM 上移除、进入缓存
-  // 4. 以及组件卸载时调用
-});
+onActivated(() => {})
+onDeactivated(() => {})
+
+let cleanupAccessTokenListener: null | (() => void) = null
+let cleanupSessionClearedListener: null | (() => void) = null
+
+function redirectToLoginWithWarning() {
+  if (window.location.pathname === '/login') {
+    return
+  }
+
+  message.warning('登录状态已失效，请重新登录')
+  window.location.replace('/login')
+}
+
+onMounted(() => {
+  initializeAuthSession()
+
+  cleanupAccessTokenListener = onAccessTokenRemoved(() => {
+    clearLoginSession()
+    redirectToLoginWithWarning()
+  })
+
+  const handleSessionCleared = (event: Event) => {
+    const { detail } = event as CustomEvent<{ reason?: string }>
+
+    if (detail?.reason === 'manual') {
+      return
+    }
+
+    redirectToLoginWithWarning()
+  }
+
+  window.addEventListener('auth:session-cleared', handleSessionCleared)
+  cleanupSessionClearedListener = () => {
+    window.removeEventListener('auth:session-cleared', handleSessionCleared)
+  }
+})
+
+onBeforeUnmount(() => {
+  cleanupAccessTokenListener?.()
+  cleanupSessionClearedListener?.()
+})
 </script>
 
 <template>
@@ -61,7 +103,6 @@ onDeactivated(() => {
             @unlock="globalStore.updateIsLock(false);"
           />
         </transition>
-        <!-- 缓存组件 -->
         <router-view v-if="Layout" v-slot="{ Component }">
           <component :is="Layout">
             <keep-alive>

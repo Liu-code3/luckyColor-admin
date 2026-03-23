@@ -1,11 +1,16 @@
-import type {
-  AxiosError,
-  AxiosInstance,
-  AxiosResponse,
-  InternalAxiosRequestConfig
+import {
+  CanceledError,
+  type AxiosError,
+  type AxiosInstance,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig
 } from 'axios'
 import sysConfig from '@/config'
-import { clearLoginSession, getAccessToken } from '@/utils/auth'
+import {
+  clearLoginSession,
+  getAccessToken,
+  getUsableAccessToken
+} from '@/utils/auth'
 import { message } from '@/utils/message.ts'
 import { handlerError, reloadCodes } from '@/utils/http/config.ts'
 
@@ -17,9 +22,13 @@ function isSilentRequest(config?: {
   return config?.headers?.['x-silent-request'] === 'true'
 }
 
+function isLoginRequest(config: Pick<InternalAxiosRequestConfig, 'url'>) {
+  return config.url?.includes('/auth/login')
+}
+
 const redirectToLogin = () => {
   loginBack.value = true
-  clearLoginSession()
+  clearLoginSession('expired')
   message.warning('登录已失效，请重新登录')
   window.setTimeout(() => {
     if (window.location.pathname !== '/login')
@@ -30,10 +39,19 @@ const redirectToLogin = () => {
 
 export function setupInterceptors(axiosInstance: AxiosInstance) {
   function reqResolve(config: InternalAxiosRequestConfig) {
-    const token = getAccessToken()
+    const storedToken = getAccessToken()
+    const token = getUsableAccessToken()
 
     if (token)
       config.headers[sysConfig.TOKEN_NAME] = sysConfig.TOKEN_PREFIX + token
+    else if (storedToken && !isLoginRequest(config)) {
+      if (!loginBack.value)
+        redirectToLogin()
+
+      return Promise.reject(
+        new CanceledError('Access token expired before request was sent')
+      )
+    }
 
     if (!sysConfig.REQUEST_CACHE && config.method === 'get') {
       config.params = config.params || {}

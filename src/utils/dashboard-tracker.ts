@@ -1,6 +1,7 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import { trackDashboardVisitApi } from '@/api'
-import { getAccessToken } from '@/utils/auth'
+import { AUTH_STORAGE_KEYS } from '@/constants/auth'
+import { getUsableAccessToken } from '@/utils/auth'
 import tool from '@/utils/tool'
 
 const VISITOR_KEY = 'DASHBOARD_VISITOR_ID'
@@ -9,6 +10,7 @@ const HEARTBEAT_MS = 60 * 1000
 
 let heartbeatTimer: number | null = null
 let latestPayload: Parameters<typeof trackDashboardVisitApi>[0] | null = null
+let authListenersBound = false
 
 function ensureVisitorId() {
   const cached = tool.data.get<string>(VISITOR_KEY)
@@ -45,27 +47,68 @@ function buildTrackPayload(route: RouteLocationNormalizedLoaded) {
 }
 
 function sendVisit() {
-  if (!latestPayload || !getAccessToken())
+  if (!latestPayload)
     return
+
+  if (!getUsableAccessToken()) {
+    stopDashboardVisitTracking()
+    return
+  }
 
   void trackDashboardVisitApi(latestPayload).catch(() => {})
 }
 
-function startHeartbeat() {
-  if (heartbeatTimer !== null)
+export function stopDashboardVisitTracking() {
+  if (heartbeatTimer !== null) {
     window.clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+  }
+
+  latestPayload = null
+}
+
+function bindAuthSessionListeners() {
+  if (authListenersBound)
+    return
+
+  window.addEventListener('auth:session-cleared', () => {
+    stopDashboardVisitTracking()
+  })
+
+  window.addEventListener('storage', (event) => {
+    if (event.storageArea !== localStorage)
+      return
+
+    if (event.key === AUTH_STORAGE_KEYS.accessToken && event.newValue === null)
+      stopDashboardVisitTracking()
+  })
+
+  authListenersBound = true
+}
+
+function startHeartbeat() {
+  stopDashboardVisitTracking()
 
   heartbeatTimer = window.setInterval(() => {
     if (document.visibilityState === 'hidden')
       return
+
+    if (!getUsableAccessToken() || window.location.pathname === '/login') {
+      stopDashboardVisitTracking()
+      return
+    }
 
     sendVisit()
   }, HEARTBEAT_MS)
 }
 
 export function syncDashboardVisit(route: RouteLocationNormalizedLoaded) {
-  if (!getAccessToken() || route.path === '/login')
+  bindAuthSessionListeners()
+
+  if (!getUsableAccessToken() || route.path === '/login') {
+    stopDashboardVisitTracking()
     return
+  }
 
   latestPayload = buildTrackPayload(route)
   sendVisit()

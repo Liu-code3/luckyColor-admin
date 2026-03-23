@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
 import sysConfig from '@/config';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
-import { getAccessToken } from '@/utils/auth';
+import { getAccessToken, initializeAuthSession } from '@/utils/auth';
 import { useLoading } from '@/utils/nprogress';
 import { syncDashboardVisit } from '@/utils/dashboard-tracker';
 import tool from '@/utils/tool';
@@ -32,6 +32,7 @@ function isWhiteListRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
 
 router.beforeEach(async (to) => {
   start();
+  initializeAuthSession();
   const token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
   const whiteListed = isWhiteListRoute(to.path, to.matched);
