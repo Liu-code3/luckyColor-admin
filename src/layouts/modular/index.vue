@@ -1,12 +1,18 @@
 <script lang="ts" setup>
-import {Icon} from '@iconify/vue';
+import { Icon } from '@iconify/vue';
 import Tags from '@/layouts/components/tags.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
 import Modular from '@/layouts/components/modular.vue';
-import {useMenuStore} from '@/store/modules/menu.ts';
-import UserBar from "@/layouts/components/userbar.vue";
+import UserBar from '@/layouts/components/userbar.vue';
+import { useMenuStore } from '@/store/modules/menu.ts';
+import { useGlobalStore } from '@/store/modules/global.ts';
 
 const menuStore = useMenuStore();
+const globalStore = useGlobalStore();
+
+const contentStyle = computed(() => ({
+  '--layout-content-offset': globalStore.showTabs ? '111px' : '61px'
+}));
 </script>
 
 <template>
@@ -14,15 +20,20 @@ const menuStore = useMenuStore();
     <n-layout>
       <n-layout has-sider>
         <div class="modular">
-          <div class="logo-bar">
-            <Icon icon="cryptocurrency-color:ltc"/>
+          <div class="logo-bar logo-bar--compact">
+            <Icon icon="cryptocurrency-color:ltc" />
           </div>
-          <Modular class="mt-7"/>
+          <Modular class="mt-7" />
         </div>
         <n-layout-sider
-            :collapsed="menuStore.collapsed"
-            bordered show-trigger collapse-mode="width" :collapsed-width="0" :width="220"
-            :native-scrollbar="false"
+          class="app-sider"
+          :collapsed="menuStore.collapsed"
+          bordered
+          show-trigger
+          collapse-mode="width"
+          :collapsed-width="0"
+          :width="220"
+          :native-scrollbar="false"
         >
           <div class="logo-bar">
             <div class="pl-9px">
@@ -30,16 +41,14 @@ const menuStore = useMenuStore();
             </div>
           </div>
           <div>
-            <NavMenu/>
+            <NavMenu />
           </div>
         </n-layout-sider>
         <n-layout-content>
-          <!-- 头部 -->
-          <UserBar/>
-          <!-- 标签页 -->
-          <Tags/>
-          <div class="n-content">
-            <slot/>
+          <UserBar />
+          <Tags v-if="globalStore.showTabs" />
+          <div class="n-content" :style="contentStyle">
+            <slot />
           </div>
         </n-layout-content>
       </n-layout>
@@ -49,7 +58,7 @@ const menuStore = useMenuStore();
 
 <style lang="scss" scoped>
 .n-scrollbar-content {
-  border-right: solid #dcdfe6 2px;
+  border-right: 1px solid var(--layout-sider-border);
 }
 
 .modular {
@@ -57,7 +66,9 @@ const menuStore = useMenuStore();
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #282c34;
+  background: var(--layout-sider-bg);
+  color: var(--layout-sider-text);
+  border-right: 1px solid var(--layout-sider-border);
   flex: none;
 
   .logo-bar {
@@ -66,11 +77,17 @@ const menuStore = useMenuStore();
     font-size: 38px;
     flex: none;
     margin: 0;
+    color: var(--layout-sider-text-active);
   }
 }
 
+.app-sider {
+  background: var(--layout-sider-bg);
+  box-shadow: inset -1px 0 0 var(--layout-sider-border);
+}
+
 .n-content {
-  height: calc(100vh - 111px);
+  height: calc(100vh - var(--layout-content-offset));
   overflow: hidden;
   overflow-y: scroll;
   padding: 10px;
@@ -90,16 +107,18 @@ const menuStore = useMenuStore();
   justify-content: center;
   font-size: 18px;
   flex: none;
+  color: var(--layout-sider-text-active);
 }
 
 .n-layout-scroll-container {
-  background-color: #f6f8f9;
+  background: transparent;
 }
 
 .n-layout-toggle-button {
   display: none !important;
 }
-:deep(.n-layout-toggle-button){
+
+:deep(.n-layout-toggle-button) {
   display: none;
 }
 </style>

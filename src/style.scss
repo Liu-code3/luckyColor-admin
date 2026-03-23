@@ -37,3 +37,24 @@
   justify-content: flex-end;
   align-items: center;
 }
+
+:root {
+  --layout-sider-bg: #0f172a;
+  --layout-sider-text: rgba(226, 232, 240, 0.86);
+  --layout-sider-text-active: #ffffff;
+  --layout-sider-hover: rgba(148, 163, 184, 0.16);
+  --layout-sider-border: rgba(148, 163, 184, 0.12);
+  --layout-sider-accent: #1890ff;
+}
+
+#app.app-gray-mode {
+  filter: grayscale(1);
+}
+
+#app.colorWeak {
+  filter: invert(80%);
+}
+
+#app.app-gray-mode.colorWeak {
+  filter: grayscale(1) invert(80%);
+}

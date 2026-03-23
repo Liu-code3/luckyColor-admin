@@ -22,6 +22,9 @@ const Layout = computed(() => {
   }
   return getLayout(isString(route.meta.layout) || globalStore.layout)
 })
+const shouldShowWatermark = computed(() =>
+  globalStore.showWatermark && route.path !== '/login'
+)
 
 const layouts = new Map()
 function getLayout(name: string) {
@@ -37,6 +40,7 @@ function getLayout(name: string) {
 
 watchEffect(() => {
   globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark)
+  globalStore.applyAppearanceModes()
 })
 
 onActivated(() => {})
@@ -104,7 +108,26 @@ onBeforeUnmount(() => {
           />
         </transition>
         <router-view v-if="Layout" v-slot="{ Component }">
-          <component :is="Layout">
+          <n-watermark
+            v-if="shouldShowWatermark"
+            content="LuckyColor Admin"
+            cross
+            fullscreen
+            :font-size="14"
+            :line-height="14"
+            :width="180"
+            :height="120"
+            :x-offset="12"
+            :y-offset="12"
+            :rotate="-18"
+          >
+            <component :is="Layout">
+              <keep-alive>
+                <component :is="Component" />
+              </keep-alive>
+            </component>
+          </n-watermark>
+          <component :is="Layout" v-else>
             <keep-alive>
               <component :is="Component" />
             </keep-alive>

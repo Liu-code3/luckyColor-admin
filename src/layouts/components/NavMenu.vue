@@ -48,3 +48,32 @@ onMounted(() => {
   />
 </template>
 
+<style scoped lang="scss">
+:deep(.n-menu) {
+  background: transparent;
+}
+
+:deep(.n-menu-item-content),
+:deep(.n-submenu .n-submenu-children .n-menu-item-content),
+:deep(.n-submenu .n-menu-item-content-header),
+:deep(.n-submenu .n-menu-item-content__icon),
+:deep(.n-menu-item-content__icon) {
+  color: var(--layout-sider-text);
+}
+
+:deep(.n-menu-item-content:hover),
+:deep(.n-menu-item-content.n-menu-item-content--selected),
+:deep(.n-submenu .n-menu-item-content-header:hover) {
+  background: var(--layout-sider-hover) !important;
+}
+
+:deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content-header__label),
+:deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content__icon),
+:deep(.n-menu-item-content.n-menu-item-content--selected .n-menu-item-content__arrow),
+:deep(.n-submenu.n-submenu--active > .n-menu-item-content-header),
+:deep(.n-submenu.n-submenu--active > .n-menu-item-content-header .n-menu-item-content-header__label),
+:deep(.n-submenu.n-submenu--active > .n-menu-item-content-header .n-menu-item-content__icon) {
+  color: var(--layout-sider-text-active) !important;
+}
+</style>
+

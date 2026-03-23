@@ -5,7 +5,7 @@ import { useIconRender } from '@/hooks/iconRender.ts';
 import { normalizeMenuTree } from '@/utils/menu-normalizer';
 import tool from '@/utils/tool.ts';
 import router from '@/router';
-import config from '@/config/index';
+import { useGlobalStore } from './global';
 
 interface IMenuState {
   menuOptions: LayoutT.TransformedMenuItem[] | [];
@@ -45,9 +45,10 @@ export const useMenuStore = defineStore('menu', {
       });
     },
     defaultLoading() {
+      const globalStore = useGlobalStore();
       const menuData = this.getCachedMenuTree();
       this.switchModulesList = this.transformMenuData(menuData);
-      if (config.LUCK_LAYOUT === 'modular') return;
+      if ([ 'modular', 'top' ].includes(globalStore.layout)) return;
       this.menuOptions = this.transformMenuData(menuData);
     },
     getCachedMenuTree() {

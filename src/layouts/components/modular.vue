@@ -95,7 +95,7 @@ const updateTabs = (item: LayoutT.MenuItem, defaultChildPath: string) => {
 <style scoped lang="scss">
 .modular_each {
   width: 70px;
-  color: #a6adb4;
+  color: var(--layout-sider-text);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,11 +112,12 @@ const updateTabs = (item: LayoutT.MenuItem, defaultChildPath: string) => {
 }
 
 .modular_each:hover {
-  color: #ffffff;
+  color: var(--layout-sider-text-active);
+  background: var(--layout-sider-hover);
 }
 
 .modular_select {
-  color: #ffffff;
-  background-color: #4e88f3;
+  color: var(--layout-sider-text-active);
+  background-color: rgba(var(--primary-color), 0.24);
 }
 </style>
