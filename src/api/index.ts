@@ -8,4 +8,6 @@ export * from './login';
 export * from './menus';
 export * from './notices';
 export * from './roles';
+export * from './tenantPackages';
+export * from './tenants';
 export * from './users';
