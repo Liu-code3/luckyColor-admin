@@ -37,17 +37,35 @@ async function ensureMenu({ existingMenus, token, payload, matchers }) {
   const existing = existingMenus.find(menu => matchers.some(matcher => matcher(menu)));
 
   if (existing) {
-    const updated = await request(`/api/menus/${existing.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(payload)
-    }, token);
-    return updated.id;
+    try {
+      const updated = await request(`/api/menus/${existing.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      }, token);
+
+      const existingIndex = existingMenus.findIndex(menu => menu.id === existing.id);
+      if (existingIndex >= 0)
+        existingMenus[existingIndex] = updated;
+
+      return updated.id;
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes('菜单不存在'))
+        throw error;
+
+      const staleIndex = existingMenus.findIndex(menu => menu.id === existing.id);
+      if (staleIndex >= 0)
+        existingMenus.splice(staleIndex, 1);
+    }
   }
 
   const created = await request('/api/menus', {
     method: 'POST',
     body: JSON.stringify(payload)
   }, token);
+
+  existingMenus.push(created);
   return created.id;
 }
 
@@ -63,7 +81,7 @@ async function syncMenus() {
     existingMenus: menuPage.records,
     token,
     payload: {
-      parentId: 0,
+      parentId: null,
       title: '租户中心',
       name: 'tenantCenter',
       type: 1,
@@ -143,7 +161,7 @@ async function syncMenus() {
     existingMenus: menuPage.records,
     token,
     payload: {
-      parentId: 0,
+      parentId: null,
       title: '功能演示',
       name: 'featureDemo',
       type: 1,
@@ -173,7 +191,7 @@ async function syncMenus() {
     existingMenus: menuPage.records,
     token,
     payload: {
-      parentId: 0,
+      parentId: null,
       title: 'Apifox',
       name: 'apifox',
       type: 1,
