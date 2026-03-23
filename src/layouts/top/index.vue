@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
-import { useRoute, useRouter } from 'vue-router';
 import Tags from '@/layouts/components/tags.vue';
 import UserBar from '@/layouts/components/userbar.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useGlobalStore } from '@/store/modules/global.ts';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
@@ -19,12 +19,24 @@ const activeTopPath = ref('');
 
 const showSideMenu = computed(() => menuStore.menuOptions.length > 0);
 const contentStyle = computed(() => ({
-  '--layout-content-offset': globalStore.showTabs ? '166px' : '116px'
+  '--layout-content-offset': globalStore.showTabs ? '110px' : '60px'
 }));
 
 function resolveTopPath(fullPath: string) {
   const secondSlashIndex = fullPath.indexOf('/', 1);
   return secondSlashIndex !== -1 ? fullPath.slice(0, secondSlashIndex) : fullPath;
+}
+
+function syncTabs(label: string, path: string, layout = 'top') {
+  tabStore.setActiveTab(path);
+  const exists = tabStore.tabs.some(item => item.key === path);
+  if (!exists) {
+    tabStore.addTab({
+      label,
+      key: path,
+      layout
+    });
+  }
 }
 
 function syncTopMenus() {
@@ -42,20 +54,9 @@ function syncTopMenus() {
   menuStore.collapsed = true;
 }
 
-function syncTabs(label: string, path: string, layout = 'top') {
-  tabStore.setActiveTab(path);
-  const exists = tabStore.tabs.some(item => item.key === path);
-  if (!exists) {
-    tabStore.addTab({
-      label,
-      key: path,
-      layout
-    });
-  }
-}
-
 function switchTopMenu(item: LayoutT.MenuItem) {
   activeTopPath.value = item.path;
+
   if (item.children?.length) {
     const defaultChild = item.children[0];
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
@@ -79,28 +80,28 @@ watch(() => route.fullPath, () => {
 <template>
   <n-space vertical>
     <n-layout>
-      <UserBar />
+      <UserBar :show-breadcrumb="false" :show-collapse="false">
+        <template #left>
+          <div class="top-header-brand">
+            <Icon icon="cryptocurrency-color:ltc" class="text-28px" />
+            <strong>luckyColor admin</strong>
+          </div>
 
-      <div class="top-nav-bar">
-        <div class="top-nav-brand">
-          <Icon icon="cryptocurrency-color:ltc" class="text-28px" />
-          <strong>luckyColor admin</strong>
-        </div>
-
-        <div class="top-nav-list">
-          <button
-            v-for="item in topMenus"
-            :key="item.path"
-            type="button"
-            class="top-nav-item"
-            :class="{ 'top-nav-item--active': activeTopPath === item.path }"
-            @click="switchTopMenu(item)"
-          >
-            <Icon v-if="item.icon" :icon="item.icon" />
-            <span>{{ item.title }}</span>
-          </button>
-        </div>
-      </div>
+          <div class="top-header-menus">
+            <button
+              v-for="item in topMenus"
+              :key="item.path"
+              type="button"
+              class="top-header-menu"
+              :class="{ 'top-header-menu--active': activeTopPath === item.path }"
+              @click="switchTopMenu(item)"
+            >
+              <Icon v-if="item.icon" :icon="item.icon" />
+              <span>{{ item.title }}</span>
+            </button>
+          </div>
+        </template>
+      </UserBar>
 
       <n-layout has-sider>
         <n-layout-sider
@@ -129,25 +130,16 @@ watch(() => route.fullPath, () => {
 </template>
 
 <style scoped lang="scss">
-.top-nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  height: 56px;
-  padding: 0 20px;
-  background: #ffffff;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-}
-
-.top-nav-brand {
+.top-header-brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   min-width: fit-content;
+  margin-right: 18px;
   color: #0f172a;
 }
 
-.top-nav-list {
+.top-header-menus {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -155,11 +147,11 @@ watch(() => route.fullPath, () => {
   padding-bottom: 4px;
 }
 
-.top-nav-list::-webkit-scrollbar {
+.top-header-menus::-webkit-scrollbar {
   display: none;
 }
 
-.top-nav-item {
+.top-header-menu {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -173,12 +165,12 @@ watch(() => route.fullPath, () => {
   transition: all 0.2s ease;
 }
 
-.top-nav-item:hover {
+.top-header-menu:hover {
   background: rgba(37, 99, 235, 0.08);
   color: rgb(var(--primary-color));
 }
 
-.top-nav-item--active {
+.top-header-menu--active {
   background: rgba(var(--primary-color), 0.12);
   border-color: rgba(var(--primary-color), 0.22);
   color: rgb(var(--primary-color));
@@ -206,12 +198,8 @@ watch(() => route.fullPath, () => {
   background: transparent;
 }
 
-@media (max-width: 960px) {
-  .top-nav-bar {
-    padding: 0 14px;
-  }
-
-  .top-nav-brand strong {
+@media (max-width: 1080px) {
+  .top-header-brand strong {
     display: none;
   }
 }

@@ -22,6 +22,7 @@ const isDrawer = computed({
 
 const globalStore = useGlobalStore();
 const menuStore = useMenuStore();
+const showThemeColorPicker = ref(false);
 
 const layoutList = [
   {
@@ -34,7 +35,7 @@ const layoutList = [
     tips: '顶部模式',
     value: 'top',
     style: 'setting-layout-menu-top',
-    description: '一级菜单切到顶部，内容更开阔。'
+    description: '菜单模块直接放在顶部，不再显示面包屑占位。'
   },
   {
     tips: '混合模式',
@@ -62,6 +63,13 @@ const sidebarThemeList = [
   }
 ];
 
+const lockSwitchValue = computed({
+  get: () => globalStore.isLocked,
+  set: (value: boolean) => {
+    globalStore.updateIsLock(value);
+  }
+});
+
 function setLayoutMode(layout: string) {
   globalStore.updateLayout(layout);
   menuStore.defaultLoading();
@@ -73,6 +81,7 @@ function handleThemeColorChange(color: string | null) {
   }
 
   globalStore.setPrimaryColor(color);
+  showThemeColorPicker.value = false;
 }
 
 function pickPresetColor(color: string) {
@@ -140,21 +149,35 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
         <section class="setting-section">
           <div class="setting-section__header">
             <h3>主题色</h3>
-            <span>支持拾色器选择和系统预设主题色</span>
+            <span>点击主题色卡片弹出颜色组件，也可使用下方预设色</span>
           </div>
 
-          <div class="setting-color-picker">
-            <n-color-picker
-              :value="globalStore.primaryColor"
-              :actions="['confirm']"
-              size="large"
-              @update:value="handleThemeColorChange"
-            />
-            <div class="setting-color-picker__meta">
-              <strong>{{ globalStore.primaryColor }}</strong>
-              <span>将同步作用于 Naive UI 与 VxeTable 主题</span>
+          <n-popover
+            trigger="click"
+            placement="bottom-start"
+            :show="showThemeColorPicker"
+            @update:show="(value: boolean) => showThemeColorPicker = value"
+          >
+            <template #trigger>
+              <button type="button" class="setting-color-picker">
+                <span class="setting-color-picker__swatch" :style="{ background: globalStore.primaryColor }" />
+                <div class="setting-color-picker__meta">
+                  <strong>{{ globalStore.primaryColor }}</strong>
+                  <span>点击主题色后弹出颜色组件，再选择更适合后台的品牌色</span>
+                </div>
+                <Icon icon="mdi:palette-outline" class="setting-color-picker__action" />
+              </button>
+            </template>
+
+            <div class="setting-color-picker__panel">
+              <n-color-picker
+                :value="globalStore.primaryColor"
+                :actions="['confirm']"
+                size="large"
+                @update:value="handleThemeColorChange"
+              />
             </div>
-          </div>
+          </n-popover>
 
           <div class="setting-theme-swatches">
             <button
@@ -212,12 +235,10 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
             <div class="setting-switch-item">
               <div>
-                <strong>锁屏快捷入口</strong>
-                <span>当前入口保留在顶栏用户区</span>
+                <strong>锁屏模式</strong>
+                <span>开启后立即进入锁屏，关闭后恢复当前界面</span>
               </div>
-              <n-tag size="small" type="info" round>
-                已启用
-              </n-tag>
+              <n-switch v-model:value="lockSwitchValue" />
             </div>
           </div>
         </section>
@@ -348,7 +369,8 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
 .setting-layout-card,
 .setting-sidebar-card,
-.setting-theme-swatches__item {
+.setting-theme-swatches__item,
+.setting-color-picker {
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: #fff;
   cursor: pointer;
@@ -367,7 +389,8 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
 .setting-layout-card:hover,
 .setting-sidebar-card:hover,
-.setting-theme-swatches__item:hover {
+.setting-theme-swatches__item:hover,
+.setting-color-picker:hover {
   border-color: rgba(var(--primary-color), 0.24);
   transform: translateY(-1px);
 }
@@ -419,22 +442,23 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
 .setting-layout-menu-top::before {
   inset: 0 0 auto 0;
-  height: 26%;
-  background: #0f172a;
+  height: 28%;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .setting-layout-menu-top::after {
   left: 8px;
-  right: 8px;
-  top: 30%;
-  height: 14px;
-  background: rgba(37, 99, 235, 0.14);
+  top: 10px;
+  width: 48%;
+  height: 12px;
+  background: rgba(37, 99, 235, 0.16);
 }
 
 .setting-layout-menu-top .setting-layout-card__preview-body {
   left: 8px;
   right: 8px;
-  top: 54%;
+  top: 34%;
   bottom: 8px;
   background: linear-gradient(180deg, #f8fafc, #e2e8f0);
 }
@@ -483,10 +507,21 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
 .setting-color-picker {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
+  width: 100%;
   margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.setting-color-picker__swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.72);
 }
 
 .setting-color-picker__meta {
@@ -498,6 +533,15 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 .setting-color-picker__meta strong {
   color: #0f172a;
   font-size: 15px;
+}
+
+.setting-color-picker__action {
+  font-size: 20px;
+  color: rgb(var(--primary-color));
+}
+
+.setting-color-picker__panel {
+  padding: 4px;
 }
 
 .setting-theme-swatches {

@@ -11,6 +11,14 @@ import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
 import setting from '@/layouts/components/setting.vue';
 
+const props = withDefaults(defineProps<{
+  showBreadcrumb?: boolean;
+  showCollapse?: boolean;
+}>(), {
+  showBreadcrumb: true,
+  showCollapse: true
+});
+
 const router = useRouter();
 const message = useMessage();
 const { isFullscreen, toggle } = useFullscreen();
@@ -69,12 +77,14 @@ const onUpdateSettingDrawer = (val: boolean) => {
 <template>
   <div class="layout-content-luckHeader" border="1px solid light_border dark:dark_border">
     <div class="layout-content-left">
+      <slot name="left" />
       <Icon
+        v-if="props.showCollapse"
         :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
         class="mr-10px h-20px w-20px cursor-pointer"
         @click="fold_fn"
       />
-      <Breadcrumb />
+      <Breadcrumb v-if="props.showBreadcrumb" />
     </div>
     <div class="layout-content-right">
       <SwitchTheme />
