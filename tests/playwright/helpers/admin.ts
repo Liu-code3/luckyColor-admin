@@ -48,7 +48,7 @@ export async function loginAsAdmin(page: Page) {
   await page.goto(`${FRONTEND_URL}/login`);
   await page.locator('input').first().fill(LOGIN_USERNAME);
   await page.locator('input').nth(1).fill(LOGIN_PASSWORD);
-  await page.getByRole('button', { name: '登录' }).click();
+  await page.getByRole('button', { name: /登录/ }).click();
   await page.locator('.verify-content').waitFor({ state: 'visible' });
   await page.waitForTimeout(1200);
 
