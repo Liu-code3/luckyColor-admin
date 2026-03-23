@@ -24,10 +24,15 @@ interface UserFormState {
   status: boolean;
 }
 
+type ColumnField = keyof DemoUserRecord | 'actions';
+type ColumnFixed = 'left' | 'right' | undefined;
+type ColumnFixedValue = 'none' | 'left' | 'right';
+
 interface ColumnSetting {
-  field: keyof DemoUserRecord | 'actions';
+  field: ColumnField;
   title: string;
   visible: boolean;
+  fixed?: ColumnFixed;
 }
 
 const roleOptions = [
@@ -36,6 +41,22 @@ const roleOptions = [
   { label: '运营专员', value: '运营专员' },
   { label: '财务人员', value: '财务人员' },
   { label: '审计人员', value: '审计人员' }
+];
+
+const fixedOptions = [
+  { label: '不固定', value: 'none' },
+  { label: '左侧固定', value: 'left' },
+  { label: '右侧固定', value: 'right' }
+];
+
+const defaultColumnSettings: ColumnSetting[] = [
+  { field: 'username', title: '用户名', visible: true },
+  { field: 'role', title: '角色', visible: true },
+  { field: 'phone', title: '手机号', visible: true },
+  { field: 'email', title: '邮箱', visible: true },
+  { field: 'status', title: '状态', visible: true },
+  { field: 'createdAt', title: '创建时间', visible: true },
+  { field: 'actions', title: '操作', visible: true, fixed: 'right' }
 ];
 
 const seedUsers: DemoUserRecord[] = [
@@ -60,6 +81,7 @@ const seedUsers: DemoUserRecord[] = [
 const gridRef = ref<VxeGridInstance<DemoUserRecord> | null>(null);
 const userFormRef = ref<FormInst | null>(null);
 const importInputRef = ref<HTMLInputElement | null>(null);
+const tableCardRef = ref<HTMLElement | null>(null);
 
 const sourceUsers = ref<DemoUserRecord[]>([ ...seedUsers ]);
 const checkedRowIds = ref<number[]>([]);
@@ -67,6 +89,9 @@ const showUserDrawer = ref(false);
 const isEditMode = ref(false);
 const editingUserId = ref<number | null>(null);
 const isFullscreen = ref(false);
+const showColumnPopover = ref(false);
+const columnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
+const draftColumnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
 
 const searchForm = reactive({
   username: '',
@@ -86,15 +111,6 @@ const userForm = reactive<UserFormState>({
   email: '',
   status: true
 });
-
-const columnSettings = ref<ColumnSetting[]>([
-  { field: 'username', title: '用户名', visible: true },
-  { field: 'role', title: '角色', visible: true },
-  { field: 'phone', title: '手机号', visible: true },
-  { field: 'email', title: '邮箱', visible: true },
-  { field: 'status', title: '状态', visible: true },
-  { field: 'createdAt', title: '创建时间', visible: true }
-]);
 
 const userFormRules: FormRules = {
   username: [
@@ -153,18 +169,68 @@ const pagedUsers = computed(() => {
   return filteredUsers.value.slice(start, start + pagerConfig.pageSize);
 });
 
+const printableColumns = computed(() =>
+  columnSettings.value.filter(item => item.visible && item.field !== 'actions')
+);
+
 const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
-  const visibleMap = new Map(columnSettings.value.map(item => [ item.field, item.visible ]));
+  const settingsMap = new Map(columnSettings.value.map(item => [ item.field, item ]));
+  const actionsSetting = settingsMap.get('actions');
 
   return [
     { type: 'checkbox', width: 56, fixed: 'left' },
-    { field: 'username', title: '用户名', minWidth: 160, visible: visibleMap.get('username') !== false },
-    { field: 'role', title: '角色', minWidth: 140, slots: { default: 'role' }, visible: visibleMap.get('role') !== false },
-    { field: 'phone', title: '手机号', minWidth: 150, visible: visibleMap.get('phone') !== false },
-    { field: 'email', title: '邮箱', minWidth: 220, visible: visibleMap.get('email') !== false },
-    { field: 'status', title: '状态', width: 120, slots: { default: 'status' }, visible: visibleMap.get('status') !== false },
-    { field: 'createdAt', title: '创建时间', minWidth: 180, visible: visibleMap.get('createdAt') !== false },
-    { field: 'actions', title: '操作', width: 160, fixed: 'right', slots: { default: 'actions' } }
+    {
+      field: 'username',
+      title: '用户名',
+      minWidth: 160,
+      visible: settingsMap.get('username')?.visible !== false,
+      fixed: settingsMap.get('username')?.fixed
+    },
+    {
+      field: 'role',
+      title: '角色',
+      minWidth: 140,
+      slots: { default: 'role' },
+      visible: settingsMap.get('role')?.visible !== false,
+      fixed: settingsMap.get('role')?.fixed
+    },
+    {
+      field: 'phone',
+      title: '手机号',
+      minWidth: 150,
+      visible: settingsMap.get('phone')?.visible !== false,
+      fixed: settingsMap.get('phone')?.fixed
+    },
+    {
+      field: 'email',
+      title: '邮箱',
+      minWidth: 220,
+      visible: settingsMap.get('email')?.visible !== false,
+      fixed: settingsMap.get('email')?.fixed
+    },
+    {
+      field: 'status',
+      title: '状态',
+      width: 120,
+      slots: { default: 'status' },
+      visible: settingsMap.get('status')?.visible !== false,
+      fixed: settingsMap.get('status')?.fixed
+    },
+    {
+      field: 'createdAt',
+      title: '创建时间',
+      minWidth: 180,
+      visible: settingsMap.get('createdAt')?.visible !== false,
+      fixed: settingsMap.get('createdAt')?.fixed
+    },
+    {
+      field: 'actions',
+      title: '操作',
+      width: 160,
+      slots: { default: 'actions' },
+      visible: actionsSetting?.visible !== false,
+      fixed: actionsSetting?.fixed
+    }
   ];
 });
 
@@ -198,6 +264,14 @@ watchEffect(() => {
   gridOptions.columns = gridColumns.value;
   gridOptions.data = pagedUsers.value;
 });
+
+function cloneColumnSettings(settings: ColumnSetting[]) {
+  return settings.map(item => ({ ...item }));
+}
+
+function getFixedValue(fixed?: ColumnFixed): ColumnFixedValue {
+  return fixed || 'none';
+}
 
 function resetUserForm() {
   userForm.username = '';
@@ -394,29 +468,84 @@ function downloadTextFile(filename: string, content: string) {
 }
 
 function handleExport() {
-  const header = '用户名,角色,手机号,邮箱,状态,创建时间';
+  const header = printableColumns.value.map(item => item.title).join(',');
   const rows = filteredUsers.value.map(item =>
-    [
-      item.username,
-      item.role,
-      item.phone,
-      item.email,
-      item.status ? '启用' : '停用',
-      item.createdAt
-    ].join(',')
+    printableColumns.value.map((column) => {
+      if (column.field === 'status')
+        return item.status ? '启用' : '停用';
+
+      return String(item[column.field as keyof DemoUserRecord] ?? '');
+    }).join(',')
   );
+
   downloadTextFile('vxe-table-users.csv', `\uFEFF${[ header, ...rows ].join('\n')}`);
   message.success('导出成功');
 }
 
+function buildPrintTable() {
+  const headerHtml = printableColumns.value.map(item => `<th>${item.title}</th>`).join('');
+  const bodyHtml = filteredUsers.value.map((item) => {
+    const cells = printableColumns.value.map((column) => {
+      const value = column.field === 'status'
+        ? (item.status ? '启用' : '停用')
+        : item[column.field as keyof DemoUserRecord];
+      return `<td>${String(value ?? '')}</td>`;
+    }).join('');
+
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  return `
+    <!doctype html>
+    <html lang="zh-CN">
+      <head>
+        <meta charset="utf-8" />
+        <title>VxeTable 打印预览</title>
+        <style>
+          body { margin: 24px; font-family: "Microsoft YaHei", sans-serif; color: #0f172a; }
+          h1 { margin: 0 0 16px; font-size: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #dbe3ee; padding: 10px 12px; text-align: left; font-size: 14px; }
+          th { background: #f8fafc; }
+          tr:nth-child(even) td { background: #f8fafc; }
+        </style>
+      </head>
+      <body>
+        <h1>VxeTable 用户列表</h1>
+        <table>
+          <thead>
+            <tr>${headerHtml}</tr>
+          </thead>
+          <tbody>
+            ${bodyHtml || `<tr><td colspan="${Math.max(printableColumns.value.length, 1)}">暂无数据</td></tr>`}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+}
+
 async function handlePrint() {
-  const grid = gridRef.value as unknown as { print?: () => Promise<void> | void };
-  if (grid?.print) {
-    await grid.print();
+  if (!printableColumns.value.length) {
+    message.warning('请至少保留一个可打印字段');
     return;
   }
 
-  window.print();
+  const printWindow = window.open('', '_blank', 'width=1200,height=800');
+  if (!printWindow) {
+    message.warning('打印窗口被浏览器拦截，请允许弹窗后重试');
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(buildPrintTable());
+  printWindow.document.close();
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
 }
 
 function handleRefresh() {
@@ -428,23 +557,75 @@ function handleRefresh() {
   message.success('表格已刷新');
 }
 
-function handleToggleFullscreen() {
-  isFullscreen.value = !isFullscreen.value;
+function syncFullscreenState() {
+  isFullscreen.value = document.fullscreenElement === tableCardRef.value;
 }
 
-function handleColumnVisibleChange(field: ColumnSetting['field'], checked: boolean) {
-  const visibleCount = columnSettings.value.filter(item => item.visible).length;
+async function handleToggleFullscreen() {
+  const target = tableCardRef.value;
 
-  if (!checked && visibleCount === 1) {
-    message.warning('至少保留一个展示字段');
+  if (!target) {
     return;
   }
 
-  columnSettings.value = columnSettings.value.map(item =>
+  try {
+    if (document.fullscreenElement === target) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    if (document.fullscreenElement && document.fullscreenElement !== target) {
+      await document.exitFullscreen();
+    }
+
+    await target.requestFullscreen();
+  }
+  catch {
+    message.warning('当前环境暂不支持全屏展示');
+  }
+}
+
+function syncDraftColumnSettings() {
+  draftColumnSettings.value = cloneColumnSettings(columnSettings.value);
+}
+
+function handleColumnPopoverShow(show: boolean) {
+  showColumnPopover.value = show;
+
+  if (show) {
+    syncDraftColumnSettings();
+  }
+}
+
+function updateDraftVisible(field: ColumnField, checked: boolean) {
+  draftColumnSettings.value = draftColumnSettings.value.map(item =>
     item.field === field
       ? { ...item, visible: checked }
       : item
   );
+}
+
+function updateDraftFixed(field: ColumnField, value: ColumnFixedValue) {
+  draftColumnSettings.value = draftColumnSettings.value.map(item =>
+    item.field === field
+      ? { ...item, fixed: value === 'none' ? undefined : value }
+      : item
+  );
+}
+
+function resetDraftColumnSettings() {
+  draftColumnSettings.value = cloneColumnSettings(defaultColumnSettings);
+}
+
+function applyColumnSettings() {
+  if (!draftColumnSettings.value.some(item => item.visible)) {
+    message.warning('至少保留一个展示字段');
+    return;
+  }
+
+  columnSettings.value = cloneColumnSettings(draftColumnSettings.value);
+  showColumnPopover.value = false;
+  message.success('列设置已更新');
 }
 
 function handleStatusChange(row: DemoUserRecord, value: boolean) {
@@ -453,47 +634,61 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
     item.id === row.id ? { ...item, status: value } : item
   );
 }
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', syncFullscreenState);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('fullscreenchange', syncFullscreenState);
+});
 </script>
 
 <template>
-  <div class="vxe-demo-page" :class="{ 'vxe-demo-page--fullscreen': isFullscreen }">
+  <div class="vxe-demo-page">
     <div class="filter-card">
-      <n-form :model="searchForm" inline label-placement="left">
-        <n-form-item label="用户名">
-          <n-input
-            v-model:value="searchForm.username"
-            clearable
-            placeholder="请输入用户名"
-            @keyup.enter="handleSearch"
-          />
-        </n-form-item>
-        <n-form-item label="角色">
-          <n-select
-            v-model:value="searchForm.role"
-            clearable
-            filterable
-            placeholder="请选择角色"
-            :options="roleOptions"
-          />
-        </n-form-item>
-        <n-space>
-          <n-button type="primary" @click="handleSearch">
-            <template #icon>
-              <Icon icon="simple-line-icons:magnifier" />
-            </template>
-            搜索
-          </n-button>
-          <n-button @click="handleReset">
-            <template #icon>
-              <Icon icon="system-uicons:reset" />
-            </template>
-            重置
-          </n-button>
-        </n-space>
-      </n-form>
+      <div class="filter-card__inner">
+        <n-form :model="searchForm" inline label-placement="left" class="filter-form">
+          <n-form-item label="用户名">
+            <n-input
+              v-model:value="searchForm.username"
+              clearable
+              placeholder="请输入用户名"
+              @keyup.enter="handleSearch"
+            />
+          </n-form-item>
+          <n-form-item label="角色">
+            <n-select
+              v-model:value="searchForm.role"
+              clearable
+              filterable
+              placeholder="请选择角色"
+              :options="roleOptions"
+            />
+          </n-form-item>
+          <n-space>
+            <n-button type="primary" @click="handleSearch">
+              <template #icon>
+                <Icon icon="simple-line-icons:magnifier" />
+              </template>
+              搜索
+            </n-button>
+            <n-button @click="handleReset">
+              <template #icon>
+                <Icon icon="system-uicons:reset" />
+              </template>
+              重置
+            </n-button>
+          </n-space>
+        </n-form>
+      </div>
     </div>
 
-    <div class="table-card">
+    <div
+      ref="tableCardRef"
+      class="table-card"
+      :class="{ 'table-card--fullscreen': isFullscreen }"
+    >
       <div class="table-toolbar">
         <div class="table-toolbar__left">
           <n-button type="primary" @click="openCreateDrawer">
@@ -518,36 +713,141 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
             class="hidden-input"
             @change="handleImportFile"
           >
-          <n-button quaternary @click="handleImportClick">
-            导入
-          </n-button>
-          <n-button quaternary @click="handleExport">
-            导出
-          </n-button>
-          <n-button quaternary @click="handlePrint">
-            打印
-          </n-button>
-          <n-button quaternary @click="handleRefresh">
-            刷新
-          </n-button>
-          <n-button quaternary @click="handleToggleFullscreen">
-            {{ isFullscreen ? '还原' : '放大' }}
-          </n-button>
-          <n-popover trigger="click" placement="bottom-end">
+
+          <n-tooltip trigger="hover">
             <template #trigger>
-              <n-button quaternary>
-                列字段操作
+              <n-button
+                quaternary
+                circle
+                title="导入"
+                aria-label="导入"
+                @click="handleImportClick"
+              >
+                <Icon icon="mdi:import" />
               </n-button>
             </template>
-            <div class="column-panel">
-              <n-checkbox
-                v-for="item in columnSettings"
-                :key="item.field"
-                :checked="item.visible"
-                @update:checked="(checked: boolean) => handleColumnVisibleChange(item.field, checked)"
+            导入
+          </n-tooltip>
+
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                quaternary
+                circle
+                title="导出"
+                aria-label="导出"
+                @click="handleExport"
               >
-                {{ item.title }}
-              </n-checkbox>
+                <Icon icon="mdi:export-variant" />
+              </n-button>
+            </template>
+            导出
+          </n-tooltip>
+
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                quaternary
+                circle
+                title="打印"
+                aria-label="打印"
+                @click="handlePrint"
+              >
+                <Icon icon="mdi:printer-outline" />
+              </n-button>
+            </template>
+            打印
+          </n-tooltip>
+
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                quaternary
+                circle
+                title="刷新"
+                aria-label="刷新"
+                @click="handleRefresh"
+              >
+                <Icon icon="mdi:refresh" />
+              </n-button>
+            </template>
+            刷新
+          </n-tooltip>
+
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                quaternary
+                circle
+                :title="isFullscreen ? '退出全屏' : '全屏放大'"
+                :aria-label="isFullscreen ? '退出全屏' : '全屏放大'"
+                @click="handleToggleFullscreen"
+              >
+                <Icon :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'" />
+              </n-button>
+            </template>
+            {{ isFullscreen ? '退出全屏' : '全屏放大' }}
+          </n-tooltip>
+
+          <n-popover
+            trigger="click"
+            placement="bottom-end"
+            :show="showColumnPopover"
+            @update:show="handleColumnPopoverShow"
+          >
+            <template #trigger>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button
+                    quaternary
+                    circle
+                    title="列字段操作"
+                    aria-label="列字段操作"
+                  >
+                    <Icon icon="mdi:view-column-outline" />
+                  </n-button>
+                </template>
+                列字段操作
+              </n-tooltip>
+            </template>
+
+            <div class="column-panel">
+              <div class="column-panel__header">
+                <span>列字段设置</span>
+                <span>可见性与固定位置</span>
+              </div>
+
+              <div class="column-panel__body">
+                <div
+                  v-for="item in draftColumnSettings"
+                  :key="item.field"
+                  class="column-panel__row"
+                >
+                  <n-checkbox
+                    :checked="item.visible"
+                    @update:checked="(checked: boolean) => updateDraftVisible(item.field, checked)"
+                  >
+                    {{ item.title }}
+                  </n-checkbox>
+
+                  <n-select
+                    size="small"
+                    class="column-panel__select"
+                    :value="getFixedValue(item.fixed)"
+                    :options="fixedOptions"
+                    @update:value="(value: ColumnFixedValue) => updateDraftFixed(item.field, value)"
+                  />
+                </div>
+              </div>
+
+              <div class="column-panel__footer">
+                <n-button size="small" @click="resetDraftColumnSettings">
+                  重置
+                </n-button>
+                <n-button size="small" type="primary" @click="applyColumnSettings">
+                  确认
+                </n-button>
+              </div>
             </div>
           </n-popover>
         </div>
@@ -661,20 +961,52 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
   gap: 12px;
 }
 
-.vxe-demo-page--fullscreen {
-  position: fixed;
-  inset: 12px;
-  z-index: 2100;
-  padding: 12px;
-  background: #f5f7fa;
-}
-
 .filter-card,
 .table-card {
   padding: 18px 20px;
   border-radius: 12px;
   background: var(--primary-bgColor);
   border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.filter-card {
+  display: flex;
+  justify-content: center;
+}
+
+.filter-card__inner {
+  width: min(100%, 920px);
+  display: flex;
+  justify-content: center;
+}
+
+.filter-form {
+  justify-content: center;
+}
+
+.table-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.table-card--fullscreen {
+  position: relative;
+  height: 100%;
+}
+
+.table-card:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 20px 24px;
+  border-radius: 0;
+  background: #f5f7fa;
+  box-sizing: border-box;
+}
+
+.table-card:fullscreen :deep(.vxe-grid) {
+  height: calc(100vh - 120px);
 }
 
 .table-toolbar {
@@ -688,8 +1020,7 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
 
 .table-toolbar__left,
 .table-toolbar__right,
-.drawer-footer,
-.column-panel {
+.drawer-footer {
   display: flex;
   gap: 10px;
 }
@@ -697,11 +1028,55 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
 .table-toolbar__left,
 .table-toolbar__right {
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .column-panel {
-  min-width: 160px;
+  width: 320px;
+  display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+
+.column-panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.column-panel__header span:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.column-panel__header span:last-child {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.column-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.column-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.column-panel__select {
+  width: 116px;
+  flex-shrink: 0;
+}
+
+.column-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .empty-block {
@@ -728,6 +1103,27 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
 
   .table-toolbar__left,
   .table-toolbar__right {
+    width: 100%;
+  }
+
+  .filter-card__inner {
+    justify-content: flex-start;
+  }
+
+  .filter-form {
+    justify-content: flex-start;
+  }
+
+  .column-panel {
+    width: min(86vw, 320px);
+  }
+
+  .column-panel__row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .column-panel__select {
     width: 100%;
   }
 }
