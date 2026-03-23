@@ -141,6 +141,67 @@ async function syncMenus() {
 
   const ensuredMenuIds = [tenantCenterRootId];
 
+  const apifoxMenuId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: 0,
+      title: 'Apifox',
+      name: 'apifox',
+      type: 1,
+      path: '/apifox',
+      menuKey: 'main_apifox',
+      icon: 'simple-icons:apifox',
+      layout: '',
+      isVisible: true,
+      component: 'sys',
+      redirect: '/apifox/index',
+      meta: {
+        title: 'Apifox'
+      },
+      sort: 6
+    },
+    matchers: [
+      menu => menu.path === '/apifox',
+      menu => menu.name === 'apifox',
+      menu => menu.key === 'main_apifox',
+      menu => menu.menuKey === 'main_apifox'
+    ]
+  });
+
+  ensuredMenuIds.push(apifoxMenuId);
+
+  const apifoxDocMenuId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: apifoxMenuId,
+      title: '接口文档',
+      name: 'apifoxDoc',
+      type: 2,
+      path: '/apifox/index',
+      menuKey: 'main_apifox_doc',
+      icon: 'simple-icons:apifox',
+      layout: '',
+      isVisible: true,
+      component: 'tool/apifox/index',
+      redirect: null,
+      meta: {
+        title: '接口文档',
+        keepAlive: true
+      },
+      sort: 1
+    },
+    matchers: [
+      menu => menu.path === '/apifox/index',
+      menu => menu.name === 'apifoxDoc',
+      menu => menu.key === 'main_apifox_doc',
+      menu => menu.menuKey === 'main_apifox_doc'
+    ]
+  });
+
+  ensuredMenuIds.push(apifoxDocMenuId);
+
   for (const item of systemMenus) {
     const id = await ensureMenu({
       existingMenus: menuPage.records,

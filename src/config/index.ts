@@ -1,4 +1,7 @@
 const tenantId = import.meta.env.VITE_TENANT_ID?.trim();
+const apiProxyTarget = import.meta.env.VITE_API_PROXY_TARGET?.trim();
+const apiDocUrl = import.meta.env.VITE_API_DOC_URL?.trim()
+  || (apiProxyTarget ? `${apiProxyTarget.replace(/\/$/, '')}/docs` : '/docs');
 
 const DEFAULT_CONFIG = {
   // 首页地址
@@ -6,6 +9,9 @@ const DEFAULT_CONFIG = {
 
   // 接口地址
   API_URL: import.meta.env.VITE_API_BASEURL,
+
+  // 接口文档地址
+  API_DOC_URL: apiDocUrl,
 
   // 请求超时
   TIMEOUT: 60000,

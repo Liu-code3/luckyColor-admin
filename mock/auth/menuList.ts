@@ -158,6 +158,37 @@ const menuList = [
   },
   {
     pid: 0,
+    id: 16,
+    title: 'Apifox',
+    name: 'apifox',
+    type: 1,
+    path: '/apifox',
+    key: 'main_apifox',
+    icon: 'simple-icons:apifox',
+    isVisible: true,
+    component: 'sys',
+    redirect: '/apifox/index',
+    meta: {
+      title: 'Apifox'
+    }
+  },
+  {
+    pid: 16,
+    id: 17,
+    title: '接口文档',
+    name: 'apifoxDoc',
+    type: 2,
+    path: '/apifox/index',
+    key: 'main_apifox_doc',
+    icon: 'simple-icons:apifox',
+    isVisible: true,
+    component: 'tool/apifox/index',
+    meta: {
+      keepAlive: true
+    }
+  },
+  {
+    pid: 0,
     id: 9,
     title: '组件封装',
     name: 'icomponent',
