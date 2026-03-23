@@ -27,6 +27,7 @@ interface UserFormState {
 type ColumnField = keyof DemoUserRecord | 'actions';
 type ColumnFixed = 'left' | 'right' | undefined;
 type ColumnFixedValue = 'none' | 'left' | 'right';
+type StatusQuickFilter = 'all' | 'enabled' | 'disabled';
 
 interface ColumnSetting {
   field: ColumnField;
@@ -96,6 +97,8 @@ const isEditMode = ref(false);
 const editingUserId = ref<number | null>(null);
 const isFullscreen = ref(false);
 const showColumnPopover = ref(false);
+const showDetailDrawer = ref(false);
+const detailUser = ref<DemoUserRecord | null>(null);
 const columnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
 const draftColumnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
 
@@ -103,6 +106,7 @@ const searchForm = reactive({
   username: '',
   role: ''
 });
+const statusQuickFilter = ref<StatusQuickFilter>('all');
 
 const pagerConfig = reactive({
   currentPage: 1,
@@ -162,11 +166,18 @@ const userFormRules: FormRules = {
 const filteredUsers = computed(() => {
   const keyword = searchForm.username.trim().toLowerCase();
   const role = searchForm.role;
+  const statusFilter = statusQuickFilter.value;
 
   return sourceUsers.value.filter((item) => {
     const matchedKeyword = !keyword || item.username.toLowerCase().includes(keyword);
     const matchedRole = !role || item.role === role;
-    return matchedKeyword && matchedRole;
+    const matchedStatus = statusFilter === 'all'
+      ? true
+      : statusFilter === 'enabled'
+        ? item.status
+        : !item.status;
+
+    return matchedKeyword && matchedRole && matchedStatus;
   });
 });
 
@@ -183,6 +194,8 @@ const visibleColumnCount = computed(() =>
   columnSettings.value.filter(item => item.visible).length
 );
 
+const gridMaxHeight = computed(() => isFullscreen.value ? 860 : 560);
+
 const summaryMetrics = computed<SummaryMetric[]>(() => [
   { label: '用户总数', value: sourceUsers.value.length, tone: 'primary' },
   { label: '筛选结果', value: filteredUsers.value.length, tone: 'success' },
@@ -194,6 +207,27 @@ const currentRoleLabel = computed(() =>
   roleOptions.find(item => item.value === searchForm.role)?.label || ''
 );
 
+const currentStatusFilterLabel = computed(() => {
+  if (statusQuickFilter.value === 'enabled')
+    return '启用';
+
+  if (statusQuickFilter.value === 'disabled')
+    return '停用';
+
+  return '';
+});
+
+const quickStatusOptions = computed(() => {
+  const enabledCount = sourceUsers.value.filter(item => item.status).length;
+  const disabledCount = sourceUsers.value.filter(item => !item.status).length;
+
+  return [
+    { key: 'all' as const, label: '全部用户', count: sourceUsers.value.length },
+    { key: 'enabled' as const, label: '启用中', count: enabledCount },
+    { key: 'disabled' as const, label: '已停用', count: disabledCount }
+  ];
+});
+
 const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
   const settingsMap = new Map(columnSettings.value.map(item => [ item.field, item ]));
   const actionsSetting = settingsMap.get('actions');
@@ -204,6 +238,7 @@ const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
       field: 'username',
       title: '用户名',
       minWidth: 160,
+      slots: { default: 'username' },
       visible: settingsMap.get('username')?.visible !== false,
       fixed: settingsMap.get('username')?.fixed
     },
@@ -269,6 +304,7 @@ const gridOptions = reactive<VxeGridProps<DemoUserRecord>>({
   columnConfig: {
     resizable: true
   },
+  maxHeight: 560,
   columns: [],
   data: []
 });
@@ -284,6 +320,7 @@ watchEffect(() => {
 
   gridOptions.columns = gridColumns.value;
   gridOptions.data = pagedUsers.value;
+  gridOptions.maxHeight = gridMaxHeight.value;
 });
 
 function cloneColumnSettings(settings: ColumnSetting[]) {
@@ -317,9 +354,16 @@ function handleSearch() {
   clearSelection();
 }
 
+function handleStatusQuickFilterChange(value: StatusQuickFilter) {
+  statusQuickFilter.value = value;
+  pagerConfig.currentPage = 1;
+  clearSelection();
+}
+
 function handleReset() {
   searchForm.username = '';
   searchForm.role = '';
+  statusQuickFilter.value = 'all';
   pagerConfig.currentPage = 1;
   clearSelection();
 }
@@ -352,10 +396,20 @@ function openEditDrawer(row: DemoUserRecord) {
   showUserDrawer.value = true;
 }
 
+function openDetailDrawer(row: DemoUserRecord) {
+  detailUser.value = { ...row };
+  showDetailDrawer.value = true;
+}
+
 function closeUserDrawer() {
   showUserDrawer.value = false;
   resetUserForm();
   userFormRef.value?.restoreValidation();
+}
+
+function closeDetailDrawer() {
+  showDetailDrawer.value = false;
+  detailUser.value = null;
 }
 
 async function submitUserForm() {
@@ -406,6 +460,11 @@ async function handleDelete(row: DemoUserRecord) {
   }
 
   sourceUsers.value = sourceUsers.value.filter(item => item.id !== row.id);
+
+  if (detailUser.value?.id === row.id) {
+    closeDetailDrawer();
+  }
+
   message.success('用户已删除');
   clearSelection();
 }
@@ -427,6 +486,11 @@ async function handleBatchDelete() {
 
   const rowIdSet = new Set(checkedRowIds.value);
   sourceUsers.value = sourceUsers.value.filter(item => !rowIdSet.has(item.id));
+
+  if (detailUser.value && rowIdSet.has(detailUser.value.id)) {
+    closeDetailDrawer();
+  }
+
   message.success('批量删除成功');
   clearSelection();
 }
@@ -486,6 +550,17 @@ function downloadTextFile(filename: string, content: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function handleDownloadTemplate() {
+  const header = '用户名,角色,手机号,邮箱,状态';
+  const rows = [
+    'demo_admin,平台管理员,13800001001,demo_admin@luckycolor.com,启用',
+    'demo_operator,运营专员,13800001002,demo_operator@luckycolor.com,停用'
+  ];
+
+  downloadTextFile('vxe-table-import-template.csv', `\uFEFF${[ header, ...rows ].join('\n')}`);
+  message.success('模板已下载');
 }
 
 function handleExport() {
@@ -574,6 +649,7 @@ function handleRefresh() {
   pagerConfig.currentPage = 1;
   searchForm.username = '';
   searchForm.role = '';
+  statusQuickFilter.value = 'all';
   clearSelection();
   message.success('表格已刷新');
 }
@@ -694,6 +770,20 @@ onBeforeUnmount(() => {
           <span>支持按用户名和角色组合查询，常用筛选放在第一屏就能完成。</span>
         </div>
 
+        <div class="quick-filter-row">
+          <button
+            v-for="item in quickStatusOptions"
+            :key="item.key"
+            type="button"
+            class="quick-filter-chip"
+            :class="{ 'quick-filter-chip--active': statusQuickFilter === item.key }"
+            @click="handleStatusQuickFilterChange(item.key)"
+          >
+            <span>{{ item.label }}</span>
+            <strong>{{ item.count }}</strong>
+          </button>
+        </div>
+
         <n-form :model="searchForm" inline label-placement="left" class="filter-form">
           <n-form-item label="用户名">
             <n-input
@@ -751,6 +841,9 @@ onBeforeUnmount(() => {
           <n-tag v-if="currentRoleLabel" size="small" round type="warning">
             角色: {{ currentRoleLabel }}
           </n-tag>
+          <n-tag v-if="currentStatusFilterLabel" size="small" round type="success">
+            状态: {{ currentStatusFilterLabel }}
+          </n-tag>
           <n-tag v-if="checkedRowIds.length" size="small" round type="error">
             已勾选 {{ checkedRowIds.length }} 条
           </n-tag>
@@ -790,6 +883,21 @@ onBeforeUnmount(() => {
           >
 
           <div class="action-bar__group action-bar__group--icon">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  title="下载模板"
+                  aria-label="下载模板"
+                  @click="handleDownloadTemplate"
+                >
+                  <Icon icon="mdi:file-download-outline" />
+                </n-button>
+              </template>
+              下载模板
+            </n-tooltip>
+
             <n-tooltip trigger="hover">
               <template #trigger>
                 <n-button
@@ -934,6 +1042,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
+      <div v-if="checkedRowIds.length" class="selection-bar">
+        <div class="selection-bar__copy">
+          <Icon icon="solar:check-circle-linear" />
+          <span>已选中 {{ checkedRowIds.length }} 条记录，可以直接进行批量删除或切换字段观察。</span>
+        </div>
+        <n-button text type="primary" @click="clearSelection">
+          清空选择
+        </n-button>
+      </div>
+
       <div class="table-shell">
         <VxeGrid
           ref="gridRef"
@@ -941,6 +1059,12 @@ onBeforeUnmount(() => {
           @checkbox-change="syncCheckedRows"
           @checkbox-all="syncCheckedRows"
         >
+          <template #username="{ row }">
+            <n-button text class="username-link" @click="openDetailDrawer(row)">
+              <span>{{ row.username }}</span>
+            </n-button>
+          </template>
+
           <template #role="{ row }">
             <n-tag type="info" size="small">
               {{ row.role }}
@@ -1029,6 +1153,59 @@ onBeforeUnmount(() => {
             </n-button>
             <n-button type="primary" @click="submitUserForm">
               保存
+            </n-button>
+          </div>
+        </template>
+      </n-drawer-content>
+    </n-drawer>
+
+    <n-drawer v-model:show="showDetailDrawer" :width="420" placement="right">
+      <n-drawer-content title="用户详情">
+        <template v-if="detailUser">
+          <div class="detail-panel">
+            <div class="detail-panel__hero">
+              <div>
+                <strong>{{ detailUser.username }}</strong>
+                <span>{{ detailUser.role }}</span>
+              </div>
+              <n-tag :type="detailUser.status ? 'success' : 'warning'" round>
+                {{ detailUser.status ? '启用' : '停用' }}
+              </n-tag>
+            </div>
+
+            <div class="detail-panel__list">
+              <div class="detail-item">
+                <span>手机号</span>
+                <strong>{{ detailUser.phone }}</strong>
+              </div>
+              <div class="detail-item">
+                <span>邮箱</span>
+                <strong>{{ detailUser.email }}</strong>
+              </div>
+              <div class="detail-item">
+                <span>创建时间</span>
+                <strong>{{ detailUser.createdAt }}</strong>
+              </div>
+            </div>
+
+            <div class="detail-panel__tips">
+              <Icon icon="solar:lightbulb-linear" />
+              <span>这个详情抽屉适合后续扩展最近登录、数据权限、关联租户等扩展信息。</span>
+            </div>
+          </div>
+        </template>
+
+        <template #footer>
+          <div class="drawer-footer">
+            <n-button @click="closeDetailDrawer">
+              关闭
+            </n-button>
+            <n-button
+              v-if="detailUser"
+              type="primary"
+              @click="openEditDrawer(detailUser); closeDetailDrawer()"
+            >
+              编辑当前用户
             </n-button>
           </div>
         </template>
@@ -1176,6 +1353,47 @@ onBeforeUnmount(() => {
   font-size: 13px;
 }
 
+.quick-filter-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.quick-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.9);
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-filter-chip span {
+  font-size: 13px;
+}
+
+.quick-filter-chip strong {
+  min-width: 24px;
+  font-size: 14px;
+}
+
+.quick-filter-chip:hover {
+  border-color: rgba(37, 99, 235, 0.24);
+  transform: translateY(-1px);
+}
+
+.quick-filter-chip--active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(14, 165, 233, 0.08));
+  border-color: rgba(37, 99, 235, 0.34);
+  color: #1d4ed8;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.08);
+}
+
 .filter-form {
   justify-content: center;
 }
@@ -1320,9 +1538,39 @@ onBeforeUnmount(() => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.selection-bar__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e40af;
+  font-size: 13px;
+}
+
+.selection-bar__copy :deep(svg) {
+  font-size: 16px;
+}
+
 .table-shell :deep(.vxe-grid) {
   border-radius: 12px;
   overflow: hidden;
+}
+
+.table-shell :deep(.vxe-table--header-wrapper) {
+  position: sticky;
+  top: 0;
+  z-index: 4;
 }
 
 .table-shell :deep(.vxe-table--header-wrapper) {
@@ -1341,6 +1589,87 @@ onBeforeUnmount(() => {
 
 .table-shell :deep(.vxe-body--column) {
   transition: background-color 0.2s ease;
+}
+
+.username-link {
+  padding: 0;
+  font-weight: 600;
+}
+
+.username-link span {
+  border-bottom: 1px dashed rgba(37, 99, 235, 0.3);
+}
+
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-panel__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.04));
+  border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.detail-panel__hero strong {
+  display: block;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.detail-panel__hero span {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+}
+
+.detail-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.detail-item span {
+  color: #64748b;
+}
+
+.detail-item strong {
+  color: #0f172a;
+  text-align: right;
+}
+
+.detail-panel__tips {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(14, 165, 233, 0.08);
+  color: #0f172a;
+  line-height: 1.7;
+}
+
+.detail-panel__tips :deep(svg) {
+  margin-top: 2px;
+  font-size: 18px;
+  color: #0284c7;
 }
 
 .column-panel {
@@ -1451,8 +1780,17 @@ onBeforeUnmount(() => {
     justify-content: flex-start;
   }
 
+  .quick-filter-row {
+    justify-content: flex-start;
+  }
+
   .action-bar {
     width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .selection-bar {
     align-items: flex-start;
     flex-direction: column;
   }
