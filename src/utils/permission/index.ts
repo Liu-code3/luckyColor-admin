@@ -1,29 +1,126 @@
+import {
+  DEFAULT_ADMIN_BUTTON_CODE_LIST,
+  SUPER_BUTTON_CODE_LIST
+} from '@/constants/permission';
 import { getCurrentUserInfo } from '@/utils/auth';
 
-/**
- * 权限判断是否能看到这个按钮，同时后端也做了校验，前端只是显示与不显示
- * @param {Array|string} data  data 按钮的权限点，可以是单个字符串，也可以是数组
- * @param {string} rlue 'or' 代表或，and代表与
- * 使用方法：
- * 例如 buttonCodeList 的数据为： ['button1', 'button2', 'button3']
- * 想要判断 button1 的权限，可以写成：hasPerm('button1')
- * 想要判断 button1 或 button2 的权限，可以写成：hasPerm(['button1', 'button2' ])
- * 想要判断 button1 与 button2 的权限，可以写成：hasPerm(['button1', 'button2' ], 'and')
- */
-export function hasPerm(data: Array<string> | string, rlue = 'or') {
-  if (!data) return false;
+export type PermissionMode = 'and' | 'or';
+export type PermissionValue = string | string[];
 
-  const userInfo = getCurrentUserInfo();
+export interface PermissionCheckOptions {
+  mode?: PermissionMode;
+  superCodes?: string[];
+}
 
-  if (!userInfo) return false;
+interface PermissionCodeCarrier {
+  buttonCodeList?: unknown;
+  buttonCodes?: unknown;
+  permissions?: unknown;
+  permissionCodes?: unknown;
+}
 
-  const { buttonCodeList } = userInfo;
+export function getCurrentButtonCodeList() {
+  return normalizePermissionCodes(getCurrentUserInfo()?.buttonCodeList);
+}
 
-  if (!buttonCodeList) return false;
+export function resolveSessionButtonCodeList(
+  username: string,
+  ...sources: Array<PermissionCodeCarrier | null | undefined>
+) {
+  const permissionCodes = collectPermissionCodes(...sources);
 
-  if (Array.isArray(data)) {
-    const fn = rlue === 'or' ? 'some' : 'every';
-    return data[fn](item => buttonCodeList.includes(item));
+  if (permissionCodes.length) {
+    return permissionCodes;
   }
-  return buttonCodeList.includes(data);
+
+  // 后端权限字段尚未完全联调时，保留 admin 的租户中心演示权限，避免页面入口全部消失。
+  if (username === 'admin') {
+    return [ ...DEFAULT_ADMIN_BUTTON_CODE_LIST ];
+  }
+
+  return [];
+}
+
+export function hasPermission(
+  permissions: PermissionValue,
+  options: PermissionCheckOptions = {}
+) {
+  const requiredPermissions = normalizePermissionCodes(permissions);
+
+  if (!requiredPermissions.length) {
+    return false;
+  }
+
+  const currentPermissions = getCurrentButtonCodeList();
+
+  if (!currentPermissions.length) {
+    return false;
+  }
+
+  const currentPermissionSet = new Set(currentPermissions);
+  const superCodes = normalizePermissionCodes(options.superCodes ?? [ ...SUPER_BUTTON_CODE_LIST ]);
+
+  if (superCodes.some(code => currentPermissionSet.has(code))) {
+    return true;
+  }
+
+  const mode = options.mode === 'and' ? 'and' : 'or';
+
+  if (mode === 'and') {
+    return requiredPermissions.every(code => currentPermissionSet.has(code));
+  }
+
+  return requiredPermissions.some(code => currentPermissionSet.has(code));
+}
+
+export function hasAnyPermission(permissions: PermissionValue) {
+  return hasPermission(permissions);
+}
+
+export function hasAllPermissions(permissions: PermissionValue) {
+  return hasPermission(permissions, {
+    mode: 'and'
+  });
+}
+
+export function lacksPermission(
+  permissions: PermissionValue,
+  options?: PermissionCheckOptions
+) {
+  return !hasPermission(permissions, options);
+}
+
+export function hasPerm(permissions: PermissionValue, mode: PermissionMode = 'or') {
+  return hasPermission(permissions, {
+    mode
+  });
+}
+
+function collectPermissionCodes(...sources: Array<PermissionCodeCarrier | null | undefined>) {
+  return [ ...new Set(
+    sources.flatMap(source => [
+      ...normalizePermissionCodes(source?.buttonCodeList),
+      ...normalizePermissionCodes(source?.buttonCodes),
+      ...normalizePermissionCodes(source?.permissions),
+      ...normalizePermissionCodes(source?.permissionCodes)
+    ])
+  ) ];
+}
+
+function normalizePermissionCodes(input: unknown) {
+  if (typeof input === 'string') {
+    const code = input.trim();
+    return code ? [ code ] : [];
+  }
+
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return [ ...new Set(
+    input
+      .filter((item): item is string => typeof item === 'string')
+      .map(item => item.trim())
+      .filter(Boolean)
+  ) ];
 }

@@ -1,5 +1,6 @@
 import { getMenuTreeApi, getProfileApi } from '@/api';
 import { getCurrentUserInfo, setCurrentUserInfo } from '@/utils/auth';
+import { resolveSessionButtonCodeList } from '@/utils/permission';
 
 interface MenuStoreLike {
   getCachedMenuTree: () => LayoutT.MenuItem[];
@@ -17,7 +18,7 @@ async function bootstrapAuthState(menuStore: MenuStoreLike) {
         setCurrentUserInfo({
           username: data.username,
           displayName: data.nickname || data.username,
-          buttonCodeList: []
+          buttonCodeList: resolveSessionButtonCodeList(data.username, data)
         });
       })
     );

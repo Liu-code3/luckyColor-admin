@@ -9,10 +9,18 @@ export interface LoginResponsePayload {
   accessToken: string;
   tokenType: string;
   expiresIn: string;
+  buttonCodeList?: string[] | null;
+  buttonCodes?: string[] | null;
+  permissions?: string[] | null;
+  permissionCodes?: string[] | null;
   user: {
     id: string;
     username: string;
     nickname?: string | null;
+    buttonCodeList?: string[] | null;
+    buttonCodes?: string[] | null;
+    permissions?: string[] | null;
+    permissionCodes?: string[] | null;
   };
 }
 

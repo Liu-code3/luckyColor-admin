@@ -4,6 +4,10 @@ export interface LoginUserProfile {
   id: string;
   username: string;
   nickname?: string | null;
+  buttonCodeList?: string[] | null;
+  buttonCodes?: string[] | null;
+  permissions?: string[] | null;
+  permissionCodes?: string[] | null;
 }
 
 export function getProfileApi() {

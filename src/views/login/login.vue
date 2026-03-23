@@ -8,6 +8,7 @@ import { useMenuStore } from '@/store/modules/menu.ts';
 import { setAccessToken, setCurrentUserInfo } from '@/utils/auth';
 import { Encrypt } from '@/utils/crypto-md5';
 import { message } from '@/utils/message.ts';
+import { resolveSessionButtonCodeList } from '@/utils/permission';
 import tool from '@/utils/tool';
 
 const router = useRouter();
@@ -111,7 +112,7 @@ async function handleVerifySuccess(state: boolean) {
     setCurrentUserInfo({
       username: data.user.username,
       displayName: data.user.nickname || data.user.username,
-      buttonCodeList: []
+      buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data)
     });
 
     const menuTreeRes = await getMenuTreeApi();
