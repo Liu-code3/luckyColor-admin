@@ -39,11 +39,25 @@ interface DashboardViewState {
   }>
 }
 
+interface TrendChartPoint {
+  date: string
+  label: string
+  pv: number
+  uv: number
+  x: number
+  pvY: number
+  uvY: number
+  showLabel: boolean
+  hitStart: number
+  hitWidth: number
+}
+
 const router = useRouter()
 
 const loading = ref(false)
 const currentTime = ref(new Date())
 const trendRange = ref<7 | 30>(7)
+const activeTrendIndex = ref<number | null>(null)
 let clockTimer: number | null = null
 const dashboardData = ref<DashboardViewState>({
   user: {
@@ -123,6 +137,36 @@ const trendData = computed(() => {
 })
 
 const chart = computed(() => buildChart(trendData.value))
+const activeTrendPoint = computed(() => {
+  if (activeTrendIndex.value === null)
+    return null
+  return chart.value.points[activeTrendIndex.value] || null
+})
+const activeTrendTooltip = computed(() => {
+  const point = activeTrendPoint.value
+  if (!point)
+    return null
+
+  const tooltipWidth = 136
+  const tooltipHeight = 64
+  const tooltipX = clamp(
+    point.x - tooltipWidth / 2,
+    chart.value.left + 6,
+    chart.value.left + chart.value.chartWidth - tooltipWidth - 6
+  )
+  const tooltipY = Math.max(
+    chart.value.top + 8,
+    Math.min(point.pvY, point.uvY) - tooltipHeight - 16
+  )
+
+  return {
+    point,
+    width: tooltipWidth,
+    height: tooltipHeight,
+    x: tooltipX,
+    y: tooltipY
+  }
+})
 
 const overviewItems = computed(() => [
   { label: '当前账号', value: dashboardData.value.user.username || '--' },
@@ -164,8 +208,20 @@ function openNoticePage() {
   router.push('/systemManagement/system/notice')
 }
 
+function setActiveTrend(index: number) {
+  activeTrendIndex.value = index
+}
+
+function clearActiveTrend() {
+  activeTrendIndex.value = null
+}
+
 function pad(value: number) {
   return value.toString().padStart(2, '0')
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
 }
 
 function noticeDate(value?: string | null) {
@@ -214,22 +270,30 @@ function buildChart(items: Array<{ date: string, pv: number, uv: number }>) {
   const gap = items.length > 1 ? chartWidth / (items.length - 1) : chartWidth / 2
   const bottomY = top + chartHeight
   const rows = [1, 0.75, 0.5, 0.25, 0]
+  const labelStep = items.length > 12 ? Math.ceil(items.length / 7) : 1
 
-  const mapPoint = (value: number, index: number) => ({
-    x: items.length > 1 ? left + gap * index : left + chartWidth / 2,
-    y: bottomY - (value / max) * chartHeight
+  const points: TrendChartPoint[] = items.map((item, index) => {
+    const x = items.length > 1 ? left + gap * index : left + chartWidth / 2
+    const start = items.length > 1
+      ? (index === 0 ? left : x - gap / 2)
+      : left
+    const end = items.length > 1
+      ? (index === items.length - 1 ? left + chartWidth : x + gap / 2)
+      : left + chartWidth
+
+    return {
+      ...item,
+      label: item.date.slice(5),
+      x,
+      pvY: bottomY - (item.pv / max) * chartHeight,
+      uvY: bottomY - (item.uv / max) * chartHeight,
+      showLabel: items.length <= 12 || index === 0 || index === items.length - 1 || index % labelStep === 0,
+      hitStart: start,
+      hitWidth: Math.max(end - start, 24)
+    }
   })
-
-  const pvPoints = items.map((item, index) => ({
-    ...item,
-    label: item.date.slice(5),
-    ...mapPoint(item.pv, index)
-  }))
-  const uvPoints = items.map((item, index) => ({
-    ...item,
-    label: item.date.slice(5),
-    ...mapPoint(item.uv, index)
-  }))
+  const pvPoints = points.map(point => ({ x: point.x, y: point.pvY }))
+  const uvPoints = points.map(point => ({ x: point.x, y: point.uvY }))
 
   return {
     width,
@@ -243,6 +307,8 @@ function buildChart(items: Array<{ date: string, pv: number, uv: number }>) {
       y: top + chartHeight * (1 - rate),
       value: Number((max * rate).toFixed(0))
     })),
+    points,
+    labelPoints: points.filter(point => point.showLabel),
     pvPoints,
     uvPoints,
     pvPath: linePath(pvPoints),
@@ -302,6 +368,51 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       </article>
     </section>
 
+    <section class="info-stack">
+      <article class="panel">
+        <header class="panel-header">
+          <div>
+            <p>System Snapshot</p>
+            <h2>系统概览</h2>
+          </div>
+        </header>
+        <div class="overview-list">
+          <div v-for="item in overviewItems" :key="item.label" class="overview-item">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-header">
+          <div>
+            <p>Notices</p>
+            <h2>通知公告</h2>
+          </div>
+          <n-button text type="primary" @click="openNoticePage">查看全部</n-button>
+        </header>
+
+        <div v-if="loading" class="notice-loading">
+          <n-skeleton v-for="index in 3" :key="index" text :repeat="2" />
+        </div>
+        <div v-else-if="dashboardData.notices.length" class="notice-list">
+          <button v-for="item in dashboardData.notices" :key="item.id" type="button" class="notice-card" @click="openNoticePage">
+            <div class="notice-head">
+              <strong>{{ item.title }}</strong>
+              <n-tag size="small" type="info" round>{{ noticeType(item.type) }}</n-tag>
+            </div>
+            <p>{{ item.content }}</p>
+            <div class="notice-meta">
+              <span>{{ item.publisher || '系统发布' }}</span>
+              <span>{{ noticeDate(item.publishedAt || item.createdAt) }}</span>
+            </div>
+          </button>
+        </div>
+        <n-empty v-else description="暂无公告内容" />
+      </article>
+    </section>
+
     <section class="content-grid">
       <article class="panel">
         <header class="panel-header">
@@ -315,7 +426,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
           </div>
         </header>
 
-        <div class="chart-wrap">
+        <div class="chart-wrap" @mouseleave="clearActiveTrend">
           <n-skeleton v-if="loading" text :repeat="8" />
           <svg v-else :viewBox="`0 0 ${chart.width} ${chart.height}`" role="img" aria-label="访问趋势图">
             <line
@@ -343,11 +454,62 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             <path :d="chart.pvPath" class="chart-line chart-line--pv" />
             <path :d="chart.uvPath" class="chart-line chart-line--uv" />
 
-            <circle v-for="point in chart.pvPoints" :key="`pv-${point.date}`" :cx="point.x" :cy="point.y" r="4" class="chart-dot chart-dot--pv" />
-            <circle v-for="point in chart.uvPoints" :key="`uv-${point.date}`" :cx="point.x" :cy="point.y" r="4" class="chart-dot chart-dot--uv" />
+            <line
+              v-if="activeTrendPoint"
+              :x1="activeTrendPoint.x"
+              :x2="activeTrendPoint.x"
+              :y1="chart.top"
+              :y2="chart.bottomY"
+              class="chart-focus-line"
+            />
+
+            <circle
+              v-for="point in chart.points"
+              :key="`pv-${point.date}`"
+              :cx="point.x"
+              :cy="point.pvY"
+              :r="activeTrendPoint?.date === point.date ? 6 : 4"
+              class="chart-dot chart-dot--pv"
+              :class="{ 'chart-dot--active': activeTrendPoint?.date === point.date }"
+            />
+            <circle
+              v-for="point in chart.points"
+              :key="`uv-${point.date}`"
+              :cx="point.x"
+              :cy="point.uvY"
+              :r="activeTrendPoint?.date === point.date ? 6 : 4"
+              class="chart-dot chart-dot--uv"
+              :class="{ 'chart-dot--active': activeTrendPoint?.date === point.date }"
+            />
+
+            <g v-if="activeTrendTooltip" class="chart-tooltip">
+              <rect
+                :x="activeTrendTooltip.x"
+                :y="activeTrendTooltip.y"
+                :width="activeTrendTooltip.width"
+                :height="activeTrendTooltip.height"
+                rx="14"
+                class="chart-tooltip-box"
+              />
+              <text
+                :x="activeTrendTooltip.x + 14"
+                :y="activeTrendTooltip.y + 20"
+                class="chart-tooltip-date"
+              >
+                {{ activeTrendTooltip.point.date }}
+              </text>
+              <circle :cx="activeTrendTooltip.x + 16" :cy="activeTrendTooltip.y + 37" r="4" class="chart-dot chart-dot--pv" />
+              <text :x="activeTrendTooltip.x + 28" :y="activeTrendTooltip.y + 41" class="chart-tooltip-text">
+                PV {{ activeTrendTooltip.point.pv }}
+              </text>
+              <circle :cx="activeTrendTooltip.x + 16" :cy="activeTrendTooltip.y + 54" r="4" class="chart-dot chart-dot--uv" />
+              <text :x="activeTrendTooltip.x + 28" :y="activeTrendTooltip.y + 58" class="chart-tooltip-text">
+                UV {{ activeTrendTooltip.point.uv }}
+              </text>
+            </g>
 
             <text
-              v-for="point in chart.pvPoints"
+              v-for="point in chart.labelPoints"
               :key="`label-${point.date}`"
               :x="point.x"
               :y="chart.bottomY + 24"
@@ -356,6 +518,17 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             >
               {{ point.label }}
             </text>
+
+            <rect
+              v-for="(point, index) in chart.points"
+              :key="`hit-${point.date}`"
+              :x="point.hitStart"
+              :y="chart.top"
+              :width="point.hitWidth"
+              :height="chart.chartHeight + 36"
+              class="chart-hit-area"
+              @mouseenter="setActiveTrend(index)"
+            />
           </svg>
         </div>
 
@@ -390,7 +563,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       </article>
     </section>
 
-    <section class="bottom-grid">
+    <section v-if="false" class="bottom-grid">
       <article class="panel">
         <header class="panel-header">
           <div>
@@ -627,13 +800,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   gap: 16px;
 }
 
-.bottom-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
-  gap: 16px;
-}
-
-.side-stack {
+.info-stack {
   display: grid;
   gap: 16px;
 }
@@ -668,6 +835,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 }
 
 .chart-wrap {
+  position: relative;
+  overflow: hidden;
   border-radius: 18px;
   padding: 14px 8px 6px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.88));
@@ -684,9 +853,20 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   stroke-dasharray: 4 6;
 }
 
+.chart-hit-area {
+  fill: transparent;
+  cursor: pointer;
+}
+
 .chart-axis {
   fill: #64748b;
   font-size: 12px;
+}
+
+.chart-focus-line {
+  stroke: rgba(37, 99, 235, 0.18);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
 }
 
 .chart-line {
@@ -719,6 +899,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 .chart-dot {
   stroke: #fff;
   stroke-width: 2;
+  transition: r 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease;
 }
 
 .chart-dot--pv {
@@ -727,6 +908,28 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 
 .chart-dot--uv {
   fill: #10b981;
+}
+
+.chart-dot--active {
+  stroke-width: 4;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.2));
+}
+
+.chart-tooltip-box {
+  fill: rgba(255, 255, 255, 0.98);
+  stroke: rgba(148, 163, 184, 0.26);
+  stroke-width: 1;
+}
+
+.chart-tooltip-date {
+  fill: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chart-tooltip-text {
+  fill: #475569;
+  font-size: 12px;
 }
 
 .legend {
@@ -764,6 +967,14 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 .overview-list {
   display: grid;
   gap: 12px;
+}
+
+.notice-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.overview-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .visit-card,
@@ -850,7 +1061,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 
 @media (max-width: 1280px) {
   .content-grid,
-  .bottom-grid {
+  .overview-list,
+  .notice-list {
     grid-template-columns: 1fr;
   }
 }
@@ -870,11 +1082,19 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+
+  .overview-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
   .dashboard-page {
     gap: 14px;
+  }
+
+  .overview-list {
+    grid-template-columns: 1fr;
   }
 
   .hero-main {
