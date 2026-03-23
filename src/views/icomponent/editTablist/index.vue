@@ -35,6 +35,12 @@ interface ColumnSetting {
   fixed?: ColumnFixed;
 }
 
+interface SummaryMetric {
+  label: string;
+  value: number;
+  tone: 'primary' | 'success' | 'warning' | 'info';
+}
+
 const roleOptions = [
   { label: '平台管理员', value: '平台管理员' },
   { label: '租户管理员', value: '租户管理员' },
@@ -171,6 +177,21 @@ const pagedUsers = computed(() => {
 
 const printableColumns = computed(() =>
   columnSettings.value.filter(item => item.visible && item.field !== 'actions')
+);
+
+const visibleColumnCount = computed(() =>
+  columnSettings.value.filter(item => item.visible).length
+);
+
+const summaryMetrics = computed<SummaryMetric[]>(() => [
+  { label: '用户总数', value: sourceUsers.value.length, tone: 'primary' },
+  { label: '筛选结果', value: filteredUsers.value.length, tone: 'success' },
+  { label: '已选记录', value: checkedRowIds.value.length, tone: 'warning' },
+  { label: '展示字段', value: visibleColumnCount.value, tone: 'info' }
+]);
+
+const currentRoleLabel = computed(() =>
+  roleOptions.find(item => item.value === searchForm.role)?.label || ''
 );
 
 const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
@@ -646,8 +667,33 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="vxe-demo-page">
+    <section class="hero-card">
+      <div class="hero-copy">
+        <span class="hero-badge">Feature Demo</span>
+        <h2>VxeTable 用户管理演示</h2>
+        <p>把搜索、批量操作、字段配置、分页和表单编辑放在一张高频后台列表里，方便后续做业务页复用。</p>
+      </div>
+
+      <div class="hero-metrics">
+        <article
+          v-for="item in summaryMetrics"
+          :key="item.label"
+          class="metric-card"
+          :class="`metric-card--${item.tone}`"
+        >
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+        </article>
+      </div>
+    </section>
+
     <div class="filter-card">
       <div class="filter-card__inner">
+        <div class="filter-card__heading">
+          <strong>快速筛选</strong>
+          <span>支持按用户名和角色组合查询，常用筛选放在第一屏就能完成。</span>
+        </div>
+
         <n-form :model="searchForm" inline label-placement="left" class="filter-form">
           <n-form-item label="用户名">
             <n-input
@@ -689,23 +735,52 @@ onBeforeUnmount(() => {
       class="table-card"
       :class="{ 'table-card--fullscreen': isFullscreen }"
     >
-      <div class="table-toolbar">
-        <div class="table-toolbar__left">
-          <n-button type="primary" @click="openCreateDrawer">
-            <template #icon>
-              <Icon icon="material-symbols:add" />
-            </template>
-            新增用户
-          </n-button>
-          <n-button type="error" ghost :disabled="!checkedRowIds.length" @click="handleBatchDelete">
-            <template #icon>
-              <Icon icon="material-symbols:delete-outline" />
-            </template>
-            批量删除
-          </n-button>
+      <div class="table-card__header">
+        <div class="table-card__copy">
+          <strong>用户列表</strong>
+          <span>当前筛选后共 {{ filteredUsers.length }} 条数据，分页展示 {{ pagedUsers.length }} 条。</span>
         </div>
 
-        <div class="table-toolbar__right">
+        <div class="table-card__tags">
+          <n-tag size="small" round type="info">
+            页大小 {{ pagerConfig.pageSize }}
+          </n-tag>
+          <n-tag v-if="searchForm.username" size="small" round type="success">
+            用户名: {{ searchForm.username }}
+          </n-tag>
+          <n-tag v-if="currentRoleLabel" size="small" round type="warning">
+            角色: {{ currentRoleLabel }}
+          </n-tag>
+          <n-tag v-if="checkedRowIds.length" size="small" round type="error">
+            已勾选 {{ checkedRowIds.length }} 条
+          </n-tag>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="table-toolbar__left action-bar">
+          <div class="action-bar__group action-bar__group--primary">
+            <n-button type="primary" @click="openCreateDrawer">
+              <template #icon>
+                <Icon icon="material-symbols:add" />
+              </template>
+              新增用户
+            </n-button>
+            <n-button type="error" ghost :disabled="!checkedRowIds.length" @click="handleBatchDelete">
+              <template #icon>
+                <Icon icon="material-symbols:delete-outline" />
+              </template>
+              批量删除
+            </n-button>
+          </div>
+
+          <div class="action-bar__hint">
+            <Icon icon="solar:info-circle-linear" />
+            <span>勾选数据后可直接批量删除，字段配置会实时影响导出与打印。</span>
+          </div>
+        </div>
+
+        <div class="table-toolbar__right action-bar">
           <input
             ref="importInputRef"
             type="file"
@@ -714,202 +789,210 @@ onBeforeUnmount(() => {
             @change="handleImportFile"
           >
 
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-button
-                quaternary
-                circle
-                title="导入"
-                aria-label="导入"
-                @click="handleImportClick"
-              >
-                <Icon icon="mdi:import" />
-              </n-button>
-            </template>
-            导入
-          </n-tooltip>
-
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-button
-                quaternary
-                circle
-                title="导出"
-                aria-label="导出"
-                @click="handleExport"
-              >
-                <Icon icon="mdi:export-variant" />
-              </n-button>
-            </template>
-            导出
-          </n-tooltip>
-
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-button
-                quaternary
-                circle
-                title="打印"
-                aria-label="打印"
-                @click="handlePrint"
-              >
-                <Icon icon="mdi:printer-outline" />
-              </n-button>
-            </template>
-            打印
-          </n-tooltip>
-
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-button
-                quaternary
-                circle
-                title="刷新"
-                aria-label="刷新"
-                @click="handleRefresh"
-              >
-                <Icon icon="mdi:refresh" />
-              </n-button>
-            </template>
-            刷新
-          </n-tooltip>
-
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <n-button
-                quaternary
-                circle
-                :title="isFullscreen ? '退出全屏' : '全屏放大'"
-                :aria-label="isFullscreen ? '退出全屏' : '全屏放大'"
-                @click="handleToggleFullscreen"
-              >
-                <Icon :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'" />
-              </n-button>
-            </template>
-            {{ isFullscreen ? '退出全屏' : '全屏放大' }}
-          </n-tooltip>
-
-          <n-popover
-            trigger="click"
-            placement="bottom-end"
-            :show="showColumnPopover"
-            @update:show="handleColumnPopoverShow"
-          >
-            <template #trigger>
-              <n-tooltip trigger="hover">
-                <template #trigger>
-                  <n-button
-                    quaternary
-                    circle
-                    title="列字段操作"
-                    aria-label="列字段操作"
-                  >
-                    <Icon icon="mdi:view-column-outline" />
-                  </n-button>
-                </template>
-                列字段操作
-              </n-tooltip>
-            </template>
-
-            <div class="column-panel">
-              <div class="column-panel__header">
-                <span>列字段设置</span>
-                <span>可见性与固定位置</span>
-              </div>
-
-              <div class="column-panel__body">
-                <div
-                  v-for="item in draftColumnSettings"
-                  :key="item.field"
-                  class="column-panel__row"
+          <div class="action-bar__group action-bar__group--icon">
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  title="导入"
+                  aria-label="导入"
+                  @click="handleImportClick"
                 >
-                  <n-checkbox
-                    :checked="item.visible"
-                    @update:checked="(checked: boolean) => updateDraftVisible(item.field, checked)"
-                  >
-                    {{ item.title }}
-                  </n-checkbox>
+                  <Icon icon="mdi:import" />
+                </n-button>
+              </template>
+              导入
+            </n-tooltip>
 
-                  <n-select
-                    size="small"
-                    class="column-panel__select"
-                    :value="getFixedValue(item.fixed)"
-                    :options="fixedOptions"
-                    @update:value="(value: ColumnFixedValue) => updateDraftFixed(item.field, value)"
-                  />
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  title="导出"
+                  aria-label="导出"
+                  @click="handleExport"
+                >
+                  <Icon icon="mdi:export-variant" />
+                </n-button>
+              </template>
+              导出
+            </n-tooltip>
+
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  title="打印"
+                  aria-label="打印"
+                  @click="handlePrint"
+                >
+                  <Icon icon="mdi:printer-outline" />
+                </n-button>
+              </template>
+              打印
+            </n-tooltip>
+
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  title="刷新"
+                  aria-label="刷新"
+                  @click="handleRefresh"
+                >
+                  <Icon icon="mdi:refresh" />
+                </n-button>
+              </template>
+              刷新
+            </n-tooltip>
+
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  quaternary
+                  circle
+                  :title="isFullscreen ? '退出全屏' : '全屏放大'"
+                  :aria-label="isFullscreen ? '退出全屏' : '全屏放大'"
+                  @click="handleToggleFullscreen"
+                >
+                  <Icon :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'" />
+                </n-button>
+              </template>
+              {{ isFullscreen ? '退出全屏' : '全屏放大' }}
+            </n-tooltip>
+
+            <n-popover
+              trigger="click"
+              placement="bottom-end"
+              :show="showColumnPopover"
+              @update:show="handleColumnPopoverShow"
+            >
+              <template #trigger>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <n-button
+                      quaternary
+                      circle
+                      title="列字段操作"
+                      aria-label="列字段操作"
+                    >
+                      <Icon icon="mdi:view-column-outline" />
+                    </n-button>
+                  </template>
+                  列字段操作
+                </n-tooltip>
+              </template>
+
+              <div class="column-panel">
+                <div class="column-panel__header">
+                  <span>列字段设置</span>
+                  <span>可见性与固定位置</span>
+                </div>
+
+                <div class="column-panel__body">
+                  <div
+                    v-for="item in draftColumnSettings"
+                    :key="item.field"
+                    class="column-panel__row"
+                  >
+                    <n-checkbox
+                      :checked="item.visible"
+                      @update:checked="(checked: boolean) => updateDraftVisible(item.field, checked)"
+                    >
+                      {{ item.title }}
+                    </n-checkbox>
+
+                    <n-select
+                      size="small"
+                      class="column-panel__select"
+                      :value="getFixedValue(item.fixed)"
+                      :options="fixedOptions"
+                      @update:value="(value: ColumnFixedValue) => updateDraftFixed(item.field, value)"
+                    />
+                  </div>
+                </div>
+
+                <div class="column-panel__footer">
+                  <n-button size="small" @click="resetDraftColumnSettings">
+                    重置
+                  </n-button>
+                  <n-button size="small" type="primary" @click="applyColumnSettings">
+                    确认
+                  </n-button>
                 </div>
               </div>
+            </n-popover>
+          </div>
 
-              <div class="column-panel__footer">
-                <n-button size="small" @click="resetDraftColumnSettings">
-                  重置
-                </n-button>
-                <n-button size="small" type="primary" @click="applyColumnSettings">
-                  确认
-                </n-button>
-              </div>
-            </div>
-          </n-popover>
+          <div class="action-bar__meta">
+            <span>可视列 {{ visibleColumnCount }}</span>
+          </div>
         </div>
       </div>
 
-      <VxeGrid
-        ref="gridRef"
-        v-bind="gridOptions"
-        @checkbox-change="syncCheckedRows"
-        @checkbox-all="syncCheckedRows"
-      >
-        <template #role="{ row }">
-          <n-tag type="info" size="small">
-            {{ row.role }}
-          </n-tag>
-        </template>
+      <div class="table-shell">
+        <VxeGrid
+          ref="gridRef"
+          v-bind="gridOptions"
+          @checkbox-change="syncCheckedRows"
+          @checkbox-all="syncCheckedRows"
+        >
+          <template #role="{ row }">
+            <n-tag type="info" size="small">
+              {{ row.role }}
+            </n-tag>
+          </template>
 
-        <template #status="{ row }">
-          <n-switch
-            :value="row.status"
-            size="small"
-            @update:value="(value: boolean) => handleStatusChange(row, value)"
-          >
-            <template #checked>
-              启用
-            </template>
-            <template #unchecked>
-              停用
-            </template>
-          </n-switch>
-        </template>
+          <template #status="{ row }">
+            <n-switch
+              :value="row.status"
+              size="small"
+              @update:value="(value: boolean) => handleStatusChange(row, value)"
+            >
+              <template #checked>
+                启用
+              </template>
+              <template #unchecked>
+                停用
+              </template>
+            </n-switch>
+          </template>
 
-        <template #actions="{ row }">
-          <n-space :size="8">
-            <n-button text type="primary" @click="openEditDrawer(row)">
-              修改
-            </n-button>
-            <n-button text type="error" @click="handleDelete(row)">
-              删除
-            </n-button>
-          </n-space>
-        </template>
+          <template #actions="{ row }">
+            <n-space :size="8">
+              <n-button text type="primary" @click="openEditDrawer(row)">
+                修改
+              </n-button>
+              <n-button text type="error" @click="handleDelete(row)">
+                删除
+              </n-button>
+            </n-space>
+          </template>
 
-        <template #empty>
-          <div class="empty-block">
-            <n-empty description="暂无用户数据" />
-          </div>
-        </template>
+          <template #empty>
+            <div class="empty-block">
+              <n-empty description="暂无用户数据" />
+            </div>
+          </template>
 
-        <template #pager>
-          <n-pagination
-            v-model:page="pagerConfig.currentPage"
-            v-model:page-size="pagerConfig.pageSize"
-            class="pager-wrap"
-            show-size-picker
-            :item-count="pagerConfig.total"
-            :page-sizes="[10, 20, 50, 100]"
-            :on-update:page="handlePageChange"
-            :on-update:page-size="handlePageSizeChange"
-          />
-        </template>
-      </VxeGrid>
+          <template #pager>
+            <n-pagination
+              v-model:page="pagerConfig.currentPage"
+              v-model:page-size="pagerConfig.pageSize"
+              class="pager-wrap"
+              show-size-picker
+              :item-count="pagerConfig.total"
+              :page-sizes="[10, 20, 50, 100]"
+              :on-update:page="handlePageChange"
+              :on-update:page-size="handlePageSizeChange"
+            />
+          </template>
+        </VxeGrid>
+      </div>
     </div>
 
     <n-drawer v-model:show="showUserDrawer" :width="480" placement="right">
@@ -958,26 +1041,139 @@ onBeforeUnmount(() => {
 .vxe-demo-page {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 460px);
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.02), rgba(59, 130, 246, 0.08));
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-copy h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.hero-copy p {
+  margin: 0;
+  max-width: 720px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.metric-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.metric-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.metric-card--primary strong {
+  color: #2563eb;
+}
+
+.metric-card--success strong {
+  color: #059669;
+}
+
+.metric-card--warning strong {
+  color: #d97706;
+}
+
+.metric-card--info strong {
+  color: #0891b2;
 }
 
 .filter-card,
 .table-card {
-  padding: 18px 20px;
-  border-radius: 12px;
+  padding: 20px 22px;
+  border-radius: 16px;
   background: var(--primary-bgColor);
   border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.04);
 }
 
 .filter-card {
   display: flex;
   justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(37, 99, 235, 0.03), transparent 100%),
+    var(--primary-bgColor);
 }
 
 .filter-card__inner {
   width: min(100%, 920px);
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  gap: 14px;
+}
+
+.filter-card__heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.filter-card__heading strong {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.filter-card__heading span {
+  color: #64748b;
+  font-size: 13px;
 }
 
 .filter-form {
@@ -995,18 +1191,57 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 
+.table-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.table-card__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.table-card__copy strong {
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.table-card__copy span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.table-card__tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .table-card:fullscreen {
   width: 100vw;
   height: 100vh;
   margin: 0;
-  padding: 20px 24px;
+  padding: 22px 24px;
   border-radius: 0;
-  background: #f5f7fa;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));
   box-sizing: border-box;
 }
 
+.table-card:fullscreen .table-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
 .table-card:fullscreen :deep(.vxe-grid) {
-  height: calc(100vh - 120px);
+  height: calc(100vh - 210px);
 }
 
 .table-toolbar {
@@ -1016,6 +1251,51 @@ onBeforeUnmount(() => {
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-bar__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-bar__group--primary {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.03), rgba(15, 23, 42, 0.01));
+  border: 1px solid rgba(37, 99, 235, 0.08);
+}
+
+.action-bar__group--icon {
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.action-bar__hint,
+.action-bar__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.action-bar__hint {
+  padding: 0 4px;
+}
+
+.action-bar__hint :deep(svg),
+.action-bar__meta :deep(svg) {
+  font-size: 14px;
 }
 
 .table-toolbar__left,
@@ -1031,17 +1311,51 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 
+.table-shell {
+  padding: 12px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.table-shell :deep(.vxe-grid) {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-shell :deep(.vxe-table--header-wrapper) {
+  background: #f8fafc;
+}
+
+.table-shell :deep(.vxe-header--column) {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #334155;
+}
+
+.table-shell :deep(.vxe-body--row.row--hover) {
+  background-color: rgba(37, 99, 235, 0.03);
+}
+
+.table-shell :deep(.vxe-body--column) {
+  transition: background-color 0.2s ease;
+}
+
 .column-panel {
   width: 320px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding: 4px;
 }
 
 .column-panel__header {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 2px 2px 0;
 }
 
 .column-panel__header span:first-child {
@@ -1066,10 +1380,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .column-panel__select {
-  width: 116px;
+  width: 124px;
   flex-shrink: 0;
 }
 
@@ -1077,6 +1395,8 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .empty-block {
@@ -1097,6 +1417,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .table-toolbar {
     align-items: flex-start;
   }
@@ -1106,12 +1434,31 @@ onBeforeUnmount(() => {
     width: 100%;
   }
 
+  .table-card__header {
+    flex-direction: column;
+  }
+
   .filter-card__inner {
     justify-content: flex-start;
   }
 
+  .filter-card__heading {
+    align-items: flex-start;
+    text-align: left;
+  }
+
   .filter-form {
     justify-content: flex-start;
+  }
+
+  .action-bar {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .action-bar__group--icon {
+    border-radius: 16px;
   }
 
   .column-panel {
@@ -1125,6 +1472,16 @@ onBeforeUnmount(() => {
 
   .column-panel__select {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card strong {
+    font-size: 26px;
   }
 }
 </style>
