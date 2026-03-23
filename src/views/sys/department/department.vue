@@ -1,223 +1,569 @@
 <script setup lang="ts">
+import type { FormInst, FormRules, TreeOption } from 'naive-ui';
 import { Icon } from '@iconify/vue';
+import {
+  createDepartmentApi,
+  deleteDepartmentApi,
+  getDepartmentDetailApi,
+  getDepartmentPageApi,
+  getDepartmentTreeApi,
+  updateDepartmentApi,
+  type DepartmentRecord,
+  type DepartmentTreeRecord
+} from '@/api';
+import { confirmAction } from '@/utils/confirm';
+import { message } from '@/utils/message';
 
+interface DepartmentFormState {
+  id: number | null;
+  parentId: number | null;
+  name: string;
+  code: string;
+  leader: string;
+  phone: string;
+  email: string;
+  sort: number | null;
+  status: boolean;
+  remark: string;
+}
+
+const loading = ref(false);
+const treeLoading = ref(false);
+const submitting = ref(false);
 const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const keyword = ref('');
+const departmentList = ref<DepartmentRecord[]>([]);
+const departmentTree = ref<DepartmentTreeRecord[]>([]);
 
-// 添加用户
-const user_pop_up = ref(false);
-const formRef = ref(null);
-
-const formValue = ref({
-  user: {
-    name: '',
-    age: ''
-  },
+const departmentFormRef = ref<FormInst | null>(null);
+const showDepartmentDrawer = ref(false);
+const isEditMode = ref(false);
+const editingDepartmentId = ref<number | null>(null);
+const departmentForm = reactive<DepartmentFormState>({
+  id: null,
+  parentId: 0,
+  name: '',
+  code: '',
+  leader: '',
   phone: '',
-  adminName: '',
-  password: '',
-  radioGroupValue: '',
-  switchValue: '',
-  multipleSelectValue: '',
-  selectValue: ''
+  email: '',
+  sort: 0,
+  status: true,
+  remark: ''
 });
 
-const generalOptions = [ '管理员', '质检员' ].map(
-  v => ({
-    label: v,
-    value: v
-  })
-);
-
-// 添加菜单
-const role_pop_up = ref(false);
-const add_role = () => {
-  role_pop_up.value = true;
+const departmentFormRules: FormRules = {
+  name: [
+    {
+      required: true,
+      message: '请输入部门名称',
+      trigger: [ 'blur', 'input' ]
+    },
+    {
+      validator: (_, value: string) => value.trim().length <= 30,
+      message: '部门名称不能超过 30 个字符',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  code: [
+    {
+      required: true,
+      message: '请输入部门编码',
+      trigger: [ 'blur', 'input' ]
+    },
+    {
+      validator: (_, value: string) => /^[a-z0-9_]{2,30}$/.test(value),
+      message: '部门编码需为 2-30 位小写字母、数字或下划线',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  phone: [
+    {
+      validator: (_, value: string) => !value || /^1\d{10}$/.test(value),
+      message: '请输入 11 位手机号',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  email: [
+    {
+      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      message: '请输入正确的邮箱地址',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  remark: [
+    {
+      validator: (_, value: string) => !value || value.trim().length <= 100,
+      message: '备注不能超过 100 个字符',
+      trigger: [ 'blur', 'input' ]
+    }
+  ]
 };
+
+const departmentTreeOptions = computed<TreeOption[]>(() => [
+  {
+    key: 0,
+    label: '顶级部门'
+  },
+  ...departmentTree.value.map(item => departmentToTreeOption(item))
+]);
+
+const parentNameMap = computed(() => {
+  const map = new Map<number, string>();
+
+  const walk = (nodes: DepartmentTreeRecord[]) => {
+    nodes.forEach((node) => {
+      map.set(node.id, node.name);
+      if (node.children?.length)
+        walk(node.children);
+    });
+  };
+
+  walk(departmentTree.value);
+  return map;
+});
+
+function departmentToTreeOption(item: DepartmentTreeRecord): TreeOption {
+  return {
+    key: item.id,
+    label: item.name,
+    children: item.children?.map(departmentToTreeOption)
+  };
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value)
+    return '-';
+
+  return new Date(value).toLocaleString('zh-CN', {
+    hour12: false
+  });
+}
+
+function resetDepartmentForm() {
+  editingDepartmentId.value = null;
+  departmentForm.id = null;
+  departmentForm.parentId = 0;
+  departmentForm.name = '';
+  departmentForm.code = '';
+  departmentForm.leader = '';
+  departmentForm.phone = '';
+  departmentForm.email = '';
+  departmentForm.sort = 0;
+  departmentForm.status = true;
+  departmentForm.remark = '';
+}
+
+async function fetchDepartmentTree() {
+  treeLoading.value = true;
+  try {
+    const { data } = await getDepartmentTreeApi();
+    departmentTree.value = data;
+  }
+  finally {
+    treeLoading.value = false;
+  }
+}
+
+async function fetchDepartments(currentPage = page.value) {
+  loading.value = true;
+
+  try {
+    const { data } = await getDepartmentPageApi({
+      page: currentPage,
+      size: pageSize.value,
+      keyword: keyword.value.trim() || undefined
+    });
+
+    page.value = data.current;
+    pageSize.value = data.size;
+    total.value = data.total;
+    departmentList.value = data.records;
+  }
+  finally {
+    loading.value = false;
+  }
+}
+
+function handleSearch() {
+  page.value = 1;
+  fetchDepartments(1);
+}
+
+function handleReset() {
+  keyword.value = '';
+  page.value = 1;
+  fetchDepartments(1);
+}
+
+function handlePageChange(currentPage: number) {
+  page.value = currentPage;
+  fetchDepartments(currentPage);
+}
+
+function handlePageSizeChange(size: number) {
+  pageSize.value = size;
+  page.value = 1;
+  fetchDepartments(1);
+}
+
+function openCreateDrawer(parentId = 0) {
+  isEditMode.value = false;
+  resetDepartmentForm();
+  departmentForm.parentId = parentId;
+  showDepartmentDrawer.value = true;
+}
+
+async function openEditDrawer(department: DepartmentRecord) {
+  isEditMode.value = true;
+  resetDepartmentForm();
+  editingDepartmentId.value = department.id;
+  showDepartmentDrawer.value = true;
+
+  const { data } = await getDepartmentDetailApi(department.id);
+  departmentForm.id = data.id;
+  departmentForm.parentId = data.pid;
+  departmentForm.name = data.name;
+  departmentForm.code = data.code;
+  departmentForm.leader = data.leader || '';
+  departmentForm.phone = data.phone || '';
+  departmentForm.email = data.email || '';
+  departmentForm.sort = data.sort;
+  departmentForm.status = data.status;
+  departmentForm.remark = data.remark || '';
+}
+
+function closeDepartmentDrawer() {
+  showDepartmentDrawer.value = false;
+  resetDepartmentForm();
+  departmentFormRef.value?.restoreValidation();
+}
+
+async function submitDepartmentForm() {
+  await departmentFormRef.value?.validate();
+
+  if (isEditMode.value && editingDepartmentId.value !== null && departmentForm.parentId === editingDepartmentId.value) {
+    message.error('不能选择自身作为上级部门');
+    return;
+  }
+
+  const payload = {
+    ...(departmentForm.id ? { id: departmentForm.id } : {}),
+    parentId: departmentForm.parentId ?? 0,
+    name: departmentForm.name.trim(),
+    code: departmentForm.code.trim(),
+    leader: departmentForm.leader.trim() || undefined,
+    phone: departmentForm.phone.trim() || undefined,
+    email: departmentForm.email.trim() || undefined,
+    sort: Number(departmentForm.sort ?? 0),
+    status: departmentForm.status,
+    remark: departmentForm.remark.trim() || undefined
+  };
+
+  submitting.value = true;
+  try {
+    if (isEditMode.value && editingDepartmentId.value !== null) {
+      await updateDepartmentApi(editingDepartmentId.value, {
+        ...payload,
+        remark: payload.remark ?? null,
+        leader: payload.leader ?? null,
+        phone: payload.phone ?? null,
+        email: payload.email ?? null
+      });
+    }
+    else {
+      await createDepartmentApi(payload);
+    }
+
+    closeDepartmentDrawer();
+    const nextPage = isEditMode.value ? page.value : 1;
+    page.value = nextPage;
+    await Promise.all([
+      fetchDepartments(nextPage),
+      fetchDepartmentTree()
+    ]);
+  }
+  finally {
+    submitting.value = false;
+  }
+}
+
+async function handleDeleteDepartment(department: DepartmentRecord) {
+  const confirmed = await confirmAction({
+    title: '删除部门',
+    content: `确认删除部门“${department.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await deleteDepartmentApi(department.id);
+  const nextPage = departmentList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
+  page.value = nextPage;
+  await Promise.all([
+    fetchDepartments(nextPage),
+    fetchDepartmentTree()
+  ]);
+}
+
+onMounted(() => {
+  fetchDepartments();
+  fetchDepartmentTree();
+});
 </script>
 
 <template>
-  <div class="user_box">
-    <div class="user_sift mb-10px">
-      <div class="user_sift_item">
-        <div class="user_sift_title">
-          菜单名
-        </div> <n-input type="text" placeholder="请输入 菜单名" />
+  <div class="department-page">
+    <div class="toolbar">
+      <div class="toolbar-item">
+        <div class="toolbar-label">
+          关键字
+        </div>
+        <n-input
+          v-model:value="keyword"
+          clearable
+          placeholder="输入部门名称或编码"
+          @keyup.enter="handleSearch"
+        />
       </div>
 
-      <NButton type="primary" class="ml-20px mr-10px">
-        <Icon icon="simple-line-icons:magnifier" class="mr-5px" /> 查询
-      </NButton>
-      <NButton type="primary" ghost>
+      <n-button type="primary" @click="handleSearch">
+        <template #icon>
+          <Icon icon="simple-line-icons:magnifier" />
+        </template>
+        查询
+      </n-button>
+      <n-button ghost type="primary" @click="handleReset">
+        <template #icon>
+          <Icon icon="system-uicons:reset" />
+        </template>
         重置
-      </NButton>
+      </n-button>
     </div>
-    <div class="user_content">
-      <div class="mb-15px">
-        <NButton type="primary" class="mr-10px">
-          <Icon icon="material-symbols:add" class="mr-5px" @click="add_role" />增加新菜单
-        </NButton>
-        <NButton type="error" ghost>
-          批量删除
-        </NButton>
+
+    <div class="content-grid">
+      <div class="tree-card">
+        <div class="panel-title">
+          部门树
+        </div>
+        <n-spin :show="treeLoading">
+          <n-tree
+            block-line
+            default-expand-all
+            key-field="id"
+            label-field="name"
+            :data="departmentTree"
+          />
+        </n-spin>
       </div>
-      <n-table>
-        <thead>
-          <tr>
-            <th>名称</th>
-            <th>图标</th>
-            <th>类型</th>
-            <th>路由地址</th>
-            <th>组件</th>
-            <th>是否可见</th>
-            <th>排序</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td>
-              <n-button type="primary" class="mx-10px">
-                <Icon icon="lucide:edit" /> 编辑
-              </n-button>
-              <n-button type="error">
-                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />  删除
-              </n-button>
-              <n-button type="primary" class="mx-10px">
-                <Icon icon="lucide:edit" /> 按钮权限
-              </n-button>
-            </td>
-          </tr>
-        </tbody>
-      </n-table>
-      <n-space vertical class="mt-10px" style="display: flex; align-items: end; ">
-        <n-pagination v-model:page="page" :page-count="100" :page-slot="4" />
-      </n-space>
+
+      <div class="table-card">
+        <div class="content-actions">
+          <n-button type="primary" @click="openCreateDrawer()">
+            <template #icon>
+              <Icon icon="material-symbols:add" />
+            </template>
+            新增部门
+          </n-button>
+        </div>
+
+        <n-spin :show="loading">
+          <n-table :bordered="false" :single-line="false">
+            <thead>
+              <tr>
+                <th>部门名称</th>
+                <th>上级部门</th>
+                <th>负责人</th>
+                <th>联系电话</th>
+                <th>状态</th>
+                <th>排序</th>
+                <th>更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in departmentList" :key="item.id">
+                <td>{{ item.name }}</td>
+                <td>{{ item.pid === 0 ? '顶级部门' : parentNameMap.get(item.pid) || item.pid }}</td>
+                <td>{{ item.leader || '-' }}</td>
+                <td>{{ item.phone || '-' }}</td>
+                <td>
+                  <n-tag :type="item.status ? 'success' : 'warning'">
+                    {{ item.status ? '启用' : '停用' }}
+                  </n-tag>
+                </td>
+                <td>{{ item.sort }}</td>
+                <td>{{ formatDateTime(item.updatedAt) }}</td>
+                <td class="operation-cell">
+                  <n-button quaternary type="primary" @click="openCreateDrawer(item.id)">
+                    新增子部门
+                  </n-button>
+                  <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                    编辑
+                  </n-button>
+                  <n-button quaternary type="error" @click="handleDeleteDepartment(item)">
+                    删除
+                  </n-button>
+                </td>
+              </tr>
+              <tr v-if="!departmentList.length">
+                <td colspan="8">
+                  <n-empty description="暂无部门数据" />
+                </td>
+              </tr>
+            </tbody>
+          </n-table>
+        </n-spin>
+
+        <div class="pagination-wrap">
+          <n-pagination
+            v-model:page="page"
+            v-model:page-size="pageSize"
+            show-size-picker
+            :item-count="total"
+            :page-sizes="[10, 20, 50, 100]"
+            @update:page="handlePageChange"
+            @update:page-size="handlePageSizeChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 添加用户 -->
-  <n-drawer v-model:show="user_pop_up" :width="702" placement="right">
-    <n-drawer-content title="添加用户">
-      <n-form
-        ref="formRef"
-        require-mark-placement="right-hanging"
-        :style="{
-          maxWidth: '640px',
-        }"
-      >
-        <n-form-item label="账号：" path="uadminName">
-          <n-input v-model:value="formValue.adminName" placeholder="输入姓名" />
+  <n-drawer v-model:show="showDepartmentDrawer" :width="560" placement="right">
+    <n-drawer-content :title="isEditMode ? '编辑部门' : '新增部门'">
+      <n-form ref="departmentFormRef" :model="departmentForm" :rules="departmentFormRules" label-placement="top">
+        <n-form-item label="上级部门" path="parentId">
+          <n-tree-select
+            v-model:value="departmentForm.parentId"
+            clearable
+            default-expand-all
+            :options="departmentTreeOptions"
+            placeholder="请选择上级部门"
+          />
         </n-form-item>
-        <n-form-item label="密码：" path="password">
-          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
-        </n-form-item>
-        <n-form-item label="昵称：" path="user.name">
-          <n-input v-model:value="formValue.user.name" placeholder="输入姓名" />
-        </n-form-item>
-        <n-form-item label="邮箱：" path="password">
-          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
-        </n-form-item>
-        <n-form-item label="性别" path="radioGroupValue">
-          <n-radio-group v-model:value="formValue.radioGroupValue" name="radiogroup2">
-            <n-radio value="男">
-              男
-            </n-radio>
-            <n-radio value="女">
-              女
-            </n-radio>
-          </n-radio-group>
-        </n-form-item>
-        <n-form-item label="状态" path="switchValue">
-          <n-switch v-model:value="formValue.switchValue">
+        <n-grid :cols="2" :x-gap="12">
+          <n-form-item-gi label="部门名称" path="name">
+            <n-input v-model:value="departmentForm.name" placeholder="请输入部门名称" />
+          </n-form-item-gi>
+          <n-form-item-gi label="部门编码" path="code">
+            <n-input v-model:value="departmentForm.code" placeholder="请输入部门编码" />
+          </n-form-item-gi>
+          <n-form-item-gi label="负责人" path="leader">
+            <n-input v-model:value="departmentForm.leader" placeholder="请输入负责人" />
+          </n-form-item-gi>
+          <n-form-item-gi label="联系电话" path="phone">
+            <n-input v-model:value="departmentForm.phone" placeholder="请输入联系电话" />
+          </n-form-item-gi>
+          <n-form-item-gi label="联系邮箱" path="email">
+            <n-input v-model:value="departmentForm.email" placeholder="请输入联系邮箱" />
+          </n-form-item-gi>
+          <n-form-item-gi label="排序" path="sort">
+            <n-input-number v-model:value="departmentForm.sort" class="w-full" :min="0" />
+          </n-form-item-gi>
+        </n-grid>
+        <n-form-item label="状态" path="status">
+          <n-switch v-model:value="departmentForm.status">
             <template #checked>
               启用
             </template>
             <template #unchecked>
-              禁用
+              停用
             </template>
           </n-switch>
         </n-form-item>
-        <n-form-item label="手机号：" path="phone">
-          <n-input v-model:value="formValue.phone" placeholder="电话号码" />
-        </n-form-item>
-        <n-form-item label="角色" path="multipleSelectValue">
-          <n-select
-            v-model:value="formValue.multipleSelectValue"
-            placeholder="请选择角色"
-            :options="generalOptions"
-            multiple
+        <n-form-item label="备注" path="remark">
+          <n-input
+            v-model:value="departmentForm.remark"
+            type="textarea"
+            placeholder="请输入备注"
+            :autosize="{ minRows: 3, maxRows: 5 }"
           />
-        </n-form-item>
-        <n-form-item label="部门" path="selectValue">
-          <n-select
-            v-model:value="formValue.selectValue"
-            placeholder="请选择部门"
-            :options="generalOptions"
-          />
-        </n-form-item>
-        <n-form-item label="职位" path="selectValue">
-          <n-select
-            v-model:value="formValue.selectValue"
-            placeholder="请选择职位"
-            :options="generalOptions"
-          />
-        </n-form-item>
-        <n-form-item>
-          <n-button attr-type="button">
-            验证
-          </n-button>
         </n-form-item>
       </n-form>
+
+      <template #footer>
+        <div class="drawer-footer">
+          <n-button @click="closeDepartmentDrawer">
+            取消
+          </n-button>
+          <n-button type="primary" :loading="submitting" @click="submitDepartmentForm">
+            保存
+          </n-button>
+        </div>
+      </template>
     </n-drawer-content>
   </n-drawer>
 </template>
 
-<style lang="less" scoped>
-.user_box {
-  .user_sift {
-    height: 80px;
-    background-color: var(--primary-bgColor);
-    display: flex;
-    align-items: center;
-    padding: 0 30px;
-
-    .user_sift_item {
-      display: flex;
-      align-items: center;
-      width: 300px;
-      flex: none;
-      margin-right: 20px;
-
-      .user_sift_title {
-        max-width: 100px;
-        margin-right: 10px;
-        flex: none;
-      }
-    }
-  }
+<style scoped lang="less">
+.department-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.user_content {
-  height: calc(100vh - 224px);
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
   background-color: var(--primary-bgColor);
-  padding: 20px;
-  box-sizing: border-box;
+  border-radius: 8px;
 }
-.n-space {
-  flex: 1;
+
+.toolbar-item {
+  display: flex;
+  align-items: center;
+  width: 360px;
 }
-.n-form {
+
+.toolbar-label {
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.tree-card,
+.table-card {
+  min-height: calc(100vh - 236px);
+  padding: 20px 24px;
+  background-color: var(--primary-bgColor);
+  border-radius: 8px;
+}
+
+.panel-title {
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.content-actions {
+  margin-bottom: 16px;
+}
+
+.operation-cell {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  .n-form-item {
-    width: 48%;
-  }
+  gap: 8px;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

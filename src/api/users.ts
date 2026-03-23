@@ -1,8 +1,7 @@
 import { request } from '@/utils/http';
+import type { PageQueryParams, PageResult } from './types';
 
-export interface UserQueryParams {
-  page?: number;
-  size?: number;
+export interface UserQueryParams extends PageQueryParams {
   keyword?: string;
 }
 
@@ -15,11 +14,20 @@ export interface UserRecord {
   updatedAt?: string;
 }
 
-export interface UserPageData {
-  total: number;
-  current: number;
-  size: number;
-  records: UserRecord[];
+export interface UserAssignedRole {
+  id: string;
+  name: string;
+  code: string;
+  sort: number;
+  status: boolean;
+}
+
+export interface UserRoleAssignment {
+  userId: string;
+  username: string;
+  nickname?: string | null;
+  roleIds: string[];
+  roles: UserAssignedRole[];
 }
 
 export interface CreateUserPayload {
@@ -35,7 +43,7 @@ export interface UpdateUserPayload {
 }
 
 export function getUserPageApi(params: UserQueryParams) {
-  return request<UserQueryParams, UserPageData>({
+  return request<UserQueryParams, PageResult<UserRecord>>({
     url: '/users',
     method: 'get',
     params
@@ -69,5 +77,20 @@ export function deleteUserApi(id: string) {
   return request<never, boolean>({
     url: `/users/${id}`,
     method: 'delete'
+  });
+}
+
+export function getUserRolesApi(id: string) {
+  return request<never, UserRoleAssignment>({
+    url: `/users/${id}/roles`,
+    method: 'get'
+  });
+}
+
+export function assignUserRolesApi(id: string, roleIds: string[]) {
+  return request<{ roleIds: string[] }, UserRoleAssignment>({
+    url: `/users/${id}/roles`,
+    method: 'put',
+    data: { roleIds }
   });
 }

@@ -1,3 +1,5 @@
+const tenantId = import.meta.env.VITE_TENANT_ID?.trim();
+
 const DEFAULT_CONFIG = {
   // 首页地址
   DASHBOARD_URL: '/index',
@@ -15,7 +17,11 @@ const DEFAULT_CONFIG = {
   TOKEN_PREFIX: 'Bearer ',
 
   // 追加其他头
-  HEADERS: {},
+  HEADERS: tenantId
+    ? {
+        'x-tenant-id': tenantId
+      }
+    : {},
 
   // 请求是否开启缓存
   REQUEST_CACHE: true,

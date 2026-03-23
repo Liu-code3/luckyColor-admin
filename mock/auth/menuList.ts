@@ -100,6 +100,21 @@ const menuList = [
     component: 'sys/role/index'
   },
   {
+    pid: 4,
+    id: 11,
+    title: '字典管理',
+    name: 'systemDict',
+    type: 2,
+    path: '/systemManagement/system/dict',
+    key: 'main_system_dict',
+    icon: 'arcticons:colordict',
+    isVisible: true,
+    component: 'sys/dict/index',
+    meta: {
+      keepAlive: true
+    }
+  },
+  {
     pid: 0,
     id: 9,
     title: '组件封装',
@@ -122,21 +137,6 @@ const menuList = [
     icon: 'bi:file-earmark-richtext',
     isVisible: true,
     component: 'icomponent/editor',
-    meta: {
-      keepAlive: true
-    }
-  },
-  {
-    pid: 9,
-    id: 11,
-    title: '数据字典',
-    name: 'dict',
-    type: 2,
-    path: '/icomponent/dict',
-    key: 'icomponent_dict',
-    icon: 'arcticons:colordict',
-    isVisible: true,
-    component: 'icomponent/dict/index',
     meta: {
       keepAlive: true
     }

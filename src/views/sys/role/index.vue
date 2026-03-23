@@ -1,175 +1,508 @@
 <script setup lang="ts">
+import type { FormInst, FormRules, TreeOption } from 'naive-ui';
 import { Icon } from '@iconify/vue';
+import {
+  assignRoleMenusApi,
+  createRoleApi,
+  deleteRoleApi,
+  getMenuTreeApi,
+  getRoleDetailApi,
+  getRoleMenusApi,
+  getRolePageApi,
+  updateRoleApi,
+  type MenuRecord,
+  type RoleRecord
+} from '@/api';
+import { confirmAction } from '@/utils/confirm';
 
-const option = ref([
-  {
-    label: '停用',
-    value: 'false'
-  }
-]);
-const values = ref('false');
+interface RoleFormState {
+  name: string;
+  code: string;
+  sort: number | null;
+  status: boolean;
+  remark: string;
+}
 
-const active = ref(true);
-
+const loading = ref(false);
+const submitting = ref(false);
+const assigning = ref(false);
 const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const keyword = ref('');
+const roleList = ref<RoleRecord[]>([]);
 
-// 添加角色
-const role_pop_up = ref(false);
-const formRef = ref(null);
-const add_role = () => {
-  role_pop_up.value = true;
+const roleFormRef = ref<FormInst | null>(null);
+const showRoleDrawer = ref(false);
+const isEditMode = ref(false);
+const editingRoleId = ref('');
+const roleForm = reactive<RoleFormState>({
+  name: '',
+  code: '',
+  sort: 0,
+  status: true,
+  remark: ''
+});
+
+const roleFormRules: FormRules = {
+  name: [
+    {
+      required: true,
+      message: '请输入角色名称',
+      trigger: [ 'blur', 'input' ]
+    },
+    {
+      validator: (_, value: string) => value.trim().length <= 30,
+      message: '角色名称不能超过 30 个字符',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  code: [
+    {
+      required: true,
+      message: '请输入角色编码',
+      trigger: [ 'blur', 'input' ]
+    },
+    {
+      validator: (_, value: string) => /^[a-z0-9_]{2,30}$/.test(value),
+      message: '角色编码需为 2-30 位小写字母、数字或下划线',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  remark: [
+    {
+      validator: (_, value: string) => !value || value.trim().length <= 100,
+      message: '备注不能超过 100 个字符',
+      trigger: [ 'blur', 'input' ]
+    }
+  ]
 };
 
-const formValue = ref({
-  adminName: '',
-  password: '',
-  switchValue: ''
+const showAssignMenuModal = ref(false);
+const selectedRole = ref<RoleRecord | null>(null);
+const checkedMenuIds = ref<Array<string | number>>([]);
+const menuTreeOptions = ref<TreeOption[]>([]);
+
+function formatDateTime(value?: string | null) {
+  if (!value)
+    return '-';
+
+  return new Date(value).toLocaleString('zh-CN', {
+    hour12: false
+  });
+}
+
+function menuToTreeOption(menu: MenuRecord): TreeOption {
+  return {
+    key: menu.id,
+    label: `${menu.title} (${menu.path})`,
+    children: menu.children?.map(menuToTreeOption)
+  };
+}
+
+async function ensureMenuTreeOptions() {
+  if (menuTreeOptions.value.length)
+    return;
+
+  const { data } = await getMenuTreeApi();
+  menuTreeOptions.value = data.map(menuToTreeOption);
+}
+
+function resetRoleForm() {
+  editingRoleId.value = '';
+  roleForm.name = '';
+  roleForm.code = '';
+  roleForm.sort = 0;
+  roleForm.status = true;
+  roleForm.remark = '';
+}
+
+async function fetchRoles(currentPage = page.value) {
+  loading.value = true;
+
+  try {
+    const { data } = await getRolePageApi({
+      page: currentPage,
+      size: pageSize.value,
+      keyword: keyword.value.trim() || undefined
+    });
+
+    page.value = data.current;
+    pageSize.value = data.size;
+    total.value = data.total;
+    roleList.value = data.records;
+  }
+  finally {
+    loading.value = false;
+  }
+}
+
+function handleSearch() {
+  page.value = 1;
+  fetchRoles(1);
+}
+
+function handleReset() {
+  keyword.value = '';
+  page.value = 1;
+  fetchRoles(1);
+}
+
+function handlePageChange(currentPage: number) {
+  page.value = currentPage;
+  fetchRoles(currentPage);
+}
+
+function handlePageSizeChange(size: number) {
+  pageSize.value = size;
+  page.value = 1;
+  fetchRoles(1);
+}
+
+function openCreateDrawer() {
+  isEditMode.value = false;
+  resetRoleForm();
+  showRoleDrawer.value = true;
+}
+
+async function openEditDrawer(role: RoleRecord) {
+  isEditMode.value = true;
+  resetRoleForm();
+  editingRoleId.value = role.id;
+  showRoleDrawer.value = true;
+
+  const { data } = await getRoleDetailApi(role.id);
+  roleForm.name = data.name;
+  roleForm.code = data.code;
+  roleForm.sort = data.sort;
+  roleForm.status = data.status;
+  roleForm.remark = data.remark || '';
+}
+
+function closeRoleDrawer() {
+  showRoleDrawer.value = false;
+  resetRoleForm();
+  roleFormRef.value?.restoreValidation();
+}
+
+async function submitRoleForm() {
+  await roleFormRef.value?.validate();
+
+  const payload = {
+    name: roleForm.name.trim(),
+    code: roleForm.code.trim(),
+    sort: Number(roleForm.sort ?? 0),
+    status: roleForm.status,
+    remark: roleForm.remark.trim() || undefined
+  };
+
+  submitting.value = true;
+  try {
+    if (isEditMode.value) {
+      await updateRoleApi(editingRoleId.value, {
+        ...payload,
+        remark: payload.remark ?? null
+      });
+    }
+    else {
+      await createRoleApi(payload);
+    }
+
+    closeRoleDrawer();
+    const nextPage = isEditMode.value ? page.value : 1;
+    page.value = nextPage;
+    await fetchRoles(nextPage);
+  }
+  finally {
+    submitting.value = false;
+  }
+}
+
+async function handleDeleteRole(role: RoleRecord) {
+  const confirmed = await confirmAction({
+    title: '删除角色',
+    content: `确认删除角色“${role.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await deleteRoleApi(role.id);
+  const nextPage = roleList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
+  page.value = nextPage;
+  await fetchRoles(nextPage);
+}
+
+async function openAssignMenu(role: RoleRecord) {
+  selectedRole.value = role;
+  showAssignMenuModal.value = true;
+  await ensureMenuTreeOptions();
+  const { data } = await getRoleMenusApi(role.id);
+  checkedMenuIds.value = data.menuIds;
+}
+
+function closeAssignMenu() {
+  showAssignMenuModal.value = false;
+  selectedRole.value = null;
+  checkedMenuIds.value = [];
+}
+
+async function submitAssignMenu() {
+  if (!selectedRole.value)
+    return;
+
+  assigning.value = true;
+  try {
+    await assignRoleMenusApi(
+      selectedRole.value.id,
+      checkedMenuIds.value.map(item => Number(item))
+    );
+    closeAssignMenu();
+  }
+  finally {
+    assigning.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchRoles();
 });
 </script>
 
 <template>
-  <div class="user_box">
-    <div class="user_sift mb-10px">
-      <div class="user_sift_item">
-        <div class="user_sift_title">
-          角色名
-        </div> <n-input type="text" placeholder="请输入用户名" />
+  <div class="crud-page">
+    <div class="toolbar">
+      <div class="toolbar-item">
+        <div class="toolbar-label">
+          关键字
+        </div>
+        <n-input
+          v-model:value="keyword"
+          clearable
+          placeholder="输入角色名称或编码"
+          @keyup.enter="handleSearch"
+        />
       </div>
-      <div class="user_sift_item">
-        <div class="user_sift_title">
-          状态
-        </div> <n-space vertical>
-          <n-select v-model:value="values" :options="option" />
-        </n-space>
-      </div>
-      <NButton type="primary" class="ml-20px mr-10px">
-        <Icon icon="simple-line-icons:magnifier" class="mr-5px" /> 查询
-      </NButton>
-      <NButton type="primary" ghost>
+
+      <n-button type="primary" @click="handleSearch">
+        <template #icon>
+          <Icon icon="simple-line-icons:magnifier" />
+        </template>
+        查询
+      </n-button>
+      <n-button ghost type="primary" @click="handleReset">
+        <template #icon>
+          <Icon icon="system-uicons:reset" />
+        </template>
         重置
-      </NButton>
+      </n-button>
     </div>
-    <div class="user_content">
-      <div class="mb-15px">
-        <NButton type="primary" class="mr-10px" @click="add_role">
-          <Icon icon="material-symbols:add" class="mr-5px" />增加新角色
-        </NButton>
-        <NButton type="error" ghost>
-          批量删除
-        </NButton>
+
+    <div class="content-card">
+      <div class="content-actions">
+        <n-button type="primary" @click="openCreateDrawer">
+          <template #icon>
+            <Icon icon="material-symbols:add" />
+          </template>
+          新增角色
+        </n-button>
       </div>
-      <n-table>
-        <thead>
-          <tr>
-            <th>角色名</th>
-            <th>角色编码</th>
-            <th>状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>超级管理员</td>
-            <td>SUPER_ADMIN</td>
-            <td>
-              <n-switch v-model:value="active" size="medium">
-                <template #checked>
-                  启用
-                </template>
-                <template #unchecked>
-                  禁用
-                </template>
-              </n-switch>
-            </td>
-            <td>
-              <n-button strong secondary type="primary">
-                <Icon icon="lets-icons:user-add" /> 分配用户
-              </n-button>
-              <n-button type="primary" class="mx-10px">
-                <Icon icon="lucide:edit" /> 编辑
-              </n-button>
-              <n-button type="error">
-                <Icon icon="material-symbols-light:delete-outline" class="mr-10px" />  删除
-              </n-button>
-            </td>
-          </tr>
-        </tbody>
-      </n-table>
-      <n-space vertical class="mt-10px" style="display: flex; align-items: end; ">
-        <n-pagination v-model:page="page" :page-count="100" :page-slot="4" />
-      </n-space>
+
+      <n-spin :show="loading">
+        <n-table :bordered="false" :single-line="false">
+          <thead>
+            <tr>
+              <th>角色名称</th>
+              <th>角色编码</th>
+              <th>状态</th>
+              <th>排序</th>
+              <th>备注</th>
+              <th>更新时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in roleList" :key="item.id">
+              <td>{{ item.name }}</td>
+              <td>{{ item.code }}</td>
+              <td>
+                <n-tag :type="item.status ? 'success' : 'warning'">
+                  {{ item.status ? '启用' : '停用' }}
+                </n-tag>
+              </td>
+              <td>{{ item.sort }}</td>
+              <td>{{ item.remark || '-' }}</td>
+              <td>{{ formatDateTime(item.updatedAt) }}</td>
+              <td class="operation-cell">
+                <n-button quaternary type="primary" @click="openAssignMenu(item)">
+                  分配菜单
+                </n-button>
+                <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                  编辑
+                </n-button>
+                <n-button quaternary type="error" @click="handleDeleteRole(item)">
+                  删除
+                </n-button>
+              </td>
+            </tr>
+            <tr v-if="!roleList.length">
+              <td colspan="7">
+                <n-empty description="暂无角色数据" />
+              </td>
+            </tr>
+          </tbody>
+        </n-table>
+      </n-spin>
+
+      <div class="pagination-wrap">
+        <n-pagination
+          v-model:page="page"
+          v-model:page-size="pageSize"
+          show-size-picker
+          :item-count="total"
+          :page-sizes="[10, 20, 50, 100]"
+          @update:page="handlePageChange"
+          @update:page-size="handlePageSizeChange"
+        />
+      </div>
     </div>
   </div>
 
-  <!-- 添加角色 -->
-  <n-drawer v-model:show="role_pop_up" :width="702" placement="right">
-    <n-drawer-content title="添加角色">
-      <n-form
-        ref="formRef"
-        require-mark-placement="right-hanging"
-        :style="{
-          maxWidth: '640px',
-        }"
-      >
-        <n-form-item label="角色名：" path="uadminName">
-          <n-input v-model:value="formValue.adminName" placeholder="输入姓名" />
-        </n-form-item>
-        <n-form-item label="角色编码" path="password">
-          <n-input v-model:value="formValue.password" placeholder="输入姓名" />
-        </n-form-item>
+  <n-modal v-model:show="showAssignMenuModal" preset="card" title="分配菜单" style="width: 720px;">
+    <div class="assign-summary">
+      当前角色：{{ selectedRole?.name || '-' }}
+    </div>
 
-        <n-form-item label="状态" path="switchValue">
-          <n-switch v-model:value="formValue.switchValue">
+    <n-spin :show="assigning">
+      <n-tree
+        v-model:checked-keys="checkedMenuIds"
+        block-line
+        cascade
+        checkable
+        check-on-click
+        expand-on-click
+        default-expand-all
+        :data="menuTreeOptions"
+      />
+    </n-spin>
+
+    <template #footer>
+      <div class="modal-footer">
+        <n-button @click="closeAssignMenu">
+          取消
+        </n-button>
+        <n-button type="primary" :loading="assigning" @click="submitAssignMenu">
+          保存
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
+
+  <n-drawer v-model:show="showRoleDrawer" :width="520" placement="right">
+    <n-drawer-content :title="isEditMode ? '编辑角色' : '新增角色'">
+      <n-form ref="roleFormRef" :model="roleForm" :rules="roleFormRules" label-placement="top">
+        <n-form-item label="角色名称" path="name">
+          <n-input v-model:value="roleForm.name" placeholder="请输入角色名称" />
+        </n-form-item>
+        <n-form-item label="角色编码" path="code">
+          <n-input v-model:value="roleForm.code" placeholder="请输入角色编码" />
+        </n-form-item>
+        <n-form-item label="排序" path="sort">
+          <n-input-number v-model:value="roleForm.sort" class="w-full" :min="0" />
+        </n-form-item>
+        <n-form-item label="状态" path="status">
+          <n-switch v-model:value="roleForm.status">
             <template #checked>
               启用
             </template>
             <template #unchecked>
-              禁用
+              停用
             </template>
           </n-switch>
         </n-form-item>
-
-        <n-form-item>
-          <n-button attr-type="button">
-            验证
-          </n-button>
+        <n-form-item label="备注" path="remark">
+          <n-input
+            v-model:value="roleForm.remark"
+            type="textarea"
+            placeholder="请输入备注"
+            :autosize="{ minRows: 3, maxRows: 5 }"
+          />
         </n-form-item>
       </n-form>
+
+      <template #footer>
+        <div class="drawer-footer">
+          <n-button @click="closeRoleDrawer">
+            取消
+          </n-button>
+          <n-button type="primary" :loading="submitting" @click="submitRoleForm">
+            保存
+          </n-button>
+        </div>
+      </template>
     </n-drawer-content>
   </n-drawer>
 </template>
 
-<style lang="less" scoped>
-.user_box {
-  .user_sift {
-    height: 80px;
-    background-color: var(--primary-bgColor);
-    display: flex;
-    align-items: center;
-    padding: 0 30px;
-
-    .user_sift_item {
-      display: flex;
-      align-items: center;
-      width: 300px;
-      flex: none;
-      margin-right: 20px;
-
-      .user_sift_title {
-        max-width: 100px;
-        margin-right: 10px;
-        flex: none;
-      }
-    }
-  }
+<style scoped lang="less">
+.crud-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.user_content {
-  height: calc(100vh - 224px);
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
   background-color: var(--primary-bgColor);
-  padding: 20px;
-  box-sizing: border-box;
+  border-radius: 8px;
 }
-.n-space {
-  flex: 1;
+
+.toolbar-item {
+  display: flex;
+  align-items: center;
+  width: 360px;
+}
+
+.toolbar-label {
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.content-card {
+  min-height: calc(100vh - 236px);
+  padding: 20px 24px;
+  background-color: var(--primary-bgColor);
+  border-radius: 8px;
+}
+
+.content-actions {
+  margin-bottom: 16px;
+}
+
+.operation-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.assign-summary {
+  margin-bottom: 16px;
+  color: var(--text-color-2);
+}
+
+.modal-footer,
+.drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

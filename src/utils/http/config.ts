@@ -24,7 +24,7 @@ function handlerError(error: AxiosError) {
 }
 
 export {
+  errorCodeMap,
   handlerError,
-  reloadCodes,
-  errorCodeMap
+  reloadCodes
 };
