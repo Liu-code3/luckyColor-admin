@@ -36,6 +36,26 @@ test('VxeTable 功能演示页面冒烟', async ({ page }) => {
   await expect(page.locator('.column-panel')).toContainText('不固定');
   await expect(page.locator('.column-panel')).toContainText('重置');
 
+  await expect(page.locator('.column-panel__sorters').first()).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'vxe-table-import.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(
+      '\uFEFF用户名,角色,手机号,邮箱,状态\n'
+      + 'import_valid,平台管理员,13800001031,import_valid@luckycolor.com,启用\n'
+      + 'import_valid,平台管理员,13800001032,duplicate@luckycolor.com,启用\n'
+      + 'import_invalid,未知角色,13800001033,invalid@luckycolor.com,启用'
+    )
+  });
+
+  await expect(page.locator('.import-result-modal')).toContainText('导入结果');
+  await expect(page.locator('.import-result-modal')).toContainText('导入已完成');
+  await expect(page.locator('.import-result-modal')).toContainText('第 3 行');
+  await expect(page.locator('.import-result-modal')).toContainText('第 4 行');
+  await page.getByRole('button', { name: '我知道了' }).click();
+  await expect(page.locator('body')).toContainText('import_valid');
+
   await page.getByRole('button', { name: 'admin', exact: true }).click();
   await expect(page.locator('.n-drawer')).toContainText('用户详情');
   await expect(page.locator('.n-drawer')).toContainText('编辑当前用户');

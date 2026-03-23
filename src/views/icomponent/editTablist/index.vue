@@ -42,6 +42,20 @@ interface SummaryMetric {
   tone: 'primary' | 'success' | 'warning' | 'info';
 }
 
+interface ImportIssue {
+  lineNumber: number;
+  raw: string;
+  reason: string;
+}
+
+interface ImportResultSummary {
+  fileName: string;
+  totalRows: number;
+  successCount: number;
+  skippedCount: number;
+  issues: ImportIssue[];
+}
+
 const roleOptions = [
   { label: '平台管理员', value: '平台管理员' },
   { label: '租户管理员', value: '租户管理员' },
@@ -98,9 +112,17 @@ const editingUserId = ref<number | null>(null);
 const isFullscreen = ref(false);
 const showColumnPopover = ref(false);
 const showDetailDrawer = ref(false);
+const showImportResultModal = ref(false);
 const detailUser = ref<DemoUserRecord | null>(null);
 const columnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
 const draftColumnSettings = ref<ColumnSetting[]>(defaultColumnSettings.map(item => ({ ...item })));
+const importResult = reactive<ImportResultSummary>({
+  fileName: '',
+  totalRows: 0,
+  successCount: 0,
+  skippedCount: 0,
+  issues: []
+});
 
 const searchForm = reactive({
   username: '',
@@ -228,6 +250,52 @@ const quickStatusOptions = computed(() => {
   ];
 });
 
+const importIssuePreview = computed(() => importResult.issues.slice(0, 6));
+
+type GridColumn = NonNullable<VxeGridProps<DemoUserRecord>['columns']>[number];
+
+const baseColumnMap: Record<ColumnField, GridColumn> = {
+  username: {
+    field: 'username',
+    title: '用户名',
+    minWidth: 160,
+    slots: { default: 'username' }
+  },
+  role: {
+    field: 'role',
+    title: '角色',
+    minWidth: 140,
+    slots: { default: 'role' }
+  },
+  phone: {
+    field: 'phone',
+    title: '手机号',
+    minWidth: 150
+  },
+  email: {
+    field: 'email',
+    title: '邮箱',
+    minWidth: 220
+  },
+  status: {
+    field: 'status',
+    title: '状态',
+    width: 120,
+    slots: { default: 'status' }
+  },
+  createdAt: {
+    field: 'createdAt',
+    title: '创建时间',
+    minWidth: 180
+  },
+  actions: {
+    field: 'actions',
+    title: '操作',
+    width: 160,
+    slots: { default: 'actions' }
+  }
+};
+
 const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
   const settingsMap = new Map(columnSettings.value.map(item => [ item.field, item ]));
   const actionsSetting = settingsMap.get('actions');
@@ -290,6 +358,18 @@ const gridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => {
   ];
 });
 
+const orderedGridColumns = computed<VxeGridProps<DemoUserRecord>['columns']>(() => [
+  { type: 'checkbox', width: 56, fixed: 'left' },
+  ...columnSettings.value.map((item) => {
+    const baseColumn = baseColumnMap[item.field];
+    return {
+      ...baseColumn,
+      visible: item.visible,
+      fixed: item.fixed
+    };
+  })
+]);
+
 const gridOptions = reactive<VxeGridProps<DemoUserRecord>>({
   border: true,
   stripe: true,
@@ -318,7 +398,7 @@ watchEffect(() => {
     return;
   }
 
-  gridOptions.columns = gridColumns.value;
+  gridOptions.columns = orderedGridColumns.value;
   gridOptions.data = pagedUsers.value;
   gridOptions.maxHeight = gridMaxHeight.value;
 });
@@ -329,6 +409,38 @@ function cloneColumnSettings(settings: ColumnSetting[]) {
 
 function getFixedValue(fixed?: ColumnFixed): ColumnFixedValue {
   return fixed || 'none';
+}
+
+function isValidPhone(value: string) {
+  return /^1\d{10}$/.test(value.trim());
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function normalizeCsvCell(value?: string) {
+  const normalizedValue = (value || '').replace(/^\uFEFF/, '').trim();
+
+  if (normalizedValue.startsWith('"') && normalizedValue.endsWith('"')) {
+    return normalizedValue.slice(1, -1).trim();
+  }
+
+  return normalizedValue;
+}
+
+function parseImportStatus(value: string) {
+  const normalizedValue = value.trim().toLowerCase();
+
+  if ([ 'true', 'enabled', '1', 'yes', '启用', '是' ].includes(normalizedValue)) {
+    return true;
+  }
+
+  if ([ 'false', 'disabled', '0', 'no', '停用', '否' ].includes(normalizedValue)) {
+    return false;
+  }
+
+  return null;
 }
 
 function resetUserForm() {
@@ -507,39 +619,112 @@ async function handleImportFile(event: Event) {
     return;
   }
 
-  const text = await file.text();
-  const rows = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  {
+    const text = await file.text();
+    const rows = text
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
 
-  if (rows.length <= 1) {
-    message.warning('导入文件内容为空');
+    if (rows.length <= 1) {
+      message.warning('导入文件内容为空');
+      input.value = '';
+      return;
+    }
+
+    const existingUsernames = new Set(sourceUsers.value.map(item => item.username.toLowerCase()));
+    const importedUsernames = new Set<string>();
+    const importedUsers: DemoUserRecord[] = [];
+    const issues: ImportIssue[] = [];
+
+    rows.slice(1).forEach((line, index) => {
+      const lineNumber = index + 2;
+      const cells = line.split(',').map(cell => normalizeCsvCell(cell));
+      const [ username, role, phone, email, statusText ] = cells;
+
+      const pushIssue = (reason: string) => {
+        issues.push({
+          lineNumber,
+          raw: line,
+          reason
+        });
+      };
+
+      if (cells.length < 5) {
+        pushIssue('字段数量不足，请按模板补齐 5 列');
+        return;
+      }
+
+      if (!username) {
+        pushIssue('用户名不能为空');
+        return;
+      }
+
+      if (!roleOptions.some(item => item.value === role)) {
+        pushIssue('角色不存在，请选择系统内置角色');
+        return;
+      }
+
+      if (!isValidPhone(phone)) {
+        pushIssue('手机号格式不正确');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        pushIssue('邮箱格式不正确');
+        return;
+      }
+
+      const parsedStatus = parseImportStatus(statusText);
+      if (parsedStatus === null) {
+        pushIssue('状态仅支持启用/停用、true/false、1/0');
+        return;
+      }
+
+      const normalizedUsername = username.toLowerCase();
+      if (existingUsernames.has(normalizedUsername) || importedUsernames.has(normalizedUsername)) {
+        pushIssue('用户名重复，已自动跳过');
+        return;
+      }
+
+      importedUsernames.add(normalizedUsername);
+      importedUsers.push({
+        id: Math.max(...sourceUsers.value.map(item => item.id), 0) + importedUsers.length + 1,
+        username,
+        role,
+        phone,
+        email,
+        status: parsedStatus,
+        createdAt: new Date().toLocaleString('zh-CN', { hour12: false })
+      });
+    });
+
+    importResult.fileName = file.name;
+    importResult.totalRows = rows.length - 1;
+    importResult.successCount = importedUsers.length;
+    importResult.skippedCount = issues.length;
+    importResult.issues = issues;
+    showImportResultModal.value = true;
+
+    if (importedUsers.length) {
+      sourceUsers.value = [ ...importedUsers, ...sourceUsers.value ];
+      pagerConfig.currentPage = 1;
+      clearSelection();
+    }
+
+    if (importedUsers.length && issues.length) {
+      message.warning(`已导入 ${importedUsers.length} 条，跳过 ${issues.length} 条`);
+    }
+    else if (importedUsers.length) {
+      message.success(`成功导入 ${importedUsers.length} 个用户`);
+    }
+    else {
+      message.warning('没有可导入的数据，请查看导入结果');
+    }
+
     input.value = '';
     return;
   }
-
-  const importedUsers = rows.slice(1).map((line, index) => {
-    const [ username, role, phone, email, status ] = line.split(',').map(item => item.trim());
-    return {
-      id: Math.max(...sourceUsers.value.map(item => item.id), 0) + index + 1,
-      username,
-      role,
-      phone,
-      email,
-      status: [ 'true', '启用', '1', '是' ].includes(status),
-      createdAt: new Date().toLocaleString('zh-CN', { hour12: false })
-    } satisfies DemoUserRecord;
-  }).filter(item => item.username && item.role);
-
-  if (!importedUsers.length) {
-    message.warning('没有识别到可导入的数据');
-    input.value = '';
-    return;
-  }
-
-  sourceUsers.value = [ ...importedUsers, ...sourceUsers.value ];
-  pagerConfig.currentPage = 1;
-  clearSelection();
-  message.success(`成功导入 ${importedUsers.length} 个用户`);
-  input.value = '';
 }
 
 function downloadTextFile(filename: string, content: string) {
@@ -637,11 +822,25 @@ async function handlePrint() {
   printWindow.document.write(buildPrintTable());
   printWindow.document.close();
 
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-  };
+  {
+    let hasTriggeredPrint = false;
+    const triggerPrint = () => {
+      if (hasTriggeredPrint) {
+        return;
+      }
+
+      hasTriggeredPrint = true;
+      printWindow.focus();
+      printWindow.print();
+    };
+
+    printWindow.onload = triggerPrint;
+    printWindow.onafterprint = () => {
+      printWindow.close();
+    };
+    window.setTimeout(triggerPrint, 260);
+    return;
+  }
 }
 
 function handleRefresh() {
@@ -708,6 +907,30 @@ function updateDraftFixed(field: ColumnField, value: ColumnFixedValue) {
       ? { ...item, fixed: value === 'none' ? undefined : value }
       : item
   );
+}
+
+function canMoveDraftColumn(field: ColumnField, direction: 'up' | 'down') {
+  const currentIndex = draftColumnSettings.value.findIndex(item => item.field === field);
+  if (currentIndex < 0) {
+    return false;
+  }
+
+  return direction === 'up'
+    ? currentIndex > 0
+    : currentIndex < draftColumnSettings.value.length - 1;
+}
+
+function moveDraftColumn(field: ColumnField, direction: 'up' | 'down') {
+  const currentIndex = draftColumnSettings.value.findIndex(item => item.field === field);
+  const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= draftColumnSettings.value.length) {
+    return;
+  }
+
+  const nextSettings = cloneColumnSettings(draftColumnSettings.value);
+  [ nextSettings[currentIndex], nextSettings[targetIndex] ] = [ nextSettings[targetIndex], nextSettings[currentIndex] ];
+  draftColumnSettings.value = nextSettings;
 }
 
 function resetDraftColumnSettings() {
@@ -1003,16 +1226,43 @@ onBeforeUnmount(() => {
 
                 <div class="column-panel__body">
                   <div
-                    v-for="item in draftColumnSettings"
+                    v-for="(item, index) in draftColumnSettings"
                     :key="item.field"
                     class="column-panel__row"
                   >
+                    <span class="column-panel__index">{{ index + 1 }}</span>
+
                     <n-checkbox
                       :checked="item.visible"
                       @update:checked="(checked: boolean) => updateDraftVisible(item.field, checked)"
                     >
                       {{ item.title }}
                     </n-checkbox>
+
+                    <div class="column-panel__sorters">
+                      <n-button
+                        quaternary
+                        circle
+                        size="small"
+                        :disabled="!canMoveDraftColumn(item.field, 'up')"
+                        :title="`上移${item.title}`"
+                        :aria-label="`上移${item.title}`"
+                        @click="moveDraftColumn(item.field, 'up')"
+                      >
+                        <Icon icon="mdi:arrow-up" />
+                      </n-button>
+                      <n-button
+                        quaternary
+                        circle
+                        size="small"
+                        :disabled="!canMoveDraftColumn(item.field, 'down')"
+                        :title="`下移${item.title}`"
+                        :aria-label="`下移${item.title}`"
+                        @click="moveDraftColumn(item.field, 'down')"
+                      >
+                        <Icon icon="mdi:arrow-down" />
+                      </n-button>
+                    </div>
 
                     <n-select
                       size="small"
@@ -1211,6 +1461,65 @@ onBeforeUnmount(() => {
         </template>
       </n-drawer-content>
     </n-drawer>
+    <n-modal
+      v-model:show="showImportResultModal"
+      preset="card"
+      title="导入结果"
+      class="import-result-modal"
+      :style="{ width: 'min(720px, 92vw)' }"
+    >
+      <div class="import-result">
+        <div class="import-result__metrics">
+          <article class="import-result__metric">
+            <span>导入文件</span>
+            <strong>{{ importResult.fileName || '--' }}</strong>
+          </article>
+          <article class="import-result__metric">
+            <span>数据总行数</span>
+            <strong>{{ importResult.totalRows }}</strong>
+          </article>
+          <article class="import-result__metric import-result__metric--success">
+            <span>成功导入</span>
+            <strong>{{ importResult.successCount }}</strong>
+          </article>
+          <article class="import-result__metric import-result__metric--warning">
+            <span>跳过记录</span>
+            <strong>{{ importResult.skippedCount }}</strong>
+          </article>
+        </div>
+
+        <div class="import-result__headline">
+          <strong>{{ importResult.successCount ? '导入已完成' : '未导入任何数据' }}</strong>
+          <span v-if="importResult.skippedCount">
+            以下展示前 {{ importIssuePreview.length }} 条异常记录，方便快速修正后再次导入。
+          </span>
+          <span v-else>本次导入没有异常记录，可以继续后续操作。</span>
+        </div>
+
+        <div v-if="importIssuePreview.length" class="import-result__issues">
+          <article
+            v-for="item in importIssuePreview"
+            :key="`${item.lineNumber}-${item.reason}`"
+            class="import-result__issue"
+          >
+            <div class="import-result__issue-header">
+              <strong>第 {{ item.lineNumber }} 行</strong>
+              <span>{{ item.reason }}</span>
+            </div>
+            <p>{{ item.raw }}</p>
+          </article>
+        </div>
+        <n-empty v-else description="本次导入没有异常记录" />
+      </div>
+
+      <template #footer>
+        <div class="drawer-footer">
+          <n-button type="primary" @click="showImportResultModal = false">
+            我知道了
+          </n-button>
+        </div>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -1708,6 +2017,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 10px 12px;
   border-radius: 12px;
@@ -1715,9 +2025,125 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
+.column-panel__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.column-panel__sorters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .column-panel__select {
   width: 124px;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.import-result {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.import-result__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.import-result__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.import-result__metric span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.import-result__metric strong {
+  font-size: 18px;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.import-result__metric--success {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.18);
+}
+
+.import-result__metric--warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.import-result__headline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.import-result__headline strong {
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.import-result__headline span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.import-result__issues {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.import-result__issue {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 251, 235, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.import-result__issue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.import-result__issue-header strong {
+  color: #92400e;
+}
+
+.import-result__issue-header span,
+.import-result__issue p {
+  font-size: 13px;
+  color: #78350f;
+}
+
+.import-result__issue p {
+  margin: 0;
+  word-break: break-all;
 }
 
 .column-panel__footer {
@@ -1808,6 +2234,10 @@ onBeforeUnmount(() => {
     flex-direction: column;
   }
 
+  .column-panel__sorters {
+    align-self: flex-end;
+  }
+
   .column-panel__select {
     width: 100%;
   }
@@ -1820,6 +2250,15 @@ onBeforeUnmount(() => {
 
   .metric-card strong {
     font-size: 26px;
+  }
+
+  .import-result__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .import-result__issue-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
