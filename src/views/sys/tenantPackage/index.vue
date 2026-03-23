@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
 import { Icon } from '@iconify/vue';
-import { useMessage } from 'naive-ui';
 import {
   createTenantPackageApi,
   deleteTenantPackageApi,
@@ -10,6 +9,8 @@ import {
   updateTenantPackageApi,
   type TenantPackageRecord
 } from '@/api';
+import { confirmAction } from '@/utils/confirm';
+import { message } from '@/utils/message';
 
 interface TenantPackageFormState {
   code: string;
@@ -22,7 +23,18 @@ interface TenantPackageFormState {
   remark: string;
 }
 
-const message = useMessage();
+interface SummaryCard {
+  label: string;
+  value: number;
+  tone: 'primary' | 'success' | 'warning' | 'info';
+}
+
+const knownFeatureLabels: Record<string, string> = {
+  watermark: '水印',
+  dictionary: '字典',
+  notices: '公告',
+  analytics: '统计分析'
+};
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -37,6 +49,7 @@ const packageFormRef = ref<FormInst | null>(null);
 const showPackageDrawer = ref(false);
 const isEditMode = ref(false);
 const editingPackageId = ref('');
+
 const packageForm = reactive<TenantPackageFormState>({
   code: '',
   name: '',
@@ -56,6 +69,33 @@ const statusOptions = [
   { label: '启用', value: true },
   { label: '停用', value: false }
 ];
+
+const summaryCards = computed<SummaryCard[]>(() => [
+  { label: '套餐总数', value: total.value, tone: 'primary' },
+  {
+    label: '启用中',
+    value: packageList.value.filter(item => item.status).length,
+    tone: 'success'
+  },
+  {
+    label: '停用中',
+    value: packageList.value.filter(item => !item.status).length,
+    tone: 'warning'
+  },
+  {
+    label: '最高用户额度',
+    value: packageList.value.reduce((max, item) => Math.max(max, item.maxUsers ?? 0), 0),
+    tone: 'info'
+  }
+]);
+
+const featureFlagsPreview = computed(() => {
+  const parsed = parseFeatureFlags(packageForm.featureFlagsText);
+  if (!parsed)
+    return [];
+
+  return toFeatureFlagEntries(parsed);
+});
 
 const packageFormRules: FormRules = {
   code: [
@@ -79,21 +119,43 @@ const packageFormRules: FormRules = {
   ],
   featureFlagsText: [
     {
-      validator: (_, value: string) => isValidJson(value),
-      message: '能力开关必须是合法 JSON',
+      validator: (_, value: string) => parseFeatureFlags(value) !== null,
+      message: '能力开关必须是合法的 JSON 对象',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  remark: [
+    {
+      validator: (_, value: string) => !value || value.trim().length <= 200,
+      message: '备注不能超过 200 个字符',
       trigger: [ 'blur', 'input' ]
     }
   ]
 };
 
-function isValidJson(value: string) {
+function parseFeatureFlags(value: string) {
   try {
-    JSON.parse(value.trim() || '{}');
-    return true;
+    const parsed = JSON.parse(value.trim() || '{}') as unknown;
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object')
+      return null;
+
+    return parsed as Record<string, unknown>;
   }
   catch {
-    return false;
+    return null;
   }
+}
+
+function toFeatureFlagEntries(value?: Record<string, unknown> | null) {
+  if (!value)
+    return [];
+
+  return Object.entries(value).map(([ key, flag ]) => ({
+    key,
+    label: knownFeatureLabels[key] || key,
+    enabled: Boolean(flag),
+    raw: flag
+  }));
 }
 
 function formatDateTime(value?: string | null) {
@@ -105,11 +167,12 @@ function formatDateTime(value?: string | null) {
   });
 }
 
-function formatFeatureFlags(value?: Record<string, unknown> | null) {
-  if (!value || !Object.keys(value).length)
-    return '-';
+function formatQuota(item: TenantPackageRecord) {
+  return `用户 ${item.maxUsers ?? 0} / 角色 ${item.maxRoles ?? 0} / 菜单 ${item.maxMenus ?? 0}`;
+}
 
-  return Object.entries(value).map(([ key, flag ]) => `${key}: ${String(flag)}`).join(' / ');
+function getSummaryCardClass(tone: SummaryCard['tone']) {
+  return `summary-card summary-card--${tone}`;
 }
 
 function resetPackageForm() {
@@ -130,7 +193,6 @@ function resetPackageForm() {
 
 async function fetchPackages(currentPage = page.value) {
   loading.value = true;
-
   try {
     const { data } = await getTenantPackagePageApi({
       page: currentPage,
@@ -204,7 +266,11 @@ function closePackageDrawer() {
 async function submitPackageForm() {
   await packageFormRef.value?.validate();
 
-  const featureFlags = JSON.parse(packageForm.featureFlagsText.trim() || '{}') as Record<string, unknown>;
+  const featureFlags = parseFeatureFlags(packageForm.featureFlagsText);
+  if (!featureFlags) {
+    message.error('能力开关必须是合法的 JSON 对象');
+    return;
+  }
 
   submitting.value = true;
   try {
@@ -219,6 +285,7 @@ async function submitPackageForm() {
         featureFlags,
         remark: packageForm.remark.trim() || null
       });
+      message.success('租户套餐已更新');
     }
     else {
       await createTenantPackageApi({
@@ -231,6 +298,7 @@ async function submitPackageForm() {
         featureFlags,
         remark: packageForm.remark.trim() || undefined
       });
+      message.success('租户套餐已创建');
     }
 
     closePackageDrawer();
@@ -244,20 +312,19 @@ async function submitPackageForm() {
 }
 
 async function handleDeletePackage(item: TenantPackageRecord) {
-  const confirmed = window.confirm(`确认删除租户套餐“${item.name}”吗？`);
+  const confirmed = await confirmAction({
+    title: '删除租户套餐',
+    content: `确认删除租户套餐“${item.name}”吗？`
+  });
 
   if (!confirmed)
     return;
 
-  try {
-    await deleteTenantPackageApi(item.id);
-    const nextPage = packageList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
-    page.value = nextPage;
-    await fetchPackages(nextPage);
-  }
-  catch (error) {
-    message.error(error instanceof Error ? error.message : '删除租户套餐失败');
-  }
+  await deleteTenantPackageApi(item.id);
+  message.success('租户套餐已删除');
+  const nextPage = packageList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
+  page.value = nextPage;
+  await fetchPackages(nextPage);
 }
 
 onMounted(() => {
@@ -267,6 +334,17 @@ onMounted(() => {
 
 <template>
   <div class="crud-page">
+    <section class="summary-grid">
+      <article
+        v-for="card in summaryCards"
+        :key="card.label"
+        :class="getSummaryCardClass(card.tone)"
+      >
+        <span>{{ card.label }}</span>
+        <strong>{{ card.value }}</strong>
+      </article>
+    </section>
+
     <div class="toolbar">
       <div class="toolbar-item toolbar-item--wide">
         <div class="toolbar-label">
@@ -322,7 +400,7 @@ onMounted(() => {
               <th>套餐名称</th>
               <th>套餐编码</th>
               <th>状态</th>
-              <th>额度</th>
+              <th>配额</th>
               <th>能力开关</th>
               <th>更新时间</th>
               <th>操作</th>
@@ -330,16 +408,33 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-for="item in packageList" :key="item.id">
-              <td>{{ item.name }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.name }}
+                </div>
+                <div class="secondary-text">
+                  ID: {{ item.id }}
+                </div>
+              </td>
               <td>{{ item.code }}</td>
               <td>
                 <n-tag :type="item.status ? 'success' : 'warning'">
                   {{ item.status ? '启用' : '停用' }}
                 </n-tag>
               </td>
-              <td>{{ `用户 ${item.maxUsers ?? 0} / 角色 ${item.maxRoles ?? 0} / 菜单 ${item.maxMenus ?? 0}` }}</td>
+              <td>{{ formatQuota(item) }}</td>
               <td class="feature-flags-cell">
-                {{ formatFeatureFlags(item.featureFlags) }}
+                <n-space v-if="toFeatureFlagEntries(item.featureFlags).length" size="small">
+                  <n-tag
+                    v-for="flag in toFeatureFlagEntries(item.featureFlags)"
+                    :key="`${item.id}-${flag.key}`"
+                    size="small"
+                    :type="flag.enabled ? 'info' : 'default'"
+                  >
+                    {{ flag.label }}: {{ String(flag.raw) }}
+                  </n-tag>
+                </n-space>
+                <span v-else>-</span>
               </td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td class="operation-cell">
@@ -374,7 +469,7 @@ onMounted(() => {
     </div>
   </div>
 
-  <n-drawer v-model:show="showPackageDrawer" :width="640" placement="right">
+  <n-drawer v-model:show="showPackageDrawer" :width="680" placement="right">
     <n-drawer-content :title="isEditMode ? '编辑租户套餐' : '新增租户套餐'">
       <n-form ref="packageFormRef" :model="packageForm" :rules="packageFormRules" label-placement="top">
         <n-grid :cols="2" :x-gap="12">
@@ -384,7 +479,7 @@ onMounted(() => {
           <n-form-item-gi label="套餐名称" path="name">
             <n-input v-model:value="packageForm.name" placeholder="请输入套餐名称" />
           </n-form-item-gi>
-          <n-form-item-gi label="状态" path="status">
+          <n-form-item-gi label="套餐状态" path="status">
             <n-switch v-model:value="packageForm.status">
               <template #checked>
                 启用
@@ -394,24 +489,47 @@ onMounted(() => {
               </template>
             </n-switch>
           </n-form-item-gi>
-          <n-form-item-gi label="最大用户数" path="maxUsers">
+          <n-form-item-gi label="用户上限" path="maxUsers">
             <n-input-number v-model:value="packageForm.maxUsers" class="w-full" :min="0" />
           </n-form-item-gi>
-          <n-form-item-gi label="最大角色数" path="maxRoles">
+          <n-form-item-gi label="角色上限" path="maxRoles">
             <n-input-number v-model:value="packageForm.maxRoles" class="w-full" :min="0" />
           </n-form-item-gi>
-          <n-form-item-gi label="最大菜单数" path="maxMenus">
+          <n-form-item-gi label="菜单上限" path="maxMenus">
             <n-input-number v-model:value="packageForm.maxMenus" class="w-full" :min="0" />
           </n-form-item-gi>
         </n-grid>
-        <n-form-item label="能力开关（JSON）" path="featureFlagsText">
+
+        <div class="quota-hint">
+          套餐 ID 会根据编码自动生成，默认格式为 `pkg_编码`。
+        </div>
+
+        <n-form-item label="能力开关（JSON 对象）" path="featureFlagsText">
           <n-input
             v-model:value="packageForm.featureFlagsText"
             type="textarea"
-            placeholder="{&quot;watermark&quot;:true,&quot;dictionary&quot;:true}"
+            placeholder="{&quot;watermark&quot;: true, &quot;dictionary&quot;: true}"
             :autosize="{ minRows: 6, maxRows: 10 }"
           />
         </n-form-item>
+
+        <div class="preview-block">
+          <div class="preview-block__title">
+            能力预览
+          </div>
+          <n-space v-if="featureFlagsPreview.length" size="small">
+            <n-tag
+              v-for="flag in featureFlagsPreview"
+              :key="`preview-${flag.key}`"
+              size="small"
+              :type="flag.enabled ? 'info' : 'default'"
+            >
+              {{ flag.label }}: {{ String(flag.raw) }}
+            </n-tag>
+          </n-space>
+          <n-empty v-else description="暂无能力开关" />
+        </div>
+
         <n-form-item label="备注" path="remark">
           <n-input
             v-model:value="packageForm.remark"
@@ -443,6 +561,48 @@ onMounted(() => {
   gap: 12px;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: var(--primary-bgColor);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.summary-card span {
+  color: var(--text-color-2);
+  font-size: 13px;
+}
+
+.summary-card strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.summary-card--primary strong {
+  color: #2563eb;
+}
+
+.summary-card--success strong {
+  color: #059669;
+}
+
+.summary-card--warning strong {
+  color: #d97706;
+}
+
+.summary-card--info strong {
+  color: #0891b2;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -469,7 +629,7 @@ onMounted(() => {
 }
 
 .content-card {
-  min-height: calc(100vh - 236px);
+  min-height: calc(100vh - 292px);
   padding: 20px 24px;
   background-color: var(--primary-bgColor);
   border-radius: 8px;
@@ -479,10 +639,20 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+.primary-text {
+  font-weight: 600;
+  color: var(--text-color-1);
+}
+
+.secondary-text {
+  margin-top: 4px;
+  color: var(--text-color-3);
+  font-size: 12px;
+}
+
 .feature-flags-cell {
-  max-width: 360px;
+  max-width: 420px;
   white-space: normal;
-  word-break: break-word;
 }
 
 .operation-cell {
@@ -497,9 +667,46 @@ onMounted(() => {
   margin-top: 16px;
 }
 
+.quota-hint {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--text-color-2);
+}
+
+.preview-block {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.preview-block__title {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
 .drawer-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+@media (max-width: 1280px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-item,
+  .toolbar-item--wide {
+    width: 100%;
+  }
 }
 </style>

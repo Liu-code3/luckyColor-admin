@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
 import { Icon } from '@iconify/vue';
-import { useMessage } from 'naive-ui';
 import {
   createTenantApi,
   getTenantDetailApi,
   getTenantPageApi,
   getTenantPackagePageApi,
   updateTenantApi,
+  type TenantInitResult,
   type TenantPackageRecord,
   type TenantRecord,
   type TenantStatus
 } from '@/api';
+import { message } from '@/utils/message';
 
 interface TenantFormState {
   code: string;
@@ -28,7 +29,17 @@ interface TenantFormState {
   adminNickname: string;
 }
 
-const message = useMessage();
+interface SummaryCard {
+  label: string;
+  value: number;
+  tone: 'primary' | 'success' | 'warning' | 'info';
+}
+
+const tenantStatusOptions: Array<{ label: string; value: TenantStatus }> = [
+  { label: '启用', value: 'ACTIVE' },
+  { label: '停用', value: 'DISABLED' },
+  { label: '冻结', value: 'FROZEN' }
+];
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -39,12 +50,15 @@ const total = ref(0);
 const keyword = ref('');
 const statusFilter = ref<TenantStatus | null>(null);
 const tenantList = ref<TenantRecord[]>([]);
-const tenantPackageOptions = ref<Array<{ label: string, value: string }>>([]);
+const tenantPackages = ref<TenantPackageRecord[]>([]);
 
 const tenantFormRef = ref<FormInst | null>(null);
 const showTenantDrawer = ref(false);
 const isEditMode = ref(false);
 const editingTenantId = ref('');
+const showInitResultModal = ref(false);
+const tenantInitResult = ref<TenantInitResult | null>(null);
+
 const tenantForm = reactive<TenantFormState>({
   code: '',
   name: '',
@@ -60,11 +74,43 @@ const tenantForm = reactive<TenantFormState>({
   adminNickname: ''
 });
 
-const tenantStatusOptions = [
-  { label: '启用', value: 'ACTIVE' },
-  { label: '停用', value: 'DISABLED' },
-  { label: '冻结', value: 'FROZEN' }
-];
+const tenantPackageOptions = computed(() =>
+  tenantPackages.value.map(item => ({
+    label: `${item.name}（${item.code}）${item.status ? '' : ' · 已停用'}`,
+    value: item.id,
+    disabled: !item.status
+  }))
+);
+
+const selectedPackage = computed(() =>
+  tenantPackages.value.find(item => item.id === tenantForm.packageId) || null
+);
+
+const summaryCards = computed<SummaryCard[]>(() => {
+  const now = Date.now();
+  const expiringSoon = tenantList.value.filter((item) => {
+    if (!item.expiresAt)
+      return false;
+
+    const diff = new Date(item.expiresAt).getTime() - now;
+    return diff > 0 && diff <= 30 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  return [
+    { label: '租户总数', value: total.value, tone: 'primary' },
+    {
+      label: '启用中',
+      value: tenantList.value.filter(item => item.status === 'ACTIVE').length,
+      tone: 'success'
+    },
+    {
+      label: '冻结/停用',
+      value: tenantList.value.filter(item => item.status !== 'ACTIVE').length,
+      tone: 'warning'
+    },
+    { label: '30 天内到期', value: expiringSoon, tone: 'info' }
+  ];
+});
 
 const tenantFormRules = computed<FormRules>(() => ({
   code: isEditMode.value
@@ -88,13 +134,34 @@ const tenantFormRules = computed<FormRules>(() => ({
       trigger: [ 'blur', 'input' ]
     }
   ],
-  contactEmail: [
+  contactPhone: [
     {
-      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
-      message: '请输入合法邮箱地址',
+      validator: (_, value: string) => !value || /^[0-9\-+() ]{6,20}$/.test(value.trim()),
+      message: '请输入合法的联系电话',
       trigger: [ 'blur', 'input' ]
     }
   ],
+  contactEmail: [
+    {
+      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
+      message: '请输入合法的联系邮箱',
+      trigger: [ 'blur', 'input' ]
+    }
+  ],
+  adminUsername: isEditMode.value
+    ? []
+    : [
+        {
+          required: true,
+          message: '请输入管理员账号',
+          trigger: [ 'blur', 'input' ]
+        },
+        {
+          validator: (_, value: string) => /^[a-zA-Z0-9_]{3,20}$/.test(value.trim()),
+          message: '管理员账号需为 3-20 位字母、数字或下划线',
+          trigger: [ 'blur', 'input' ]
+        }
+      ],
   adminPassword: isEditMode.value
     ? []
     : [
@@ -108,7 +175,14 @@ const tenantFormRules = computed<FormRules>(() => ({
           message: '管理员初始密码至少 6 位',
           trigger: [ 'blur', 'input' ]
         }
-      ]
+      ],
+  remark: [
+    {
+      validator: (_, value: string) => !value || value.trim().length <= 200,
+      message: '备注不能超过 200 个字符',
+      trigger: [ 'blur', 'input' ]
+    }
+  ]
 }));
 
 function formatDateTime(value?: string | null) {
@@ -120,6 +194,13 @@ function formatDateTime(value?: string | null) {
   });
 }
 
+function formatExpiresAt(value?: string | null) {
+  if (!value)
+    return '长期有效';
+
+  return formatDateTime(value);
+}
+
 function getTenantStatusLabel(status: TenantStatus) {
   return tenantStatusOptions.find(option => option.value === status)?.label || status;
 }
@@ -127,11 +208,13 @@ function getTenantStatusLabel(status: TenantStatus) {
 function getTenantStatusType(status: TenantStatus) {
   if (status === 'ACTIVE')
     return 'success';
-
   if (status === 'FROZEN')
     return 'warning';
-
   return 'error';
+}
+
+function getSummaryCardClass(tone: SummaryCard['tone']) {
+  return `summary-card summary-card--${tone}`;
 }
 
 function resetTenantForm() {
@@ -150,10 +233,9 @@ function resetTenantForm() {
   tenantForm.adminNickname = '';
 }
 
-async function ensureTenantPackages() {
-  if (tenantPackageOptions.value.length) {
+async function ensureTenantPackages(force = false) {
+  if (tenantPackages.value.length && !force)
     return;
-  }
 
   packageLoading.value = true;
   try {
@@ -161,11 +243,7 @@ async function ensureTenantPackages() {
       page: 1,
       size: 200
     });
-
-    tenantPackageOptions.value = data.records.map((item: TenantPackageRecord) => ({
-      label: `${item.name} (${item.code})`,
-      value: item.id
-    }));
+    tenantPackages.value = data.records;
   }
   finally {
     packageLoading.value = false;
@@ -174,7 +252,6 @@ async function ensureTenantPackages() {
 
 async function fetchTenants(currentPage = page.value) {
   loading.value = true;
-
   try {
     const { data } = await getTenantPageApi({
       page: currentPage,
@@ -248,6 +325,11 @@ function closeTenantDrawer() {
   tenantFormRef.value?.restoreValidation();
 }
 
+function closeInitResultModal() {
+  showInitResultModal.value = false;
+  tenantInitResult.value = null;
+}
+
 async function submitTenantForm() {
   await tenantFormRef.value?.validate();
 
@@ -264,9 +346,10 @@ async function submitTenantForm() {
         contactEmail: tenantForm.contactEmail.trim() || null,
         remark: tenantForm.remark.trim() || null
       });
+      message.success('租户信息已更新');
     }
     else {
-      const result = await createTenantApi({
+      const { data } = await createTenantApi({
         code: tenantForm.code.trim(),
         name: tenantForm.name.trim(),
         packageId: tenantForm.packageId || undefined,
@@ -281,13 +364,18 @@ async function submitTenantForm() {
         adminNickname: tenantForm.adminNickname.trim() || undefined
       });
 
-      message.success(`租户初始化完成，管理员账号：${result.data.adminUser.username}`);
+      tenantInitResult.value = data;
+      showInitResultModal.value = true;
+      message.success(`租户初始化完成，管理员账号：${data.adminUser.username}`);
     }
 
     closeTenantDrawer();
     const nextPage = isEditMode.value ? page.value : 1;
     page.value = nextPage;
-    await fetchTenants(nextPage);
+    await Promise.all([
+      ensureTenantPackages(true),
+      fetchTenants(nextPage)
+    ]);
   }
   finally {
     submitting.value = false;
@@ -304,6 +392,17 @@ onMounted(async () => {
 
 <template>
   <div class="crud-page">
+    <section class="summary-grid">
+      <article
+        v-for="card in summaryCards"
+        :key="card.label"
+        :class="getSummaryCardClass(card.tone)"
+      >
+        <span>{{ card.label }}</span>
+        <strong>{{ card.value }}</strong>
+      </article>
+    </section>
+
     <div class="toolbar">
       <div class="toolbar-item toolbar-item--wide">
         <div class="toolbar-label">
@@ -358,7 +457,7 @@ onMounted(async () => {
             <tr>
               <th>租户名称</th>
               <th>租户编码</th>
-              <th>套餐</th>
+              <th>租户套餐</th>
               <th>状态</th>
               <th>联系人</th>
               <th>到期时间</th>
@@ -368,16 +467,37 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr v-for="item in tenantList" :key="item.id">
-              <td>{{ item.name }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.name }}
+                </div>
+                <div class="secondary-text">
+                  ID: {{ item.id }}
+                </div>
+              </td>
               <td>{{ item.code }}</td>
-              <td>{{ item.tenantPackage?.name || '-' }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.tenantPackage?.name || '未绑定套餐' }}
+                </div>
+                <div class="secondary-text">
+                  {{ item.tenantPackage?.code || '-' }}
+                </div>
+              </td>
               <td>
                 <n-tag :type="getTenantStatusType(item.status)">
                   {{ getTenantStatusLabel(item.status) }}
                 </n-tag>
               </td>
-              <td>{{ item.contactName || item.contactPhone || '-' }}</td>
-              <td>{{ formatDateTime(item.expiresAt) }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.contactName || '-' }}
+                </div>
+                <div class="secondary-text">
+                  {{ item.contactPhone || item.contactEmail || '-' }}
+                </div>
+              </td>
+              <td>{{ formatExpiresAt(item.expiresAt) }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td class="operation-cell">
                 <n-button quaternary type="primary" @click="openEditDrawer(item)">
@@ -408,7 +528,7 @@ onMounted(async () => {
     </div>
   </div>
 
-  <n-drawer v-model:show="showTenantDrawer" :width="640" placement="right">
+  <n-drawer v-model:show="showTenantDrawer" :width="720" placement="right">
     <n-drawer-content :title="isEditMode ? '编辑租户' : '新增租户'">
       <n-form ref="tenantFormRef" :model="tenantForm" :rules="tenantFormRules" label-placement="top">
         <n-grid :cols="2" :x-gap="12">
@@ -431,7 +551,7 @@ onMounted(async () => {
               placeholder="请选择租户套餐"
             />
           </n-form-item-gi>
-          <n-form-item-gi label="状态" path="status">
+          <n-form-item-gi label="租户状态" path="status">
             <n-select v-model:value="tenantForm.status" :options="tenantStatusOptions" />
           </n-form-item-gi>
           <n-form-item-gi label="到期时间" path="expiresAt">
@@ -453,6 +573,19 @@ onMounted(async () => {
           </n-form-item-gi>
         </n-grid>
 
+        <div v-if="selectedPackage" class="package-hint">
+          <div class="package-hint__header">
+            <strong>{{ selectedPackage.name }}</strong>
+            <n-tag size="small" :type="selectedPackage.status ? 'success' : 'warning'">
+              {{ selectedPackage.status ? '可用' : '已停用' }}
+            </n-tag>
+          </div>
+          <div class="package-hint__meta">
+            用户上限 {{ selectedPackage.maxUsers ?? 0 }} / 角色上限 {{ selectedPackage.maxRoles ?? 0 }} /
+            菜单上限 {{ selectedPackage.maxMenus ?? 0 }}
+          </div>
+        </div>
+
         <template v-if="!isEditMode">
           <n-divider>初始化管理员</n-divider>
           <n-grid :cols="2" :x-gap="12">
@@ -465,9 +598,9 @@ onMounted(async () => {
             <n-form-item-gi :span="2" label="管理员初始密码" path="adminPassword">
               <n-input
                 v-model:value="tenantForm.adminPassword"
-                placeholder="请输入管理员初始密码"
                 type="password"
                 show-password-on="mousedown"
+                placeholder="请输入管理员初始密码"
               />
             </n-form-item-gi>
           </n-grid>
@@ -495,6 +628,93 @@ onMounted(async () => {
       </template>
     </n-drawer-content>
   </n-drawer>
+
+  <n-modal v-model:show="showInitResultModal" preset="card" title="租户初始化完成" style="width: 760px;">
+    <template v-if="tenantInitResult">
+      <div class="result-grid">
+        <article class="result-panel">
+          <div class="result-panel__title">
+            租户信息
+          </div>
+          <div class="result-line">
+            <span>租户名称</span>
+            <strong>{{ tenantInitResult.tenant.name }}</strong>
+          </div>
+          <div class="result-line">
+            <span>租户编码</span>
+            <strong>{{ tenantInitResult.tenant.code }}</strong>
+          </div>
+          <div class="result-line">
+            <span>绑定套餐</span>
+            <strong>{{ tenantInitResult.tenant.tenantPackage?.name || '未绑定' }}</strong>
+          </div>
+        </article>
+
+        <article class="result-panel">
+          <div class="result-panel__title">
+            管理员账号
+          </div>
+          <div class="result-line">
+            <span>用户名</span>
+            <strong>{{ tenantInitResult.adminUser.username }}</strong>
+          </div>
+          <div class="result-line">
+            <span>昵称</span>
+            <strong>{{ tenantInitResult.adminUser.nickname || '-' }}</strong>
+          </div>
+          <div class="result-line">
+            <span>系统角色</span>
+            <strong>{{ tenantInitResult.roles.length }} 个</strong>
+          </div>
+        </article>
+      </div>
+
+      <div class="result-list">
+        <div class="result-list__title">
+          初始化角色
+        </div>
+        <n-space>
+          <n-tag v-for="role in tenantInitResult.roles" :key="role.id" type="info">
+            {{ role.name }} / {{ role.code }}
+          </n-tag>
+        </n-space>
+      </div>
+
+      <div class="result-list">
+        <div class="result-list__title">
+          初始化部门
+        </div>
+        <n-space>
+          <n-tag v-for="department in tenantInitResult.departments" :key="department.id" type="success">
+            {{ department.name }}
+          </n-tag>
+        </n-space>
+      </div>
+
+      <div class="result-grid result-grid--compact">
+        <article class="result-panel">
+          <div class="result-panel__title">
+            已分配菜单
+          </div>
+          <strong class="result-count">{{ tenantInitResult.menuIds.length }}</strong>
+        </article>
+        <article class="result-panel">
+          <div class="result-panel__title">
+            已初始化字典
+          </div>
+          <strong class="result-count">{{ tenantInitResult.dictionaryIds.length }}</strong>
+        </article>
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="drawer-footer">
+        <n-button type="primary" @click="closeInitResultModal">
+          我知道了
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
 </template>
 
 <style scoped lang="less">
@@ -502,6 +722,48 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: var(--primary-bgColor);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.summary-card span {
+  color: var(--text-color-2);
+  font-size: 13px;
+}
+
+.summary-card strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.summary-card--primary strong {
+  color: #2563eb;
+}
+
+.summary-card--success strong {
+  color: #059669;
+}
+
+.summary-card--warning strong {
+  color: #d97706;
+}
+
+.summary-card--info strong {
+  color: #0891b2;
 }
 
 .toolbar {
@@ -530,7 +792,7 @@ onMounted(async () => {
 }
 
 .content-card {
-  min-height: calc(100vh - 236px);
+  min-height: calc(100vh - 292px);
   padding: 20px 24px;
   background-color: var(--primary-bgColor);
   border-radius: 8px;
@@ -538,6 +800,17 @@ onMounted(async () => {
 
 .content-actions {
   margin-bottom: 16px;
+}
+
+.primary-text {
+  font-weight: 600;
+  color: var(--text-color-1);
+}
+
+.secondary-text {
+  margin-top: 4px;
+  color: var(--text-color-3);
+  font-size: 12px;
 }
 
 .operation-cell {
@@ -552,9 +825,89 @@ onMounted(async () => {
   margin-top: 16px;
 }
 
+.package-hint {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.package-hint__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.package-hint__meta {
+  margin-top: 8px;
+  color: var(--text-color-2);
+}
+
 .drawer-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.result-grid--compact {
+  margin-top: 16px;
+}
+
+.result-panel {
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.result-panel__title,
+.result-list__title {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.result-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.result-line span {
+  color: var(--text-color-2);
+}
+
+.result-count {
+  display: block;
+  font-size: 30px;
+  color: #2563eb;
+}
+
+.result-list {
+  margin-top: 16px;
+}
+
+@media (max-width: 1280px) {
+  .summary-grid,
+  .result-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-item,
+  .toolbar-item--wide {
+    width: 100%;
+  }
 }
 </style>
