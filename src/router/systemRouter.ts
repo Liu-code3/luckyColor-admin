@@ -22,6 +22,11 @@ const routes = [
     redirect: '/systemManagement/system/dict'
   },
   {
+    path: '/icomponent/editTablist',
+    name: 'legacyVxeTableRedirect',
+    redirect: '/featureDemo/vxeTable'
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/errorPage/404.vue'),
     meta: {

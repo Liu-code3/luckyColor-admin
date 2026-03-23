@@ -215,14 +215,26 @@ const menuList = [
     }
   },
   {
-    pid: 9,
-    id: 12,
-    title: '编辑表格',
-    name: 'editTablist',
+    pid: 0,
+    id: 18,
+    title: '功能演示',
+    name: 'featureDemo',
+    type: 1,
+    path: '/featureDemo',
+    key: 'main_feature_demo',
+    icon: 'carbon:function-math',
+    isVisible: true,
+    component: 'sys'
+  },
+  {
+    pid: 18,
+    id: 19,
+    title: 'VxeTable',
+    name: 'featureDemoVxeTable',
     type: 2,
-    path: '/icomponent/editTablist',
-    key: 'icomponent_editTablist',
-    icon: 'arcticons:colordict',
+    path: '/featureDemo/vxeTable',
+    key: 'main_feature_demo_vxe_table',
+    icon: 'carbon:data-table',
     isVisible: true,
     component: 'icomponent/editTablist/index',
     meta: {

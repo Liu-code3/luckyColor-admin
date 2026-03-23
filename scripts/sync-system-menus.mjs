@@ -139,7 +139,35 @@ async function syncMenus() {
     }
   ];
 
-  const ensuredMenuIds = [tenantCenterRootId];
+  const featureDemoRootId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: 0,
+      title: '功能演示',
+      name: 'featureDemo',
+      type: 1,
+      path: '/featureDemo',
+      menuKey: 'main_feature_demo',
+      icon: 'carbon:function-math',
+      layout: '',
+      isVisible: true,
+      component: 'sys',
+      redirect: null,
+      meta: {
+        title: '功能演示'
+      },
+      sort: 7
+    },
+    matchers: [
+      menu => menu.path === '/featureDemo',
+      menu => menu.name === 'featureDemo',
+      menu => menu.key === 'main_feature_demo',
+      menu => menu.menuKey === 'main_feature_demo'
+    ]
+  });
+
+  const ensuredMenuIds = [tenantCenterRootId, featureDemoRootId];
 
   const apifoxMenuId = await ensureMenu({
     existingMenus: menuPage.records,
@@ -201,6 +229,39 @@ async function syncMenus() {
   });
 
   ensuredMenuIds.push(apifoxDocMenuId);
+
+  const vxeTableMenuId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: featureDemoRootId,
+      title: 'VxeTable',
+      name: 'featureDemoVxeTable',
+      type: 2,
+      path: '/featureDemo/vxeTable',
+      menuKey: 'main_feature_demo_vxe_table',
+      icon: 'carbon:data-table',
+      layout: '',
+      isVisible: true,
+      component: 'icomponent/editTablist/index',
+      redirect: null,
+      meta: {
+        title: 'VxeTable',
+        keepAlive: true
+      },
+      sort: 1
+    },
+    matchers: [
+      menu => menu.path === '/featureDemo/vxeTable',
+      menu => menu.path === '/icomponent/editTablist',
+      menu => menu.name === 'featureDemoVxeTable',
+      menu => menu.name === 'editTablist',
+      menu => menu.key === 'main_feature_demo_vxe_table',
+      menu => menu.menuKey === 'main_feature_demo_vxe_table'
+    ]
+  });
+
+  ensuredMenuIds.push(vxeTableMenuId);
 
   for (const item of systemMenus) {
     const id = await ensureMenu({
