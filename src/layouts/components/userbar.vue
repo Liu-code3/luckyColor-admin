@@ -94,6 +94,7 @@ const onUpdateSettingDrawer = (val: boolean) => {
         @click="handleLinkClick('https://github.com/Liu-code3/luckyColor-admin')"
       />
       <Icon
+        v-if="globalStore.showLockEntry"
         class="cursor-pointer text-5"
         icon="tabler:lock-filled"
         @click="JumpLock"

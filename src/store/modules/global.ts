@@ -14,6 +14,7 @@ interface IGlobalState {
   naiveThemeOverrides: GlobalThemeOverrides;
   showTabs: boolean;
   showWatermark: boolean;
+  showLockEntry: boolean;
   grayMode: boolean;
   colorWeakMode: boolean;
   sidebarTheme: 'dark' | 'light' | 'theme';
@@ -26,6 +27,7 @@ enum Global {
   NaiveThemeOverrides = 'naiveThemeOverrides',
   SHOW_TABS = 'SHOW_TABS',
   SHOW_WATERMARK = 'SHOW_WATERMARK',
+  SHOW_LOCK_ENTRY = 'SHOW_LOCK_ENTRY',
   GRAY_MODE = 'GRAY_MODE',
   COLOR_WEAK_MODE = 'COLOR_WEAK_MODE',
   SIDEBAR_THEME = 'SIDEBAR_THEME'
@@ -40,6 +42,7 @@ export const useGlobalStore = defineStore('layout', {
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
     showTabs: tool.session.get(Global.SHOW_TABS) ?? sysConfig.LUCK_LAYOUT_TAGS_OPEN,
     showWatermark: tool.session.get(Global.SHOW_WATERMARK) ?? false,
+    showLockEntry: tool.session.get(Global.SHOW_LOCK_ENTRY) ?? true,
     grayMode: tool.session.get(Global.GRAY_MODE) ?? false,
     colorWeakMode: tool.session.get(Global.COLOR_WEAK_MODE) ?? false,
     sidebarTheme: tool.session.get(Global.SIDEBAR_THEME) ?? 'dark'
@@ -60,6 +63,15 @@ export const useGlobalStore = defineStore('layout', {
     updateShowWatermark(showWatermark: boolean) {
       this.showWatermark = showWatermark;
       tool.session.set(Global.SHOW_WATERMARK, showWatermark);
+    },
+    updateShowLockEntry(showLockEntry: boolean) {
+      this.showLockEntry = showLockEntry;
+      tool.session.set(Global.SHOW_LOCK_ENTRY, showLockEntry);
+
+      if (!showLockEntry) {
+        this.isLocked = false;
+        tool.session.set(Global.LOCK_SCREEN, false);
+      }
     },
     updateGrayMode(grayMode: boolean) {
       this.grayMode = grayMode;

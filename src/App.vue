@@ -108,8 +108,15 @@ onBeforeUnmount(() => {
           />
         </transition>
         <router-view v-if="Layout" v-slot="{ Component }">
+          <component :is="Layout">
+            <keep-alive>
+              <component :is="Component" />
+            </keep-alive>
+          </component>
+
           <n-watermark
             v-if="shouldShowWatermark"
+            class="app-watermark-layer"
             content="LuckyColor Admin"
             cross
             fullscreen
@@ -120,20 +127,17 @@ onBeforeUnmount(() => {
             :x-offset="12"
             :y-offset="12"
             :rotate="-18"
-          >
-            <component :is="Layout">
-              <keep-alive>
-                <component :is="Component" />
-              </keep-alive>
-            </component>
-          </n-watermark>
-          <component :is="Layout" v-else>
-            <keep-alive>
-              <component :is="Component" />
-            </keep-alive>
-          </component>
+            :font-color="'rgba(15, 23, 42, 0.12)'"
+            :z-index="12"
+          />
         </router-view>
       </n-message-provider>
     </n-config-provider>
   </div>
 </template>
+
+<style scoped>
+:deep(.app-watermark-layer.n-watermark) {
+  background-color: transparent !important;
+}
+</style>

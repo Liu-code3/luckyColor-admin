@@ -64,9 +64,9 @@ const sidebarThemeList = [
 ];
 
 const lockSwitchValue = computed({
-  get: () => globalStore.isLocked,
+  get: () => globalStore.showLockEntry,
   set: (value: boolean) => {
-    globalStore.updateIsLock(value);
+    globalStore.updateShowLockEntry(value);
   }
 });
 
@@ -235,8 +235,8 @@ function updateSidebarTheme(theme: 'dark' | 'light' | 'theme') {
 
             <div class="setting-switch-item">
               <div>
-                <strong>锁屏模式</strong>
-                <span>开启后立即进入锁屏，关闭后恢复当前界面</span>
+                <strong>锁屏功能</strong>
+                <span>控制用户头像旁的锁屏入口是否显示</span>
               </div>
               <n-switch v-model:value="lockSwitchValue" />
             </div>
