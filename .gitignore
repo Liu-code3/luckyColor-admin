@@ -16,6 +16,8 @@ components.d.ts
 server/dist
 server/.env
 docs/
+playwright-report/
+test-results/
 
 # Editor directories and files
 .vscode/*
