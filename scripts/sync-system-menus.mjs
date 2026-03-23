@@ -33,6 +33,24 @@ async function login() {
   return data.accessToken;
 }
 
+async function ensureMenu({ existingMenus, token, payload, matchers }) {
+  const existing = existingMenus.find(menu => matchers.some(matcher => matcher(menu)));
+
+  if (existing) {
+    const updated = await request(`/api/menus/${existing.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }, token);
+    return updated.id;
+  }
+
+  const created = await request('/api/menus', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  }, token);
+  return created.id;
+}
+
 async function syncMenus() {
   const token = await login();
   const menuPage = await request('/api/menus?page=1&size=500', {}, token);
@@ -41,7 +59,34 @@ async function syncMenus() {
   if (!systemRoot)
     throw new Error('System root menu not found');
 
-  const desiredMenus = [
+  const tenantCenterRootId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: 0,
+      title: '租户中心',
+      name: 'tenantCenter',
+      type: 1,
+      path: '/tenantCenter',
+      menuKey: 'main_tenant_center',
+      icon: 'mdi:domain',
+      layout: '',
+      isVisible: true,
+      component: 'sys',
+      redirect: null,
+      meta: {
+        title: '租户中心'
+      },
+      sort: 5
+    },
+    matchers: [
+      menu => menu.path === '/tenantCenter',
+      menu => menu.name === 'tenantCenter',
+      menu => menu.key === 'main_tenant_center'
+    ]
+  });
+
+  const systemMenus = [
     {
       title: '字典管理',
       name: 'systemDict',
@@ -68,72 +113,101 @@ async function syncMenus() {
       icon: 'mdi:bullhorn-outline',
       component: 'sys/notice/index',
       sort: 10
-    },
+    }
+  ];
+
+  const tenantMenus = [
     {
       title: '租户管理',
       name: 'systemTenant',
-      path: '/systemManagement/system/tenant',
-      menuKey: 'main_system_tenant',
+      path: '/tenantCenter/tenant',
+      legacyPaths: ['/systemManagement/system/tenant'],
+      menuKey: 'main_tenant_center_tenant',
       icon: 'mdi:office-building-cog-outline',
       component: 'sys/tenant/index',
-      sort: 11
+      sort: 1
     },
     {
       title: '租户套餐',
       name: 'systemTenantPackage',
-      path: '/systemManagement/system/tenantPackage',
-      menuKey: 'main_system_tenant_package',
+      path: '/tenantCenter/tenantPackage',
+      legacyPaths: ['/systemManagement/system/tenantPackage'],
+      menuKey: 'main_tenant_center_tenant_package',
       icon: 'mdi:package-variant-closed',
       component: 'sys/tenantPackage/index',
-      sort: 12
+      sort: 2
     }
   ];
 
-  const ensuredMenuIds = [];
+  const ensuredMenuIds = [tenantCenterRootId];
 
-  for (const item of desiredMenus) {
-    const existing = menuPage.records.find(menu => menu.path === item.path || menu.name === item.name);
-    const payload = {
-      parentId: systemRoot.id,
-      title: item.title,
-      name: item.name,
-      type: 2,
-      path: item.path,
-      menuKey: item.menuKey,
-      icon: item.icon,
-      layout: '',
-      isVisible: true,
-      component: item.component,
-      redirect: null,
-      meta: {
+  for (const item of systemMenus) {
+    const id = await ensureMenu({
+      existingMenus: menuPage.records,
+      token,
+      payload: {
+        parentId: systemRoot.id,
         title: item.title,
-        keepAlive: true
+        name: item.name,
+        type: 2,
+        path: item.path,
+        menuKey: item.menuKey,
+        icon: item.icon,
+        layout: '',
+        isVisible: true,
+        component: item.component,
+        redirect: null,
+        meta: {
+          title: item.title,
+          keepAlive: true
+        },
+        sort: item.sort
       },
-      sort: item.sort
-    };
+      matchers: [
+        menu => menu.path === item.path,
+        menu => menu.name === item.name
+      ]
+    });
+    ensuredMenuIds.push(id);
+  }
 
-    if (existing) {
-      const updated = await request(`/api/menus/${existing.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(payload)
-      }, token);
-      ensuredMenuIds.push(updated.id);
-      continue;
-    }
-
-    const created = await request('/api/menus', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    }, token);
-    ensuredMenuIds.push(created.id);
+  for (const item of tenantMenus) {
+    const id = await ensureMenu({
+      existingMenus: menuPage.records,
+      token,
+      payload: {
+        parentId: tenantCenterRootId,
+        title: item.title,
+        name: item.name,
+        type: 2,
+        path: item.path,
+        menuKey: item.menuKey,
+        icon: item.icon,
+        layout: '',
+        isVisible: true,
+        component: item.component,
+        redirect: null,
+        meta: {
+          title: item.title,
+          keepAlive: true
+        },
+        sort: item.sort
+      },
+      matchers: [
+        menu => menu.path === item.path,
+        menu => item.legacyPaths.includes(menu.path),
+        menu => menu.name === item.name
+      ]
+    });
+    ensuredMenuIds.push(id);
   }
 
   const rolePage = await request('/api/roles?page=1&size=200', {}, token);
-  const targetRoles = rolePage.records.filter(role => [ 'super_admin', 'tenant_admin' ].includes(role.code));
+  const targetRoles = rolePage.records.filter(role => ['super_admin', 'tenant_admin'].includes(role.code));
 
   for (const role of targetRoles) {
     const roleMenuData = await request(`/api/roles/${role.id}/menus`, {}, token);
-    const nextMenuIds = Array.from(new Set([ ...roleMenuData.menuIds, ...ensuredMenuIds ])).sort((a, b) => a - b);
+    const nextMenuIds = Array.from(new Set([...roleMenuData.menuIds, ...ensuredMenuIds])).sort((a, b) => a - b);
 
     await request(`/api/roles/${role.id}/menus`, {
       method: 'PUT',
@@ -146,6 +220,7 @@ async function syncMenus() {
   return {
     tenantId: TENANT_ID,
     systemRootId: systemRoot.id,
+    tenantCenterRootId,
     ensuredMenuIds,
     assignedRoleCodes: targetRoles.map(role => role.code)
   };
@@ -153,7 +228,8 @@ async function syncMenus() {
 
 syncMenus()
   .then((result) => {
-    console.log(`Synced menus for tenant ${result.tenantId} under root ${result.systemRootId}: ${result.ensuredMenuIds.join(', ')}`);
+    console.log(`Synced menus for tenant ${result.tenantId}: system root ${result.systemRootId}, tenant root ${result.tenantCenterRootId}`);
+    console.log(`Ensured menu ids: ${result.ensuredMenuIds.join(', ')}`);
     console.log(`Assigned roles: ${result.assignedRoleCodes.join(', ')}`);
   })
   .catch((error) => {

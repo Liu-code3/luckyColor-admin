@@ -116,6 +116,48 @@ const menuList = [
   },
   {
     pid: 0,
+    id: 13,
+    title: '租户中心',
+    name: 'tenantCenter',
+    type: 1,
+    path: '/tenantCenter',
+    key: 'main_tenant_center',
+    icon: 'mdi:domain',
+    isVisible: true,
+    component: 'sys'
+  },
+  {
+    pid: 13,
+    id: 14,
+    title: '租户管理',
+    name: 'systemTenant',
+    type: 2,
+    path: '/tenantCenter/tenant',
+    key: 'main_tenant_center_tenant',
+    icon: 'mdi:office-building-cog-outline',
+    isVisible: true,
+    component: 'sys/tenant/index',
+    meta: {
+      keepAlive: true
+    }
+  },
+  {
+    pid: 13,
+    id: 15,
+    title: '租户套餐',
+    name: 'systemTenantPackage',
+    type: 2,
+    path: '/tenantCenter/tenantPackage',
+    key: 'main_tenant_center_tenant_package',
+    icon: 'mdi:package-variant-closed',
+    isVisible: true,
+    component: 'sys/tenantPackage/index',
+    meta: {
+      keepAlive: true
+    }
+  },
+  {
+    pid: 0,
     id: 9,
     title: '组件封装',
     name: 'icomponent',

@@ -12,7 +12,7 @@ test('租户管理与租户套餐页面冒烟', async ({ page }) => {
 
   await loginAsAdmin(page);
 
-  await page.goto('/systemManagement/system/tenantPackage');
+  await page.goto('/tenantCenter/tenantPackage');
   await page.waitForLoadState('networkidle');
   await expect(page.locator('body')).toContainText('套餐总数');
   await expect(page.getByRole('button', { name: '新增套餐' })).toBeVisible();
@@ -21,7 +21,7 @@ test('租户管理与租户套餐页面冒烟', async ({ page }) => {
   await expect(page.locator('.n-drawer')).toContainText('能力开关（JSON 对象）');
   await page.getByRole('button', { name: '取消' }).last().click();
 
-  await page.goto('/systemManagement/system/tenant');
+  await page.goto('/tenantCenter/tenant');
   await page.waitForLoadState('networkidle');
   await expect(page.locator('body')).toContainText('租户总数');
   await expect(page.getByRole('button', { name: '新增租户' })).toBeVisible();
