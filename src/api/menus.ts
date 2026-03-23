@@ -1,8 +1,8 @@
 import { request } from '@/utils/http';
+import { normalizeMenuTree } from '@/utils/menu-normalizer';
+import type { PageQueryParams, PageResult } from './types';
 
-export interface MenuQueryParams {
-  page?: number;
-  size?: number;
+export interface MenuQueryParams extends PageQueryParams {
   title?: string;
 }
 
@@ -26,13 +26,6 @@ export interface MenuRecord {
   createdAt?: string;
   updatedAt?: string;
   children?: MenuRecord[];
-}
-
-export interface MenuPageData {
-  total: number;
-  current: number;
-  size: number;
-  records: MenuRecord[];
 }
 
 export interface CreateMenuPayload {
@@ -69,18 +62,23 @@ export interface UpdateMenuPayload {
 }
 
 export function getMenuPageApi(params: MenuQueryParams) {
-  return request<MenuQueryParams, MenuPageData>({
+  return request<MenuQueryParams, PageResult<MenuRecord>>({
     url: '/menus',
     method: 'get',
     params
   });
 }
 
-export function getMenuTreeApi() {
-  return request<never, MenuRecord[]>({
+export async function getMenuTreeApi() {
+  const response = await request<never, MenuRecord[]>({
     url: '/menus/tree',
     method: 'get'
   });
+
+  return {
+    ...response,
+    data: normalizeMenuTree(response.data)
+  };
 }
 
 export function getMenuDetailApi(id: number) {

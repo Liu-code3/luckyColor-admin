@@ -17,6 +17,11 @@ const routes = [
     }
   },
   {
+    path: '/icomponent/dict',
+    name: 'legacyDictRedirect',
+    redirect: '/systemManagement/system/dict'
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/errorPage/404.vue'),
     meta: {

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import type { RouteRecordRaw } from 'vue-router';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useIconRender } from '@/hooks/iconRender.ts';
+import { normalizeMenuTree } from '@/utils/menu-normalizer';
 import tool from '@/utils/tool.ts';
 import router from '@/router';
 import config from '@/config/index';
@@ -50,10 +51,14 @@ export const useMenuStore = defineStore('menu', {
       this.menuOptions = this.transformMenuData(menuData);
     },
     getCachedMenuTree() {
-      return tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[] || [];
+      const cachedMenuTree = normalizeMenuTree(
+        tool.data.get(AUTH_STORAGE_KEYS.menuTree) as LayoutT.MenuItem[] || []
+      );
+      tool.data.set(AUTH_STORAGE_KEYS.menuTree, cachedMenuTree);
+      return cachedMenuTree;
     },
     cacheMenuTree(menuData: LayoutT.MenuItem[]) {
-      tool.data.set(AUTH_STORAGE_KEYS.menuTree, menuData);
+      tool.data.set(AUTH_STORAGE_KEYS.menuTree, normalizeMenuTree(menuData));
     },
     initializeRoutesWithMenu(menuData: LayoutT.MenuItem[]) {
       this.cacheMenuTree(menuData);
