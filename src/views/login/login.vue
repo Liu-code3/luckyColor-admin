@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue';
 import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { getMenuTreeApi, loginApi } from '@/api';
