@@ -6,7 +6,13 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import { isExternalLinkMenu, openExternalLink, resolveExternalLinkUrl } from '@/utils/menu-navigation';
+import {
+  isExternalLinkMenu,
+  openExternalLink,
+  resolveExternalLinkUrl,
+  resolveMatchedMenuRootPath,
+  resolveMenuRoutePath
+} from '@/utils/menu-navigation';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -23,11 +29,6 @@ const contentStyle = computed(() => ({
   '--layout-content-offset': globalStore.showTabs ? '110px' : '60px'
 }));
 
-function resolveTopPath(fullPath: string) {
-  const secondSlashIndex = fullPath.indexOf('/', 1);
-  return secondSlashIndex !== -1 ? fullPath.slice(0, secondSlashIndex) : fullPath;
-}
-
 function syncTabs(label: string, path: string, layout = 'top') {
   tabStore.setActiveTab(path);
   const exists = tabStore.tabs.some(item => item.key === path);
@@ -42,7 +43,11 @@ function syncTabs(label: string, path: string, layout = 'top') {
 
 function syncTopMenus() {
   topMenus.value = menuStore.getDisplayMenuTree();
-  activeTopPath.value = resolveTopPath(route.fullPath);
+  const currentTopPath = resolveMatchedMenuRootPath(route);
+  const currentTopMenu = topMenus.value.find(item =>
+    resolveMenuRoutePath(item) === currentTopPath || item.path === currentTopPath
+  );
+  activeTopPath.value = currentTopMenu?.path || currentTopPath;
 
   const activeTopMenu = topMenus.value.find(item => item.path === activeTopPath.value);
   if (activeTopMenu?.children?.length) {
@@ -70,17 +75,19 @@ function switchTopMenu(item: LayoutT.MenuItem) {
       return;
     }
 
+    const defaultChildPath = resolveMenuRoutePath(defaultChild);
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
     menuStore.collapsed = false;
-    router.push(defaultChild.path);
-    syncTabs(defaultChild.title, defaultChild.path);
+    router.push(defaultChildPath);
+    syncTabs(defaultChild.title, defaultChildPath);
     return;
   }
 
+  const targetPath = resolveMenuRoutePath(item);
   menuStore.menuOptions = [];
   menuStore.collapsed = true;
-  router.push(item.path);
-  syncTabs(item.title, item.path);
+  router.push(targetPath);
+  syncTabs(item.title, targetPath);
 }
 
 watch(() => route.fullPath, () => {

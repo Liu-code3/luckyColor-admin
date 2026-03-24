@@ -3,7 +3,13 @@ import { Icon } from '@iconify/vue';
 import { useRoute } from 'vue-router';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
-import { isExternalLinkMenu, openExternalLink, resolveExternalLinkUrl } from '@/utils/menu-navigation';
+import {
+  isExternalLinkMenu,
+  openExternalLink,
+  resolveExternalLinkUrl,
+  resolveMatchedMenuRootPath,
+  resolveMenuRoutePath
+} from '@/utils/menu-navigation';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,12 +19,11 @@ const switchModulesList = ref<LayoutT.MenuItem[]>([]);
 const selectedKeys = ref<string[]>([ '' ]);
 const identification = ref<string>('');
 
-// 监听路由变化并初始化数据
 watch(() => route.fullPath, async () => {
   try {
     switchModulesList.value = menuStore.getDisplayMenuTree();
-    selectedKeys.value = [ route.fullPath ];
-    identification.value = getBeforeSecondSlash(route.fullPath);
+    selectedKeys.value = [ route.path ];
+    identification.value = resolveActiveModulePath();
     switchModulesList.value.forEach((item) => {
       checkAndSetMenuOptions(item);
     });
@@ -41,10 +46,13 @@ function checkAndSetMenuOptions(item: LayoutT.MenuItem) {
   }
 }
 
-// 获取路径中的第二个斜杠之前的部分
-function getBeforeSecondSlash(url: string): string {
-  const secondSlashIndex = url.indexOf('/', 1);
-  return secondSlashIndex !== -1 ? url.substring(0, secondSlashIndex) : url;
+function resolveActiveModulePath() {
+  const currentModulePath = resolveMatchedMenuRootPath(route);
+  const activeModule = switchModulesList.value.find(item =>
+    resolveMenuRoutePath(item) === currentModulePath || item.path === currentModulePath
+  );
+
+  return activeModule?.path || currentModulePath;
 }
 
 const switchingModules = (item: LayoutT.MenuItem) => {
@@ -55,10 +63,11 @@ const switchingModules = (item: LayoutT.MenuItem) => {
 
   identification.value = item.path;
   if (item.children && item.children.length) {
+    const defaultChild = item.children[0];
+    const defaultChildPath = resolveMenuRoutePath(defaultChild);
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
-    const defaultChildPath = item.children[0].path;
-    if (isExternalLinkMenu(item.children[0])) {
-      openExternalLink(resolveExternalLinkUrl(item.children[0]));
+    if (isExternalLinkMenu(defaultChild)) {
+      openExternalLink(resolveExternalLinkUrl(defaultChild));
       return;
     }
 
@@ -68,19 +77,20 @@ const switchingModules = (item: LayoutT.MenuItem) => {
     menuStore.collapsed = false;
   }
   else {
-    router.push(item.path);
-    tabStore.setActiveTab(item.path);
-    updateTabs(item, item.path);
+    const targetPath = resolveMenuRoutePath(item);
+    router.push(targetPath);
+    tabStore.setActiveTab(targetPath);
+    updateTabs(item, targetPath);
     menuStore.collapsed = true;
   }
 };
 
-const updateTabs = (item: LayoutT.MenuItem, defaultChildPath: string) => {
-  const exists = tabStore.tabs.some(v => v.key === defaultChildPath);
+const updateTabs = (item: LayoutT.MenuItem, targetPath: string) => {
+  const exists = tabStore.tabs.some(v => v.key === targetPath);
   if (!exists) {
     const tab = {
       label: item.title,
-      key: item.path,
+      key: targetPath,
       layout: item.layout
     };
     tabStore.addTab(tab);

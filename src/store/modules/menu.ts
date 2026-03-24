@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useIconRender } from '@/hooks/iconRender.ts';
 import { normalizeMenuTree } from '@/utils/menu-normalizer';
+import { buildIframeRoutePath, isIframeMenu } from '@/utils/menu-navigation';
 import tool from '@/utils/tool.ts';
 import router from '@/router';
 import { useGlobalStore } from './global';
@@ -55,11 +56,11 @@ export const useMenuStore = defineStore('menu', {
         const newItem: LayoutT.TransformedMenuItem = {
           type: item.type,
           layout: item.layout,
-          key: item.path,
+          key: this.resolveMenuRoutePath(item),
           label: item.title,
           icon: iconRender(item.icon),
           routeType: item.meta?.type,
-          url: item.meta?.url ? String(item.meta.url) : undefined
+          url: this.resolveMenuUrl(item)
         };
 
         if (item.children && item.children.length) {
@@ -152,8 +153,8 @@ export const useMenuStore = defineStore('menu', {
         }
 
         if (item.meta.type === 'iframe') {
-          item.meta.url = item.path;
-          item.path = `/i/${item.name}`;
+          item.meta.url = this.resolveMenuUrl(item);
+          item.path = this.resolveMenuRoutePath(item);
         }
 
         const route: RouteRecordRaw = {
@@ -166,13 +167,35 @@ export const useMenuStore = defineStore('menu', {
           },
           redirect: item?.redirect,
           children: item.children ? this.filterAsyncRouter(item.children) : [],
-          component: this.loadComponent(item.component)
+          component: this.loadComponent(this.resolveRouteComponent(item))
         };
 
         accessedRouters.push(route);
       });
 
       return accessedRouters;
+    },
+    resolveMenuRoutePath(item: Pick<LayoutT.MenuItem, 'name' | 'path' | 'meta'>) {
+      if (isIframeMenu(item)) {
+        return buildIframeRoutePath(item.name);
+      }
+
+      return item.path;
+    },
+    resolveMenuUrl(item: Pick<LayoutT.MenuItem, 'path' | 'meta'>) {
+      if (!item.meta?.url && !isIframeMenu(item)) {
+        return undefined;
+      }
+
+      const menuUrl = item.meta?.url || item.path;
+      return menuUrl ? String(menuUrl) : undefined;
+    },
+    resolveRouteComponent(item: Pick<LayoutT.MenuItem, 'component' | 'meta'>) {
+      if (isIframeMenu(item)) {
+        return 'iframe';
+      }
+
+      return item.component;
     },
     collectRouteNames(routes: RouteRecordRaw[]) {
       const names: string[] = [];
