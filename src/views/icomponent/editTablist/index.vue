@@ -6,6 +6,10 @@ import { Icon } from '@iconify/vue';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
+defineOptions({
+  name: 'featureDemoVxeTable'
+});
+
 interface DemoUserRecord {
   id: number;
   username: string;

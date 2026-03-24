@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import Editor from '@/components/wangEditor/index.vue';
 
+defineOptions({
+  name: 'editor'
+});
+
 const value = ref('初始内容');
 </script>
 

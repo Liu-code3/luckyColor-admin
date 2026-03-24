@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { defineAsyncComponent, markRaw } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useIconRender } from '@/hooks/iconRender.ts';
@@ -17,6 +18,7 @@ interface IMenuState {
 
 const modules = import.meta.glob('/src/views/**/*.vue');
 const iconRender = useIconRender();
+const cachedViewComponents = new Map<string, ReturnType<typeof defineAsyncComponent>>();
 
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
@@ -189,9 +191,22 @@ export const useMenuStore = defineStore('menu', {
       return String(route.name);
     },
     loadComponent(component: string) {
-      if (component.includes('/'))
-        return modules[`/src/views/${component}.vue`];
-      return modules[`/src/views/${component}/index.vue`];
+      const modulePath = component.includes('/')
+        ? `/src/views/${component}.vue`
+        : `/src/views/${component}/index.vue`;
+      const importer = modules[modulePath];
+
+      if (!importer)
+        return undefined;
+
+      const cachedComponent = cachedViewComponents.get(modulePath);
+      if (cachedComponent) {
+        return cachedComponent;
+      }
+
+      const asyncComponent = markRaw(defineAsyncComponent(importer));
+      cachedViewComponents.set(modulePath, asyncComponent);
+      return asyncComponent;
     }
   }
 });

@@ -11,6 +11,10 @@ import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts'
 import { confirmAction } from '@/utils/confirm'
 import { message, notification } from '@/utils/message.ts'
 
+defineOptions({
+  name: 'systemDict'
+})
+
 interface DictRow {
   id: string
   parentId: string

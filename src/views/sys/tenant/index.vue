@@ -16,6 +16,10 @@ import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { message } from '@/utils/message';
 
+defineOptions({
+  name: 'systemTenant'
+});
+
 interface TenantFormState {
   code: string;
   name: string;

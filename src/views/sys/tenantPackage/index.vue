@@ -14,6 +14,10 @@ import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
+defineOptions({
+  name: 'systemTenantPackage'
+});
+
 interface TenantPackageFormState {
   code: string;
   name: string;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { darkTheme, dateZhCN, zhCN } from 'naive-ui'
+import LayoutRouteView from '@/components/LayoutRouteView.vue'
 import lockScreen from '@/components/lockScreen.vue'
 import { useGlobalStore } from '@/store/modules/global.ts'
 import {
@@ -107,30 +108,26 @@ onBeforeUnmount(() => {
             @unlock="globalStore.updateIsLock(false);"
           />
         </transition>
-        <router-view v-if="Layout" v-slot="{ Component }">
-          <component :is="Layout">
-            <keep-alive>
-              <component :is="Component" />
-            </keep-alive>
-          </component>
+        <component v-if="Layout" :is="Layout">
+          <LayoutRouteView />
+        </component>
 
-          <n-watermark
-            v-if="shouldShowWatermark"
-            class="app-watermark-layer"
-            content="LuckyColor Admin"
-            cross
-            fullscreen
-            :font-size="14"
-            :line-height="14"
-            :width="180"
-            :height="120"
-            :x-offset="12"
-            :y-offset="12"
-            :rotate="-18"
-            :font-color="'rgba(15, 23, 42, 0.12)'"
-            :z-index="12"
-          />
-        </router-view>
+        <n-watermark
+          v-if="shouldShowWatermark"
+          class="app-watermark-layer"
+          content="LuckyColor Admin"
+          cross
+          fullscreen
+          :font-size="14"
+          :line-height="14"
+          :width="180"
+          :height="120"
+          :x-offset="12"
+          :y-offset="12"
+          :rotate="-18"
+          :font-color="'rgba(15, 23, 42, 0.12)'"
+          :z-index="12"
+        />
       </n-message-provider>
     </n-config-provider>
   </div>

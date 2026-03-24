@@ -2,6 +2,10 @@
 import sysConfig from '@/config';
 import { message } from '@/utils/message';
 
+defineOptions({
+  name: 'apifoxDoc'
+});
+
 const iframeRef = ref<HTMLIFrameElement | null>(null);
 const apiDocUrl = sysConfig.API_DOC_URL;
 const loading = ref(true);

@@ -12,6 +12,10 @@ import {
 } from '@/api';
 import { confirmAction } from '@/utils/confirm';
 
+defineOptions({
+  name: 'menu'
+});
+
 interface MenuFormState {
   id: number | null;
   parentId: number | null;
