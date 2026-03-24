@@ -18,8 +18,15 @@ interface IMenuState {
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
+const NOT_FOUND_COMPONENT = 'errorPage/404';
 const iconRender = useIconRender();
 const cachedViewComponents = new Map<string, ReturnType<typeof defineAsyncComponent>>();
+
+function resolveViewModulePath(component: string) {
+  return component.includes('/')
+    ? `/src/views/${component}.vue`
+    : `/src/views/${component}/index.vue`;
+}
 
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
@@ -157,17 +164,22 @@ export const useMenuStore = defineStore('menu', {
           item.path = this.resolveMenuRoutePath(item);
         }
 
+        const routeComponent = this.resolveRouteComponent(item);
+        const hasViewComponent = this.hasViewComponent(routeComponent);
+
         const route: RouteRecordRaw = {
           path: item.path,
           name: item.name,
           meta: {
             ...item.meta,
             title: item.title,
-            icon: item.icon
+            icon: item.icon,
+            notFound: !hasViewComponent || item.meta?.notFound === true,
+            keepAlive: hasViewComponent ? item.meta?.keepAlive : false
           },
           redirect: item?.redirect,
           children: item.children ? this.filterAsyncRouter(item.children) : [],
-          component: this.loadComponent(this.resolveRouteComponent(item))
+          component: this.loadComponent(hasViewComponent ? routeComponent : NOT_FOUND_COMPONENT)
         };
 
         accessedRouters.push(route);
@@ -197,6 +209,9 @@ export const useMenuStore = defineStore('menu', {
 
       return item.component;
     },
+    hasViewComponent(component: string) {
+      return Boolean(modules[resolveViewModulePath(component)]);
+    },
     collectRouteNames(routes: RouteRecordRaw[]) {
       const names: string[] = [];
 
@@ -221,9 +236,7 @@ export const useMenuStore = defineStore('menu', {
       return String(route.name);
     },
     loadComponent(component: string) {
-      const modulePath = component.includes('/')
-        ? `/src/views/${component}.vue`
-        : `/src/views/${component}/index.vue`;
+      const modulePath = resolveViewModulePath(component);
       const importer = modules[modulePath];
 
       if (!importer)
