@@ -57,7 +57,9 @@ export const useMenuStore = defineStore('menu', {
           layout: item.layout,
           key: item.path,
           label: item.title,
-          icon: iconRender(item.icon)
+          icon: iconRender(item.icon),
+          routeType: item.meta?.type,
+          url: item.meta?.url ? String(item.meta.url) : undefined
         };
 
         if (item.children && item.children.length) {
@@ -144,6 +146,11 @@ export const useMenuStore = defineStore('menu', {
 
       routerMap.forEach((item) => {
         item.meta = item.meta || {};
+        if (item.meta.type === 'link') {
+          item.meta.url = item.meta.url || item.path;
+          return;
+        }
+
         if (item.meta.type === 'iframe') {
           item.meta.url = item.path;
           item.path = `/i/${item.name}`;

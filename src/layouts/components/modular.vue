@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue';
 import { useRoute } from 'vue-router';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
+import { isExternalLinkMenu, openExternalLink, resolveExternalLinkUrl } from '@/utils/menu-navigation';
 
 const route = useRoute();
 const router = useRouter();
@@ -47,10 +48,20 @@ function getBeforeSecondSlash(url: string): string {
 }
 
 const switchingModules = (item: LayoutT.MenuItem) => {
+  if (isExternalLinkMenu(item)) {
+    openExternalLink(resolveExternalLinkUrl(item));
+    return;
+  }
+
   identification.value = item.path;
   if (item.children && item.children.length) {
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
     const defaultChildPath = item.children[0].path;
+    if (isExternalLinkMenu(item.children[0])) {
+      openExternalLink(resolveExternalLinkUrl(item.children[0]));
+      return;
+    }
+
     router.push(defaultChildPath);
     tabStore.setActiveTab(defaultChildPath);
     updateTabs(item, defaultChildPath);

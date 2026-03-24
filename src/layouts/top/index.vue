@@ -6,6 +6,7 @@ import NavMenu from '@/layouts/components/NavMenu.vue';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useGlobalStore } from '@/store/modules/global.ts';
+import { isExternalLinkMenu, openExternalLink, resolveExternalLinkUrl } from '@/utils/menu-navigation';
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
@@ -55,10 +56,20 @@ function syncTopMenus() {
 }
 
 function switchTopMenu(item: LayoutT.MenuItem) {
+  if (isExternalLinkMenu(item)) {
+    openExternalLink(resolveExternalLinkUrl(item));
+    return;
+  }
+
   activeTopPath.value = item.path;
 
   if (item.children?.length) {
     const defaultChild = item.children[0];
+    if (isExternalLinkMenu(defaultChild)) {
+      openExternalLink(resolveExternalLinkUrl(defaultChild));
+      return;
+    }
+
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
     menuStore.collapsed = false;
     router.push(defaultChild.path);

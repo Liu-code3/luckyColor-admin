@@ -30,6 +30,8 @@ declare namespace LayoutT {
     key: string;
     icon: () => VNode;
     layout: string;
+    routeType?: MenuRouteMeta['type'];
+    url?: string;
     children?: TransformedMenuItem[];
   }
 

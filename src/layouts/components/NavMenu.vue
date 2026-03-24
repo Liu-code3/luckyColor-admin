@@ -3,6 +3,7 @@ import type { MenuInst } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
+import { isExternalLinkMenu, openExternalLink, resolveExternalLinkUrl } from '@/utils/menu-navigation';
 
 const router = useRouter();
 const route = useRoute();
@@ -18,6 +19,11 @@ watch(route, async () => {
 
 // 切换菜单
 function handleUpdateValue(key: string, item: LayoutT.TransformedMenuItem) {
+  if (isExternalLinkMenu(item)) {
+    openExternalLink(resolveExternalLinkUrl(item));
+    return;
+  }
+
   router.push(key);
   tabStore.setActiveTab(key);
   const exists = tabStore.tabs.some(item => item.key === key);
