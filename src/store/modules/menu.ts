@@ -27,6 +27,27 @@ export const useMenuStore = defineStore('menu', {
     collapsed: false
   }),
   actions: {
+    isMenuVisible(item: LayoutT.MenuItem) {
+      return item.isVisible !== false && item.meta?.hidden !== true;
+    },
+    getDisplayMenuTree(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
+      return this.filterVisibleMenus(menuData);
+    },
+    filterVisibleMenus(menuData: LayoutT.MenuItem[]) {
+      return menuData
+        .filter(item => this.isMenuVisible(item))
+        .map((item) => {
+          const nextItem: LayoutT.MenuItem = {
+            ...item
+          };
+
+          if (item.children?.length) {
+            nextItem.children = this.filterVisibleMenus(item.children);
+          }
+
+          return nextItem;
+        });
+    },
     transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuItem[] {
       return data.map((item: LayoutT.MenuItem) => {
         const newItem: LayoutT.TransformedMenuItem = {
@@ -46,7 +67,7 @@ export const useMenuStore = defineStore('menu', {
     },
     defaultLoading() {
       const globalStore = useGlobalStore();
-      const menuData = this.getCachedMenuTree();
+      const menuData = this.getDisplayMenuTree();
       this.switchModulesList = this.transformMenuData(menuData);
       if ([ 'modular', 'top' ].includes(globalStore.layout))
         return;

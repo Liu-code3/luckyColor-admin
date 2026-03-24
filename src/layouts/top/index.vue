@@ -40,7 +40,7 @@ function syncTabs(label: string, path: string, layout = 'top') {
 }
 
 function syncTopMenus() {
-  topMenus.value = menuStore.getCachedMenuTree();
+  topMenus.value = menuStore.getDisplayMenuTree();
   activeTopPath.value = resolveTopPath(route.fullPath);
 
   const activeTopMenu = topMenus.value.find(item => item.path === activeTopPath.value);

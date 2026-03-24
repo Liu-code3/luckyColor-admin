@@ -15,7 +15,7 @@ const identification = ref<string>('');
 // 监听路由变化并初始化数据
 watch(() => route.fullPath, async () => {
   try {
-    switchModulesList.value = menuStore.getCachedMenuTree();
+    switchModulesList.value = menuStore.getDisplayMenuTree();
     selectedKeys.value = [ route.fullPath ];
     identification.value = getBeforeSecondSlash(route.fullPath);
     switchModulesList.value.forEach((item) => {
