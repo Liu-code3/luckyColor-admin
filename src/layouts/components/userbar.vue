@@ -57,6 +57,7 @@ const fold_fn = () => {
 // 退出登录
 function signOut() {
   clearLoginSession();
+  menuStore.clearMenuState();
   tabStore.$reset();
   router.push('/login');
   message.success(

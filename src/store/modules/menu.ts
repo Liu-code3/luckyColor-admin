@@ -11,22 +11,22 @@ interface IMenuState {
   menuOptions: LayoutT.TransformedMenuItem[] | [];
   switchModulesList: LayoutT.TransformedMenuItem[];
   accessedRouters: RouteRecordRaw[];
+  dynamicRouteNames: string[];
   collapsed: boolean;
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
 const iconRender = useIconRender();
+
 export const useMenuStore = defineStore('menu', {
   state: (): IMenuState => ({
-    menuOptions: [], // 侧边栏菜单列表
-    switchModulesList: [], // 模块
-    accessedRouters: [], // 权限路由列表
+    menuOptions: [],
+    switchModulesList: [],
+    accessedRouters: [],
+    dynamicRouteNames: [],
     collapsed: false
   }),
   actions: {
-    /**
-     * @description 路由传换为菜单
-     */
     transformMenuData(data: LayoutT.MenuItem[]): LayoutT.TransformedMenuItem[] {
       return data.map((item: LayoutT.MenuItem) => {
         const newItem: LayoutT.TransformedMenuItem = {
@@ -48,7 +48,8 @@ export const useMenuStore = defineStore('menu', {
       const globalStore = useGlobalStore();
       const menuData = this.getCachedMenuTree();
       this.switchModulesList = this.transformMenuData(menuData);
-      if ([ 'modular', 'top' ].includes(globalStore.layout)) return;
+      if ([ 'modular', 'top' ].includes(globalStore.layout))
+        return;
       this.menuOptions = this.transformMenuData(menuData);
     },
     getCachedMenuTree() {
@@ -63,25 +64,68 @@ export const useMenuStore = defineStore('menu', {
     },
     initializeRoutesWithMenu(menuData: LayoutT.MenuItem[]) {
       this.cacheMenuTree(menuData);
-      return this.addRoutesWithMenu(menuData);
+      return this.replaceRoutesWithMenu(menuData);
+    },
+    hasDynamicRoutes() {
+      return this.dynamicRouteNames.length > 0 || this.accessedRouters.length > 0;
     },
     addRoutesWithMenu(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
-      const apiMenu = menuData || [];
+      const apiMenu = normalizeMenuTree(menuData || []);
       const menuRouter = this.filterAsyncRouter(apiMenu);
-      menuRouter.forEach(route => router.addRoute(route));
+      const nextDynamicRouteNames = this.collectRouteNames(menuRouter);
+
+      menuRouter.forEach((route) => {
+        const routeName = this.resolveRouteName(route);
+        if (routeName && router.hasRoute(routeName)) {
+          router.removeRoute(routeName);
+        }
+        router.addRoute(route);
+      });
+
+      this.dynamicRouteNames = nextDynamicRouteNames;
+      this.accessedRouters = [ ...menuRouter ];
       return menuRouter;
+    },
+    replaceRoutesWithMenu(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
+      this.resetDynamicRoutes();
+      return this.addRoutesWithMenu(menuData);
+    },
+    restoreRoutesFromCache() {
+      const cachedMenuTree = this.getCachedMenuTree();
+      if (!cachedMenuTree.length) {
+        this.clearMenuState();
+        return false;
+      }
+
+      this.replaceRoutesWithMenu(cachedMenuTree);
+      return true;
+    },
+    resetDynamicRoutes() {
+      [ ...this.dynamicRouteNames ].reverse().forEach((routeName) => {
+        if (router.hasRoute(routeName)) {
+          router.removeRoute(routeName);
+        }
+      });
+
+      this.dynamicRouteNames = [];
+      this.accessedRouters = [];
+    },
+    clearMenuState() {
+      this.resetDynamicRoutes();
+      this.menuOptions = [];
+      this.switchModulesList = [];
+      this.collapsed = false;
     },
     filterAsyncRouter(routerMap: LayoutT.MenuItem[]): RouteRecordRaw[] {
       const accessedRouters: RouteRecordRaw[] = [];
+
       routerMap.forEach((item) => {
         item.meta = item.meta || {};
-        // 处理外部链接特殊路由
         if (item.meta.type === 'iframe') {
           item.meta.url = item.path;
           item.path = `/i/${item.name}`;
         }
 
-        // 转换为路由对象
         const route: RouteRecordRaw = {
           path: item.path,
           name: item.name,
@@ -94,15 +138,39 @@ export const useMenuStore = defineStore('menu', {
           children: item.children ? this.filterAsyncRouter(item.children) : [],
           component: this.loadComponent(item.component)
         };
+
         accessedRouters.push(route);
       });
-      this.accessedRouters = [ ...accessedRouters ];
+
       return accessedRouters;
     },
+    collectRouteNames(routes: RouteRecordRaw[]) {
+      const names: string[] = [];
+
+      routes.forEach((route) => {
+        const routeName = this.resolveRouteName(route);
+        if (routeName) {
+          names.push(routeName);
+        }
+
+        if (route.children?.length) {
+          names.push(...this.collectRouteNames(route.children));
+        }
+      });
+
+      return names;
+    },
+    resolveRouteName(route: RouteRecordRaw) {
+      if (!route.name) {
+        return '';
+      }
+
+      return String(route.name);
+    },
     loadComponent(component: string) {
-      if (component.includes('/')) return modules[`/src/views/${component}.vue`];
+      if (component.includes('/'))
+        return modules[`/src/views/${component}.vue`];
       return modules[`/src/views/${component}/index.vue`];
     }
-
   }
 });

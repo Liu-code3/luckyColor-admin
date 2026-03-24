@@ -12,7 +12,6 @@ import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { ensureAuthState } from '@/utils/auth-bootstrap';
 
-// 进度条配置
 const { start, done } = useLoading();
 const ROUTE_WHITE_LIST = [ '/login' ];
 
@@ -26,8 +25,16 @@ const router = createRouter({
 });
 
 function isWhiteListRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
-  if (ROUTE_WHITE_LIST.includes(path)) return true;
+  if (ROUTE_WHITE_LIST.includes(path))
+    return true;
   return matchedRoutes.some(route => Boolean(route.meta?.whiteList));
+}
+
+function buildRetryNavigationTarget(fullPath: string) {
+  return {
+    path: fullPath,
+    replace: true
+  };
 }
 
 router.beforeEach(async (to) => {
@@ -40,16 +47,15 @@ router.beforeEach(async (to) => {
   if (whiteListed) {
     if (token) {
       const targetPath = lastPath || '/';
-      return ({ path: targetPath, replace: true });
+      return { path: targetPath, replace: true };
     }
     return true;
   }
 
   if (!token) {
-    return ({ path: '/login', replace: true });
+    return { path: '/login', replace: true };
   }
 
-  // 防止动态路由刷新丢失
   const menuStore = useMenuStore();
   try {
     await ensureAuthState(menuStore);
@@ -58,25 +64,25 @@ router.beforeEach(async (to) => {
     return false;
   }
 
-  if (!menuStore.accessedRouters.length) {
-    menuStore.addRoutesWithMenu(); // 确保路由添加完成
-    return ({ ...to, replace: true }); // 确保重新导航到目标路径
+  if (!menuStore.hasDynamicRoutes()) {
+    const restored = menuStore.restoreRoutesFromCache();
+    if (restored) {
+      return buildRetryNavigationTarget(to.fullPath);
+    }
   }
 
-  // 保留上一次关闭系统时候的路由界面
   if (to.path === sysConfig.DASHBOARD_URL && lastPath) {
     if (sysConfig.DASHBOARD_URL === lastPath) {
       return true;
     }
-    else {
-      return ({ path: lastPath, replace: true });
-    }
+
+    return { path: lastPath, replace: true };
   }
 });
 
 export const EXCLUDE_TAB = [ '/login' ];
+
 router.afterEach((to) => {
-  // 刚登入系统时 添加tab
   const tab: LayoutT.ITab = {
     label: to.meta.title as string,
     key: to.path,
