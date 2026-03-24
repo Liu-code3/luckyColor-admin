@@ -30,6 +30,29 @@ function isWhiteListRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
   return matchedRoutes.some(route => Boolean(route.meta?.whiteList));
 }
 
+function shouldRedirectAuthenticatedWhiteListRoute(
+  path: string,
+  matchedRoutes: RouteLocationMatched[]
+) {
+  if (ROUTE_WHITE_LIST.includes(path)) {
+    return path === '/login';
+  }
+
+  return matchedRoutes.some(route => Boolean(route.meta?.whiteList && route.meta?.guestOnly));
+}
+
+function shouldTrackAsTab(path: string, matchedRoutes: RouteLocationMatched[]) {
+  if (EXCLUDE_TAB.includes(path)) {
+    return false;
+  }
+
+  return !matchedRoutes.some(route => route.meta?.layout === 'empty');
+}
+
+function isNotFoundFallbackRoute(matchedRoutes: RouteLocationMatched[]) {
+  return matchedRoutes.some(route => Boolean(route.meta?.notFound));
+}
+
 function buildRetryNavigationTarget(fullPath: string) {
   return {
     path: fullPath,
@@ -43,9 +66,10 @@ router.beforeEach(async (to) => {
   const token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
   const whiteListed = isWhiteListRoute(to.path, to.matched);
+  const notFoundFallback = isNotFoundFallbackRoute(to.matched);
 
-  if (whiteListed) {
-    if (token) {
+  if (whiteListed && (!token || !notFoundFallback)) {
+    if (token && shouldRedirectAuthenticatedWhiteListRoute(to.path, to.matched)) {
       const targetPath = lastPath || '/';
       return { path: targetPath, replace: true };
     }
@@ -83,13 +107,19 @@ router.beforeEach(async (to) => {
 export const EXCLUDE_TAB = [ '/login' ];
 
 router.afterEach((to) => {
+  if (!shouldTrackAsTab(to.path, to.matched)) {
+    syncDashboardVisit(to);
+    done();
+    return;
+  }
+
   const tab: LayoutT.ITab = {
     label: to.meta.title as string,
     key: to.path,
     layout: to.meta.layout as string
   };
   const tabStore = useTabStore();
-  !(EXCLUDE_TAB.includes(to.path)) && tabStore.addTab(tab);
+  tabStore.addTab(tab);
   syncDashboardVisit(to);
   done();
 });

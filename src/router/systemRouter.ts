@@ -12,6 +12,7 @@ const routes = [
     component: () => import('@/views/login/login.vue'),
     meta: {
       whiteList: true,
+      guestOnly: true,
       title: '登录页',
       layout: 'empty'
     }
@@ -30,6 +31,9 @@ const routes = [
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/errorPage/404.vue'),
     meta: {
+      whiteList: true,
+      title: '404',
+      notFound: true,
       layout: 'empty'
     }
   }
