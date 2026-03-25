@@ -13,6 +13,7 @@ import {
   type TenantStatus
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
+import sysConfig from '@/config';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { message } from '@/utils/message';
 
@@ -43,6 +44,8 @@ interface SummaryCard {
 
 const tenantButtonCodes = BUTTON_PERMISSION_CODES.tenantManage;
 const { hasPermission } = usePermission();
+const defaultAdminUsername = sysConfig.DEFAULT_LOGIN_USERNAME;
+const defaultAdminPassword = sysConfig.DEFAULT_LOGIN_PASSWORD;
 
 const tenantStatusOptions: Array<{ label: string; value: TenantStatus }> = [
   { label: '启用', value: 'ACTIVE' },
@@ -78,8 +81,8 @@ const tenantForm = reactive<TenantFormState>({
   contactPhone: '',
   contactEmail: '',
   remark: '',
-  adminUsername: 'admin',
-  adminPassword: '123456',
+  adminUsername: defaultAdminUsername,
+  adminPassword: defaultAdminPassword,
   adminNickname: ''
 });
 
@@ -240,8 +243,8 @@ function resetTenantForm() {
   tenantForm.contactPhone = '';
   tenantForm.contactEmail = '';
   tenantForm.remark = '';
-  tenantForm.adminUsername = 'admin';
-  tenantForm.adminPassword = '123456';
+  tenantForm.adminUsername = defaultAdminUsername;
+  tenantForm.adminPassword = defaultAdminPassword;
   tenantForm.adminNickname = '';
 }
 

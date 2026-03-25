@@ -4,6 +4,7 @@ import { request } from '@/utils/http';
 export interface LoginRequestPayload {
   username: string;
   password: string;
+  captchaToken?: string;
 }
 
 export interface LoginResponsePayload {

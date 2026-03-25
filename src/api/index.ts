@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './captcha';
 export * from './configs';
 export * from './dashboard';
 export * from './departments';

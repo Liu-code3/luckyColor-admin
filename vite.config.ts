@@ -12,17 +12,35 @@ import { lazyImport, VxeResolver } from 'vite-plugin-lazy-import';
 
 export const resolvePath = (...args: string[]) => resolve(__dirname, '.', ...args);
 
+function readBoolean(value: string | undefined, fallback = false) {
+  if (value === undefined)
+    return fallback;
+
+  return value.trim().toLowerCase() === 'true';
+}
+
+function readString(value: string | undefined, fallback: string) {
+  const normalized = value?.trim();
+  return normalized?.length ? normalized : fallback;
+}
+
 export default defineConfig(({ mode }) => {
   const envConfig = loadEnv(mode, './');
   const alias = {
     '~': `${resolvePath('./')}`,
     '@/': `${resolvePath('src')}/`
   };
-  // 环境变量在被加载后总是被当作字符串处理。这是因为环境变量本质上是通过操作系统或 Node.js 的环境接口来存储和管理，而这些接口只支持字符串类型。
-  // 所有这里需要手动转换为number类型
-  const port = Number(envConfig.VITE_PORT) || 3000; // 如果转换失败，使用默认端口 3000
+  const port = Number(envConfig.VITE_PORT) || 3000;
+  const shouldDropDebugger = readBoolean(envConfig.VITE_BUILD_DROP_DEBUGGER, false);
+  const shouldDropConsoleLog = readBoolean(envConfig.VITE_BUILD_DROP_CONSOLE, false);
+  const enableSourceMap = readBoolean(envConfig.VITE_BUILD_SOURCEMAP, false);
+  const buildBase = readString(envConfig.VITE_BUILD_PUBLIC_PATH, '/');
+  const buildOutDir = readString(envConfig.VITE_BUILD_OUT_DIR, 'dist');
+  const shouldUseTerser = shouldDropDebugger || shouldDropConsoleLog;
+  const pureFunctions = shouldDropConsoleLog ? ['console.log'] : undefined;
 
   return {
+    base: buildBase,
     plugins: [
       vue(),
       VueJSX(),
@@ -38,7 +56,6 @@ export default defineConfig(({ mode }) => {
         ]
       }),
       AutoImport({
-        // targets to transform
         include: [
           /\.[tj]sx?$/,
           /\.vue$/,
@@ -66,22 +83,14 @@ export default defineConfig(({ mode }) => {
       Components({
         resolvers: [
           NaiveUiResolver(),
-          IconsResolver({
-            // prefix: 'icon', // 自动引入的Icon组件统一前缀，默认为 i，设置 '' 为不需要前缀
-            // {prefix}-{collection}-{icon} 使用组件解析器时，您必须遵循名称转换才能正确推断图标。
-            // alias: { park: 'icon-park' } 集合的别名
-            // enabledCollections: ['ep'] // 这是可选的，默认启用 Iconify 支持的所有集合['mdi']
-          })
+          IconsResolver()
         ],
-        dirs: [ resolvePath('src/components') ],
+        dirs: [resolvePath('src/components')],
         dts: false
       }),
       Icons({
-        // scale: 1, // 缩放
         autoInstall: true,
-        compiler: 'vue3' // 编译方式
-        // defaultClass: '', // 默认类型
-        // defaultStyle: '' // 默认样式
+        compiler: 'vue3'
       })
     ],
     server: {
@@ -89,7 +98,6 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           target: envConfig.VITE_API_PROXY_TARGET || 'http://127.0.0.1:3001',
-          // 修改请求头中的host为目标地址的host
           changeOrigin: true
         }
       }
@@ -97,7 +105,22 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias
     },
-    // 解决警告You are running the esm-bundler build of vue-i18n.
+    build: {
+      minify: shouldUseTerser ? 'terser' : 'oxc',
+      sourcemap: enableSourceMap,
+      outDir: buildOutDir,
+      terserOptions: shouldUseTerser
+        ? {
+            compress: {
+              drop_debugger: shouldDropDebugger,
+              pure_funcs: pureFunctions
+            },
+            format: {
+              comments: false
+            }
+          }
+        : undefined
+    },
     define: {
       __VUE_I18N_FULL_INSTALL__: true,
       __VUE_I18N_LEGACY_API__: true,
