@@ -20,6 +20,13 @@ interface NoticeFormState {
   publishedAt: number | null;
 }
 
+interface SummaryCard {
+  label: string;
+  value: number;
+  helper: string;
+  tone: 'primary' | 'success' | 'warning' | 'info';
+}
+
 const loading = ref(false);
 const submitting = ref(false);
 const page = ref(1);
@@ -48,6 +55,33 @@ const noticeTypeOptions = [
   { label: '版本发布', value: 'release' },
   { label: '运营通知', value: 'notice' }
 ];
+
+const summaryCards = computed<SummaryCard[]>(() => [
+  {
+    label: '\u516c\u544a\u603b\u6570',
+    value: total.value,
+    helper: '\u57fa\u4e8e\u5f53\u524d\u68c0\u7d22\u6761\u4ef6\u7684\u5168\u90e8\u5185\u5bb9',
+    tone: 'primary'
+  },
+  {
+    label: '\u5df2\u53d1\u5e03',
+    value: noticeList.value.filter(item => item.status).length,
+    helper: '\u5df2\u8fdb\u5165\u7ebf\u4e0a\u89e6\u8fbe\u72b6\u6001\u7684\u5185\u5bb9',
+    tone: 'success'
+  },
+  {
+    label: '\u8349\u7a3f',
+    value: noticeList.value.filter(item => !item.status).length,
+    helper: '\u9002\u5408\u7ee7\u7eed\u7f16\u8f91\u6216\u5b89\u6392\u53d1\u5e03\u65f6\u673a',
+    tone: 'warning'
+  },
+  {
+    label: '\u53d1\u5e03\u4eba',
+    value: new Set(noticeList.value.map(item => item.publisher?.trim()).filter(Boolean)).size,
+    helper: '\u5f53\u524d\u5217\u8868\u4e2d\u7684\u5185\u5bb9\u8d1f\u8d23\u4eba\u6570',
+    tone: 'info'
+  }
+]);
 
 const noticeFormRules: FormRules = {
   title: [
@@ -97,6 +131,10 @@ function formatDateTime(value?: string | null) {
   return new Date(value).toLocaleString('zh-CN', {
     hour12: false
   });
+}
+
+function getSummaryCardClass(tone: SummaryCard['tone']) {
+  return `summary-card summary-card--${tone}`;
 }
 
 function getNoticeTypeLabel(type: string) {
@@ -254,8 +292,20 @@ onMounted(() => {
 
 <template>
   <div class="crud-page">
+    <section class="summary-grid">
+      <article
+        v-for="card in summaryCards"
+        :key="card.label"
+        :class="getSummaryCardClass(card.tone)"
+      >
+        <span>{{ card.label }}</span>
+        <strong>{{ card.value }}</strong>
+        <small class="summary-card__helper">{{ card.helper }}</small>
+      </article>
+    </section>
+
     <div class="toolbar">
-      <div class="toolbar-item">
+      <div class="toolbar-item toolbar-item--wide">
         <div class="toolbar-label">
           关键字
         </div>
@@ -305,7 +355,14 @@ onMounted(() => {
           </thead>
           <tbody>
             <tr v-for="item in noticeList" :key="item.id">
-              <td>{{ item.title }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.title }}
+                </div>
+                <div class="secondary-text notice-snippet">
+                  {{ item.content }}
+                </div>
+              </td>
               <td>{{ getNoticeTypeLabel(item.type) }}</td>
               <td>
                 <n-tag :type="item.status ? 'success' : 'warning'">
@@ -352,6 +409,19 @@ onMounted(() => {
   <n-drawer v-model:show="showNoticeDrawer" :width="640" placement="right">
     <n-drawer-content :title="isEditMode ? '编辑公告' : '新增公告'">
       <n-form ref="noticeFormRef" :model="noticeForm" :rules="noticeFormRules" label-placement="top">
+        <div class="lc-form-stack">
+          <section class="lc-form-section">
+            <div class="lc-form-section__header">
+              <div>
+                <p class="lc-form-section__eyebrow">Publish</p>
+                <h3 class="lc-form-section__title">
+                  {{ isEditMode ? '\u7f16\u8f91\u516c\u544a' : '\u521b\u5efa\u516c\u544a' }}
+                </h3>
+                <p class="lc-form-section__description">
+                  {{ '\u7edf\u4e00\u5904\u7406\u6807\u9898\uff0c\u7c7b\u578b\uff0c\u53d1\u5e03\u72b6\u6001\u4e0e\u65f6\u95f4\uff0c\u63d0\u5347\u5185\u5bb9\u8fd0\u8425\u7684\u8282\u594f\u611f\u3002' }}
+                </p>
+              </div>
+            </div>
         <n-form-item label="公告标题" path="title">
           <n-input v-model:value="noticeForm.title" placeholder="请输入公告标题" />
         </n-form-item>
@@ -387,6 +457,8 @@ onMounted(() => {
             :autosize="{ minRows: 5, maxRows: 8 }"
           />
         </n-form-item>
+          </section>
+        </div>
       </n-form>
 
       <template #footer>
@@ -440,6 +512,12 @@ onMounted(() => {
 .crud-page {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -447,15 +525,17 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .toolbar-item {
   display: flex;
   align-items: center;
   width: 360px;
+}
+
+.toolbar-item--wide {
+  width: 420px;
 }
 
 .toolbar-label {
@@ -465,13 +545,27 @@ onMounted(() => {
 
 .content-card {
   min-height: calc(100vh - 236px);
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
 }
 
 .content-actions {
   margin-bottom: 16px;
+}
+
+.primary-text {
+  font-weight: 600;
+}
+
+.secondary-text {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.notice-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.6;
 }
 
 .operation-cell {
@@ -525,5 +619,22 @@ onMounted(() => {
   line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+@media (max-width: 1280px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-item,
+  .toolbar-item--wide {
+    width: 100%;
+  }
 }
 </style>

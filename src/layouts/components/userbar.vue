@@ -134,11 +134,17 @@ const onUpdateSettingDrawer = (val: boolean) => {
 
 <style lang="scss" scoped>
 .layout-content-luckHeader {
-  padding: 0 20px;
-  height: 60px;
+  padding: 0 18px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 10px 10px 0;
+  border-radius: 22px;
+  border: 1px solid var(--lc-border);
+  background: var(--lc-surface-strong);
+  box-shadow: var(--lc-shadow-md);
+  backdrop-filter: var(--lc-backdrop);
 
   .n-button__border {
     border: none;
@@ -148,10 +154,30 @@ const onUpdateSettingDrawer = (val: boolean) => {
 .layout-content-left {
   display: flex;
   align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .layout-content-right {
   display: flex;
   align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.layout-content-right :deep(.n-avatar) {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.layout-content-right :deep(.n-dropdown-trigger) {
+  border-radius: 999px;
+}
+
+@media (max-width: 768px) {
+  .layout-content-luckHeader {
+    margin: 8px 8px 0;
+    padding: 0 14px;
+  }
 }
 </style>

@@ -4,21 +4,17 @@ import type { FormInst } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { getMenuTreeApi, loginApi } from '@/api';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
-import RotateVerify from '@/components/verify/rotate/index.vue';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { setAccessToken, setCurrentUserInfo } from '@/utils/auth';
 import { Encrypt } from '@/utils/crypto-md5';
-import { message } from '@/utils/message.ts';
 import { resolveSessionButtonCodeList } from '@/utils/permission';
 import tool from '@/utils/tool';
 
 const router = useRouter();
 const menuStore = useMenuStore();
 const formRef = ref<FormInst | null>(null);
-const rotateVerifyRef = ref<InstanceType<typeof RotateVerify>>();
 
 const accentColor = ref('#1e5eff');
-
 const formValue = reactive({
   adminName: 'admin',
   password: '123456'
@@ -27,26 +23,20 @@ const formValue = reactive({
 const rules = {
   adminName: {
     required: true,
-    message: '请输入账号',
+    message: '请输入登录账号',
     trigger: 'blur'
   },
   password: {
     required: true,
-    message: '请输入密码',
+    message: '请输入登录密码',
     trigger: ['input', 'blur']
   }
 };
 
-const slideImages = ref([
-  'http://codegen.caihongy.cn/20231007/1bd4fe88e21a4641a3208a7d783cbf6d.jpg',
-  'http://codegen.caihongy.cn/20231007/605d68174b8a49959b82f364194a9ba0.jpg',
-  'http://codegen.caihongy.cn/20231007/6e13a48b74c940118f00f2d28de337c3.jpg'
-]);
-
 const capabilityCards = [
   {
     title: '多租户后台',
-    description: '菜单、权限、配置、公告与租户中心统一收口。'
+    description: '统一管理菜单、权限、配置、公告和租户工作台。'
   },
   {
     title: '实时联调',
@@ -54,13 +44,13 @@ const capabilityCards = [
   },
   {
     title: '稳定交付',
-    description: '提交规范、菜单同步与冒烟测试一起落地。'
+    description: '动态菜单、权限同步与常用配置能力一起落地。'
   }
 ];
 
 const quickFacts = [
   { label: '默认账号', value: 'admin' },
-  { label: '验证方式', value: '旋转滑块' },
+  { label: '验证方式', value: '账号密码' },
   { label: '接入模式', value: '动态菜单' }
 ];
 
@@ -86,16 +76,7 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function openVerify() {
-  rotateVerifyRef.value?.show();
-}
-
-async function handleVerifySuccess(state: boolean) {
-  if (!state) {
-    message.error('验证失败，请重试');
-    return;
-  }
-
+async function handleValidateClick() {
   formRef.value?.validate(async (errors) => {
     if (errors)
       return;
@@ -111,9 +92,12 @@ async function handleVerifySuccess(state: boolean) {
 
     setAccessToken(data.accessToken);
     setCurrentUserInfo({
+      id: data.user.id,
       username: data.user.username,
       displayName: data.user.nickname || data.user.username,
-      buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data)
+      buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data),
+      dataScopeType: data.user.dataScopeType || data.dataScopeType || undefined,
+      dataScopeDeptIds: data.user.dataScopeDeptIds || data.dataScopeDeptIds || undefined
     });
 
     const menuTreeRes = await getMenuTreeApi();
@@ -122,14 +106,6 @@ async function handleVerifySuccess(state: boolean) {
     menuStore.initializeRoutesWithMenu(menuTreeRes.data);
     await router.push('/');
   });
-
-  setTimeout(() => {
-    rotateVerifyRef.value?.hide();
-  }, 2500);
-}
-
-function handleValidateClick() {
-  openVerify();
 }
 </script>
 
@@ -152,9 +128,9 @@ function handleValidateClick() {
           <div class="brand-badge">
             LuckyColor Admin
           </div>
-          <h1>把管理台做得清晰、稳定、又有一点锋芒。</h1>
+          <h1>让后台管理更清晰、更稳定，也更高效。</h1>
           <p class="brand-copy">
-            这是一套面向后台业务的多租户管理工作台，围绕权限、系统管理、租户中心和日常配置建立统一入口。
+            面向 SaaS 管理场景的统一工作台，围绕权限、租户、系统设置与日常运维建立清晰入口。
           </p>
 
           <div class="fact-grid">
@@ -184,7 +160,7 @@ function handleValidateClick() {
           <div class="auth-card__header">
             <div>
               <h2>欢迎回来</h2>
-              <p>输入账号密码后完成旋转验证，即可进入工作台。</p>
+              <p>输入账号和密码，即可进入工作台。</p>
             </div>
             <img src="@/assets/images/luckColor.png" alt="LuckyColor 标志" class="brand-logo">
           </div>
@@ -228,19 +204,13 @@ function handleValidateClick() {
                 登录
               </n-button>
               <div class="auth-tip">
-                首次登录后会根据账号权限动态加载菜单，并同步锁屏密码缓存。
+                登录后会根据账号权限动态加载菜单，并同步锁屏密码缓存。
               </div>
             </div>
           </n-form>
         </div>
       </section>
     </div>
-
-    <RotateVerify
-      ref="rotateVerifyRef"
-      :slide-image="slideImages"
-      @success="handleVerifySuccess"
-    />
   </div>
 </template>
 

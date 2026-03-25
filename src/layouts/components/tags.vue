@@ -44,8 +44,13 @@ function handleClose(path: string) {
 <style lang="scss" scoped>
 .tabs_list :deep(.n-tabs) {
   height: 50px;
+  margin: 10px 10px 0;
   padding: 8px;
-  border-bottom: 1px solid rgba(var(--primary-color), 0.2);
+  border: 1px solid var(--lc-border);
+  border-radius: 20px;
+  background: var(--lc-surface);
+  box-shadow: var(--lc-shadow-sm);
+  backdrop-filter: var(--lc-backdrop);
 
   .n-tabs-nav__prefix,
   .n-tabs-nav__suffix,
@@ -60,20 +65,30 @@ function handleClose(path: string) {
 
   .n-tabs-tab {
     height: 34px;
-    border-radius: 4px !important;
+    border-radius: 999px !important;
+    border: 1px solid transparent !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
 
   .n-tabs-tab:hover {
-    border: 1px solid rgb(var(--primary-color)) !important;
+    border: 1px solid rgba(var(--primary-color), 0.2) !important;
+    background-color: rgba(var(--primary-color), 0.08) !important;
   }
 
   .n-tabs-tab--active {
-    border: 1px solid rgb(var(--primary-color)) !important;
-    background-color: rgba(var(--primary-color), 0.1) !important;
+    border: 1px solid rgba(var(--primary-color), 0.22) !important;
+    background-color: rgba(var(--primary-color), 0.12) !important;
 
     .n-base-icon {
       color: rgb(var(--primary-color)) !important;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs_list :deep(.n-tabs) {
+    margin: 8px 8px 0;
+    border-radius: 18px;
   }
 }
 </style>

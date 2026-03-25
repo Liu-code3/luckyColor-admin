@@ -28,10 +28,13 @@ const contentStyle = computed(() => ({
           :width="260"
           :native-scrollbar="false"
         >
-          <div class="logo-bar">
-            <Icon class="mr-14px text-30px" icon="cryptocurrency-color:ltc" />
-            <div class="pl-9px">
-              luckyColor admin
+          <div class="logo-bar" :class="{ 'logo-bar--collapsed': menuStore.collapsed }">
+            <div class="logo-mark">
+              <Icon class="text-26px" icon="cryptocurrency-color:ltc" />
+            </div>
+            <div class="logo-copy" :class="{ 'logo-copy--collapsed': menuStore.collapsed }">
+              <strong>luckyColor admin</strong>
+              <span>Workspace</span>
             </div>
           </div>
           <NavMenu />
@@ -62,9 +65,9 @@ const contentStyle = computed(() => ({
   height: calc(100vh - var(--layout-content-offset));
   overflow: hidden;
   overflow-y: scroll;
-  padding: 10px;
+  padding: 18px 18px 28px;
   box-sizing: border-box;
-  background: var(--theme-background);
+  background: transparent;
 }
 
 .n-content::-webkit-scrollbar {
@@ -72,14 +75,69 @@ const contentStyle = computed(() => ({
 }
 
 .logo-bar {
-  width: 220px;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  margin: 0 0 0 10px;
+  gap: 12px;
+  padding: 0 20px;
+  overflow: hidden;
   color: var(--layout-sider-text-active);
+  border-bottom: 1px solid var(--layout-sider-border);
+  transition: padding 0.2s ease, gap 0.2s ease;
+}
+
+.logo-bar--collapsed {
+  gap: 0;
+  padding: 0;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  flex: none;
+}
+
+.logo-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 0.2s ease,
+    opacity 0.16s ease,
+    transform 0.2s ease;
+}
+
+.logo-copy--collapsed {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+}
+
+.logo-copy strong {
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logo-copy span {
+  margin-top: 4px;
+  color: rgba(226, 232, 240, 0.64);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .n-layout-scroll-container {
@@ -92,5 +150,15 @@ const contentStyle = computed(() => ({
 
 :deep(.n-layout-toggle-button) {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .logo-copy span {
+    display: none;
+  }
+
+  .n-content {
+    padding: 16px 16px 24px;
+  }
 }
 </style>

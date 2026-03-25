@@ -101,8 +101,11 @@ watch(() => route.fullPath, () => {
       <UserBar :show-breadcrumb="false" :show-collapse="false">
         <template #left>
           <div class="top-header-brand">
-            <Icon icon="cryptocurrency-color:ltc" class="text-28px" />
-            <strong>luckyColor admin</strong>
+            <Icon icon="cryptocurrency-color:ltc" class="text-26px" />
+            <div class="top-header-brand__copy">
+              <strong>luckyColor admin</strong>
+              <span>Workspace</span>
+            </div>
           </div>
 
           <div class="top-header-menus">
@@ -127,12 +130,15 @@ watch(() => route.fullPath, () => {
           class="app-sider"
           :collapsed="menuStore.collapsed"
           bordered
-          show-trigger
           collapse-mode="width"
           :collapsed-width="64"
           :width="240"
           :native-scrollbar="false"
         >
+          <div class="top-sider-head">
+            <span>Current Module</span>
+            <strong>当前模块菜单</strong>
+          </div>
           <NavMenu />
         </n-layout-sider>
 
@@ -153,8 +159,28 @@ watch(() => route.fullPath, () => {
   align-items: center;
   gap: 10px;
   min-width: fit-content;
-  margin-right: 18px;
-  color: #0f172a;
+  margin-right: 14px;
+  padding-right: 14px;
+  color: var(--lc-text-strong);
+}
+
+.top-header-brand__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.top-header-brand__copy strong {
+  line-height: 1.15;
+}
+
+.top-header-brand__copy span {
+  margin-top: 4px;
+  color: var(--lc-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .top-header-menus {
@@ -162,7 +188,7 @@ watch(() => route.fullPath, () => {
   align-items: center;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  min-width: 0;
 }
 
 .top-header-menus::-webkit-scrollbar {
@@ -173,18 +199,22 @@ watch(() => route.fullPath, () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
-  padding: 0 16px;
+  height: 36px;
+  padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
-  color: #475569;
+  color: var(--lc-text-soft);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .top-header-menu:hover {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(var(--primary-color), 0.08);
   color: rgb(var(--primary-color));
 }
 
@@ -195,17 +225,43 @@ watch(() => route.fullPath, () => {
 }
 
 .app-sider {
+  --layout-sider-sub-text: #ffffff;
   background: var(--layout-sider-bg);
   box-shadow: inset -1px 0 0 var(--layout-sider-border);
+}
+
+:deep(.app-sider .n-layout-toggle-button) {
+  display: none !important;
+}
+
+.top-sider-head {
+  padding: 16px 16px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--layout-sider-border);
+}
+
+.top-sider-head span {
+  color: color-mix(in srgb, var(--layout-sider-text) 78%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.top-sider-head strong {
+  color: var(--layout-sider-text-active);
+  font-size: 15px;
 }
 
 .n-content {
   height: calc(100vh - var(--layout-content-offset));
   overflow: hidden;
   overflow-y: auto;
-  padding: 10px;
+  padding: 18px 18px 28px;
   box-sizing: border-box;
-  background: var(--theme-background);
+  background: transparent;
 }
 
 .n-content::-webkit-scrollbar {
@@ -217,8 +273,14 @@ watch(() => route.fullPath, () => {
 }
 
 @media (max-width: 1080px) {
-  .top-header-brand strong {
+  .top-header-brand__copy span {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .n-content {
+    padding: 16px 16px 24px;
   }
 }
 </style>

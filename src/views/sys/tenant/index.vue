@@ -554,6 +554,19 @@ onMounted(async () => {
   <n-drawer v-model:show="showTenantDrawer" :width="720" placement="right">
     <n-drawer-content :title="isEditMode ? '编辑租户' : '新增租户'">
       <n-form ref="tenantFormRef" :model="tenantForm" :rules="tenantFormRules" label-placement="top">
+        <div class="lc-form-stack">
+          <section class="lc-form-section">
+            <div class="lc-form-section__header">
+              <div>
+                <p class="lc-form-section__eyebrow">Tenant</p>
+                <h3 class="lc-form-section__title">
+                  {{ isEditMode ? '\u7f16\u8f91\u79df\u6237' : '\u521b\u5efa\u79df\u6237' }}
+                </h3>
+                <p class="lc-form-section__description">
+                  {{ '\u5c06\u79df\u6237\u57fa\u7840\u4fe1\u606f\uff0c\u5957\u9910\u548c\u8054\u7cfb\u65b9\u5f0f\u96c6\u4e2d\u914d\u7f6e\uff0c\u65b9\u4fbf\u5feb\u901f\u5b8c\u6210\u5165\u9a7b\u3002' }}
+                </p>
+              </div>
+            </div>
         <n-grid :cols="2" :x-gap="12">
           <n-form-item-gi label="租户编码" path="code">
             <n-input
@@ -637,6 +650,8 @@ onMounted(async () => {
             :autosize="{ minRows: 3, maxRows: 5 }"
           />
         </n-form-item>
+          </section>
+        </div>
       </n-form>
 
       <template #footer>
@@ -744,7 +759,7 @@ onMounted(async () => {
 .crud-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .summary-grid {
@@ -753,49 +768,10 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 20px;
-  border-radius: 10px;
-  background: var(--primary-bgColor);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-}
-
-.summary-card span {
-  color: var(--text-color-2);
-  font-size: 13px;
-}
-
-.summary-card strong {
-  font-size: 26px;
-  line-height: 1;
-}
-
-.summary-card--primary strong {
-  color: #2563eb;
-}
-
-.summary-card--success strong {
-  color: #059669;
-}
-
-.summary-card--warning strong {
-  color: #d97706;
-}
-
-.summary-card--info strong {
-  color: #0891b2;
-}
-
 .toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
   flex-wrap: wrap;
 }
 
@@ -816,9 +792,6 @@ onMounted(async () => {
 
 .content-card {
   min-height: calc(100vh - 292px);
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
 }
 
 .content-actions {
@@ -827,12 +800,10 @@ onMounted(async () => {
 
 .primary-text {
   font-weight: 600;
-  color: var(--text-color-1);
 }
 
 .secondary-text {
   margin-top: 4px;
-  color: var(--text-color-3);
   font-size: 12px;
 }
 
@@ -851,8 +822,9 @@ onMounted(async () => {
 .package-hint {
   margin-bottom: 16px;
   padding: 14px 16px;
-  border-radius: 10px;
-  background: rgba(37, 99, 235, 0.06);
+  border-radius: 16px;
+  border: 1px solid var(--lc-accent-border);
+  background: linear-gradient(180deg, var(--lc-accent-faint), transparent 78%);
 }
 
 .package-hint__header {
@@ -863,7 +835,7 @@ onMounted(async () => {
 
 .package-hint__meta {
   margin-top: 8px;
-  color: var(--text-color-2);
+  color: var(--lc-text-soft);
 }
 
 .drawer-footer {
@@ -884,8 +856,7 @@ onMounted(async () => {
 
 .result-panel {
   padding: 16px;
-  border-radius: 10px;
-  background: rgba(148, 163, 184, 0.08);
+  border-radius: 16px;
 }
 
 .result-panel__title,
@@ -902,13 +873,13 @@ onMounted(async () => {
 }
 
 .result-line span {
-  color: var(--text-color-2);
+  color: var(--lc-text-soft);
 }
 
 .result-count {
   display: block;
   font-size: 30px;
-  color: #2563eb;
+  color: var(--lc-accent);
 }
 
 .result-list {

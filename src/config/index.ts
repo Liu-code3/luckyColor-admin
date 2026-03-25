@@ -60,7 +60,7 @@ const DEFAULT_CONFIG = {
   LANG: 'zh-cn',
 
   // 主题颜色
-  COLOR: '#1890FF',
+  COLOR: '#0F766E',
 
   // 默认整体主题
   LUCK_THEME: 'light',
@@ -102,10 +102,10 @@ const DEFAULT_CONFIG = {
 
 export const naiveThemeOverrides = {
   common: {
-    primaryColor: '#316C72FF',
-    primaryColorHover: '#316C72E3',
-    primaryColorPressed: '#2B4C59FF',
-    primaryColorSuppl: '#316C72E3'
+    primaryColor: '#0F766E',
+    primaryColorHover: '#129082',
+    primaryColorPressed: '#0B5F5A',
+    primaryColorSuppl: '#129082'
   }
 };
 

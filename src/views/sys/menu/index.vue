@@ -458,7 +458,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="menu-page">
+  <div class="crud-page">
     <div class="toolbar">
       <div class="toolbar-item">
         <div class="toolbar-label">
@@ -594,19 +594,17 @@ onMounted(() => {
 </template>
 
 <style scoped lang="less">
-.menu-page {
+.crud-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .toolbar-item {
@@ -622,9 +620,6 @@ onMounted(() => {
 
 .content-card {
   min-height: calc(100vh - 236px);
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
 }
 
 .content-actions {
@@ -635,5 +630,11 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .toolbar-item {
+    width: 100%;
+  }
 }
 </style>

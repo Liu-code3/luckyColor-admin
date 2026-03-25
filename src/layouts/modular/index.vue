@@ -23,7 +23,10 @@ const contentStyle = computed(() => ({
           <div class="logo-bar logo-bar--compact">
             <Icon icon="cryptocurrency-color:ltc" />
           </div>
-          <Modular class="mt-7" />
+          <div class="modular-eyebrow">
+            Modules
+          </div>
+          <Modular class="mt-4" />
         </div>
         <n-layout-sider
           class="app-sider"
@@ -36,8 +39,9 @@ const contentStyle = computed(() => ({
           :native-scrollbar="false"
         >
           <div class="logo-bar">
-            <div class="pl-9px">
-              luckyColor admin
+            <div class="logo-copy">
+              <strong>luckyColor admin</strong>
+              <span>Workspace</span>
             </div>
           </div>
           <div>
@@ -63,6 +67,7 @@ const contentStyle = computed(() => ({
 
 .modular {
   width: 80px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,11 +79,25 @@ const contentStyle = computed(() => ({
   .logo-bar {
     width: 100%;
     height: 60px;
-    font-size: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 34px;
     flex: none;
     margin: 0;
     color: var(--layout-sider-text-active);
   }
+}
+
+.modular-eyebrow {
+  width: 100%;
+  text-align: center;
+  color: rgba(226, 232, 240, 0.56);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .app-sider {
@@ -90,9 +109,9 @@ const contentStyle = computed(() => ({
   height: calc(100vh - var(--layout-content-offset));
   overflow: hidden;
   overflow-y: scroll;
-  padding: 10px;
+  padding: 18px 18px 28px;
   box-sizing: border-box;
-  background-color: var(--theme-background);
+  background: transparent;
 }
 
 .n-content::-webkit-scrollbar {
@@ -100,14 +119,34 @@ const contentStyle = computed(() => ({
 }
 
 .logo-bar {
-  width: 220px;
-  height: 60px;
+  width: 100%;
+  min-height: 60px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
+  justify-content: flex-start;
+  padding: 0 18px;
   flex: none;
   color: var(--layout-sider-text-active);
+  border-bottom: 1px solid var(--layout-sider-border);
+}
+
+.logo-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-copy strong {
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.logo-copy span {
+  margin-top: 4px;
+  color: rgba(226, 232, 240, 0.64);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .n-layout-scroll-container {
@@ -120,5 +159,12 @@ const contentStyle = computed(() => ({
 
 :deep(.n-layout-toggle-button) {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .logo-copy span,
+  .modular-eyebrow {
+    display: none;
+  }
 }
 </style>
