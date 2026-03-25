@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DataTableColumns, FormInst, FormRules, TreeOption } from 'naive-ui';
-import { NButton, NSpace, NTag, useMessage } from 'naive-ui';
+import { NButton, NSpace, NSwitch, NTag, useMessage } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { h } from 'vue';
 import {
@@ -29,6 +29,7 @@ interface MenuFormState {
   icon: string;
   layout: string;
   isVisible: boolean;
+  status: boolean;
   component: string;
   redirect: string;
   metaText: string;
@@ -41,6 +42,8 @@ const { hasPermission } = usePermission();
 
 const loading = ref(false);
 const submitting = ref(false);
+const visibilitySwitchingId = ref<number | null>(null);
+const statusSwitchingId = ref<number | null>(null);
 const searchTitle = ref('');
 const rawMenuTree = ref<MenuRecord[]>([]);
 
@@ -59,6 +62,7 @@ const menuForm = reactive<MenuFormState>({
   icon: '',
   layout: '',
   isVisible: true,
+  status: true,
   component: '',
   redirect: '',
   metaText: '',
@@ -223,11 +227,47 @@ const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
     {
       key: 'isVisible',
       title: '显示状态',
-      width: 100,
+      width: 180,
       render: row => h(
-        NTag,
-        { type: row.isVisible ? 'success' : 'warning' },
-        { default: () => row.isVisible ? '显示' : '隐藏' }
+        'div',
+        { class: 'switch-cell' },
+        [
+          h(NSwitch, {
+            value: row.isVisible ?? true,
+            size: 'small',
+            loading: visibilitySwitchingId.value === row.id,
+            disabled: !canUpdateMenu.value,
+            'onUpdate:value': (value: boolean) => handleToggleMenuVisible(row, value)
+          }),
+          h(
+            NTag,
+            { type: row.isVisible ? 'success' : 'warning', size: 'small' },
+            { default: () => row.isVisible ? '显示' : '隐藏' }
+          )
+        ]
+      )
+    },
+    {
+      key: 'status',
+      title: '菜单状态',
+      width: 180,
+      render: row => h(
+        'div',
+        { class: 'switch-cell' },
+        [
+          h(NSwitch, {
+            value: row.status !== false,
+            size: 'small',
+            loading: statusSwitchingId.value === row.id,
+            disabled: !canUpdateMenu.value,
+            'onUpdate:value': (value: boolean) => handleToggleMenuStatus(row, value)
+          }),
+          h(
+            NTag,
+            { type: row.status !== false ? 'success' : 'warning', size: 'small' },
+            { default: () => row.status !== false ? '启用' : '停用' }
+          )
+        ]
       )
     }
   ];
@@ -321,6 +361,7 @@ function resetMenuForm() {
   menuForm.icon = '';
   menuForm.layout = '';
   menuForm.isVisible = true;
+  menuForm.status = true;
   menuForm.component = '';
   menuForm.redirect = '';
   menuForm.metaText = '';
@@ -370,6 +411,7 @@ async function openEditDrawer(menu: MenuRecord) {
   menuForm.icon = menu.icon || '';
   menuForm.layout = menu.layout || '';
   menuForm.isVisible = menu.isVisible ?? true;
+  menuForm.status = menu.status ?? true;
   menuForm.component = menu.component;
   menuForm.redirect = menu.redirect || '';
   menuForm.metaText = formatJsonMeta(menu.meta);
@@ -412,6 +454,7 @@ async function submitMenuForm() {
     icon: menuForm.icon.trim() || undefined,
     layout: menuForm.layout.trim() || undefined,
     isVisible: menuForm.isVisible,
+    status: menuForm.status,
     component: menuForm.component.trim(),
     redirect: menuForm.redirect.trim() || undefined,
     meta,
@@ -426,9 +469,11 @@ async function submitMenuForm() {
         redirect: payload.redirect ?? null,
         meta: payload.meta ?? null
       });
+      message.success('菜单已更新');
     }
     else {
       await createMenuApi(payload);
+      message.success('菜单已创建');
     }
 
     closeMenuDrawer();
@@ -436,6 +481,69 @@ async function submitMenuForm() {
   }
   finally {
     submitting.value = false;
+  }
+}
+
+function patchMenuTreeNode(targetId: number, updater: (item: MenuRecord) => MenuRecord, items = rawMenuTree.value): MenuRecord[] {
+  return items.map((item) => {
+    if (item.id === targetId)
+      return updater(item);
+
+    if (!item.children?.length)
+      return item;
+
+    return {
+      ...item,
+      children: patchMenuTreeNode(targetId, updater, item.children)
+    };
+  });
+}
+
+async function handleToggleMenuVisible(menu: MenuRecord, value: boolean) {
+  if (!canUpdateMenu.value)
+    return;
+
+  const actionText = value ? '显示' : '隐藏';
+  const confirmed = await confirmAction({
+    title: `${actionText}菜单`,
+    content: `确认将菜单“${menu.title}”设置为${actionText}吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  visibilitySwitchingId.value = menu.id;
+  try {
+    await updateMenuApi(menu.id, { isVisible: value });
+    rawMenuTree.value = patchMenuTreeNode(menu.id, item => ({ ...item, isVisible: value }));
+    message.success(`菜单已设为${actionText}`);
+  }
+  finally {
+    visibilitySwitchingId.value = null;
+  }
+}
+
+async function handleToggleMenuStatus(menu: MenuRecord, value: boolean) {
+  if (!canUpdateMenu.value)
+    return;
+
+  const actionText = value ? '启用' : '停用';
+  const confirmed = await confirmAction({
+    title: `${actionText}菜单`,
+    content: `确认${actionText}菜单“${menu.title}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  statusSwitchingId.value = menu.id;
+  try {
+    await updateMenuApi(menu.id, { status: value });
+    rawMenuTree.value = patchMenuTreeNode(menu.id, item => ({ ...item, status: value }));
+    message.success(`菜单已${actionText}`);
+  }
+  finally {
+    statusSwitchingId.value = null;
   }
 }
 
@@ -449,6 +557,7 @@ async function handleDeleteMenu(menu: MenuRecord) {
     return;
 
   await deleteMenuApi(menu.id);
+  message.success('菜单已删除');
   await fetchMenuTree();
 }
 
@@ -569,6 +678,16 @@ onMounted(() => {
             </template>
           </n-switch>
         </n-form-item>
+        <n-form-item label="菜单状态" path="status">
+          <n-switch v-model:value="menuForm.status">
+            <template #checked>
+              启用
+            </template>
+            <template #unchecked>
+              停用
+            </template>
+          </n-switch>
+        </n-form-item>
         <n-form-item label="路由元信息（JSON）" path="metaText">
           <n-input
             v-model:value="menuForm.metaText"
@@ -624,6 +743,12 @@ onMounted(() => {
 
 .content-actions {
   margin-bottom: 16px;
+}
+
+.switch-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .drawer-footer {

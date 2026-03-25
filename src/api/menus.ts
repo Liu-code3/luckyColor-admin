@@ -19,6 +19,7 @@ export interface MenuRecord {
   icon?: string;
   layout?: string;
   isVisible?: boolean;
+  status?: boolean;
   component: string;
   redirect?: string | null;
   meta?: Record<string, unknown> | null;
@@ -39,6 +40,7 @@ export interface CreateMenuPayload {
   icon?: string;
   layout?: string;
   isVisible?: boolean;
+  status?: boolean;
   component: string;
   redirect?: string;
   meta?: Record<string, unknown>;
@@ -55,6 +57,7 @@ export interface UpdateMenuPayload {
   icon?: string;
   layout?: string;
   isVisible?: boolean;
+  status?: boolean;
   component?: string;
   redirect?: string | null;
   meta?: Record<string, unknown> | null;
