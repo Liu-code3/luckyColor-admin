@@ -56,6 +56,7 @@ const { hasPermission } = usePermission();
 const loading = ref(false);
 const submitting = ref(false);
 const assigning = ref(false);
+const switchingRoleId = ref('');
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -562,6 +563,10 @@ function closeRoleDrawer() {
   roleFormRef.value?.restoreValidation();
 }
 
+function isRoleStatusSwitchDisabled(role: RoleRecord) {
+  return !canUpdateRole.value || isSuperAdminIdentity(role.code);
+}
+
 async function submitRoleForm() {
   await roleFormRef.value?.validate();
 
@@ -580,9 +585,11 @@ async function submitRoleForm() {
         ...payload,
         remark: payload.remark ?? null
       });
+      message.success('角色信息已更新');
     }
     else {
       await createRoleApi(payload);
+      message.success('角色已创建');
     }
 
     closeRoleDrawer();
@@ -592,6 +599,34 @@ async function submitRoleForm() {
   }
   finally {
     submitting.value = false;
+  }
+}
+
+async function handleToggleRoleStatus(role: RoleRecord, value: boolean) {
+  if (isRoleStatusSwitchDisabled(role))
+    return;
+
+  const actionText = value ? '启用' : '停用';
+  const confirmed = await confirmAction({
+    title: `${actionText}角色`,
+    content: `确认${actionText}角色“${role.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  switchingRoleId.value = role.id;
+  try {
+    await updateRoleApi(role.id, { status: value });
+    roleList.value = roleList.value.map(item =>
+      item.id === role.id
+        ? { ...item, status: value }
+        : item
+    );
+    message.success(`已${actionText}角色`);
+  }
+  finally {
+    switchingRoleId.value = '';
   }
 }
 
@@ -605,6 +640,7 @@ async function handleDeleteRole(role: RoleRecord) {
     return;
 
   await deleteRoleApi(role.id);
+  message.success('角色已删除');
   const nextPage = roleList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
   page.value = nextPage;
   await fetchRoles(nextPage);
@@ -894,9 +930,31 @@ watch(
               </td>
               <td>{{ item.code }}</td>
               <td>
-                <n-tag :type="item.status ? 'success' : 'warning'">
-                  {{ item.status ? '启用' : '停用' }}
-                </n-tag>
+                <div class="status-field">
+                  <n-switch
+                    :value="item.status"
+                    size="small"
+                    :loading="switchingRoleId === item.id"
+                    :disabled="isRoleStatusSwitchDisabled(item)"
+                    @update:value="value => handleToggleRoleStatus(item, value)"
+                  >
+                    <template #checked>
+                      启用
+                    </template>
+                    <template #unchecked>
+                      停用
+                    </template>
+                  </n-switch>
+                  <span
+                    class="status-text"
+                    :class="item.status ? 'status-text--success' : 'status-text--warning'"
+                  >
+                    {{ item.status ? '启用' : '停用' }}
+                  </span>
+                </div>
+                <div v-if="isSuperAdminIdentity(item.code)" class="secondary-text">
+                  超级管理员角色默认保留启用
+                </div>
               </td>
               <td>{{ item.sort }}</td>
               <td>{{ item.remark || '-' }}</td>
@@ -1344,6 +1402,26 @@ watch(
 .secondary-text {
   margin-top: 4px;
   font-size: 12px;
+  color: var(--text-color-2);
+}
+
+.status-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-text {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-text--success {
+  color: var(--success-color, #18a058);
+}
+
+.status-text--warning {
+  color: var(--warning-color, #f0a020);
 }
 
 .operation-cell {
