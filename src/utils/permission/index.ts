@@ -6,13 +6,14 @@ import { getCurrentUserInfo } from '@/utils/auth';
 
 export type PermissionMode = 'and' | 'or';
 export type PermissionValue = string | string[];
+export type PermissionCodeList = string[];
 
 export interface PermissionCheckOptions {
   mode?: PermissionMode;
   superCodes?: string[];
 }
 
-interface PermissionCodeCarrier {
+export interface PermissionCodeCarrier {
   buttonCodeList?: unknown;
   buttonCodes?: unknown;
   permissions?: unknown;
@@ -33,7 +34,7 @@ export function resolveSessionButtonCodeList(
     return permissionCodes;
   }
 
-  // 后端权限字段尚未完全联调时，保留 admin 的租户中心演示权限，避免页面入口全部消失。
+  // 后端权限字段尚未完全联调时，保留 admin 的演示权限，避免入口全部消失。
   if (username === 'admin') {
     return [ ...DEFAULT_ADMIN_BUTTON_CODE_LIST ];
   }
@@ -45,32 +46,7 @@ export function hasPermission(
   permissions: PermissionValue,
   options: PermissionCheckOptions = {}
 ) {
-  const requiredPermissions = normalizePermissionCodes(permissions);
-
-  if (!requiredPermissions.length) {
-    return false;
-  }
-
-  const currentPermissions = getCurrentButtonCodeList();
-
-  if (!currentPermissions.length) {
-    return false;
-  }
-
-  const currentPermissionSet = new Set(currentPermissions);
-  const superCodes = normalizePermissionCodes(options.superCodes ?? [ ...SUPER_BUTTON_CODE_LIST ]);
-
-  if (superCodes.some(code => currentPermissionSet.has(code))) {
-    return true;
-  }
-
-  const mode = options.mode === 'and' ? 'and' : 'or';
-
-  if (mode === 'and') {
-    return requiredPermissions.every(code => currentPermissionSet.has(code));
-  }
-
-  return requiredPermissions.some(code => currentPermissionSet.has(code));
+  return checkPermissions(getCurrentButtonCodeList(), permissions, options);
 }
 
 export function hasAnyPermission(permissions: PermissionValue) {
@@ -96,7 +72,73 @@ export function hasPerm(permissions: PermissionValue, mode: PermissionMode = 'or
   });
 }
 
-function collectPermissionCodes(...sources: Array<PermissionCodeCarrier | null | undefined>) {
+export function checkPermissions(
+  currentPermissions: PermissionValue,
+  permissions: PermissionValue,
+  options: PermissionCheckOptions = {}
+) {
+  const requiredPermissions = normalizePermissionCodes(permissions);
+  if (!requiredPermissions.length) {
+    return false;
+  }
+
+  const currentPermissionCodes = normalizePermissionCodes(currentPermissions);
+  if (!currentPermissionCodes.length) {
+    return false;
+  }
+
+  if (hasSuperPermission(currentPermissionCodes, options.superCodes)) {
+    return true;
+  }
+
+  const currentPermissionSet = new Set(currentPermissionCodes);
+  const mode = resolvePermissionMode(options.mode);
+
+  if (mode === 'and') {
+    return requiredPermissions.every(code => currentPermissionSet.has(code));
+  }
+
+  return requiredPermissions.some(code => currentPermissionSet.has(code));
+}
+
+export function hasAnyPermissionByCodes(
+  currentPermissions: PermissionValue,
+  permissions: PermissionValue,
+  options?: Omit<PermissionCheckOptions, 'mode'>
+) {
+  return checkPermissions(currentPermissions, permissions, {
+    ...options,
+    mode: 'or'
+  });
+}
+
+export function hasAllPermissionsByCodes(
+  currentPermissions: PermissionValue,
+  permissions: PermissionValue,
+  options?: Omit<PermissionCheckOptions, 'mode'>
+) {
+  return checkPermissions(currentPermissions, permissions, {
+    ...options,
+    mode: 'and'
+  });
+}
+
+export function hasSuperPermission(
+  currentPermissions: PermissionValue,
+  superCodes: PermissionValue = [ ...SUPER_BUTTON_CODE_LIST ]
+) {
+  const currentPermissionCodes = normalizePermissionCodes(currentPermissions);
+  if (!currentPermissionCodes.length) {
+    return false;
+  }
+
+  const currentPermissionSet = new Set(currentPermissionCodes);
+  return normalizePermissionCodes(superCodes).some(code => currentPermissionSet.has(code));
+}
+
+export function collectPermissionCodes(
+  ...sources: Array<PermissionCodeCarrier | null | undefined>
+) {
   return [ ...new Set(
     sources.flatMap(source => [
       ...normalizePermissionCodes(source?.buttonCodeList),
@@ -107,7 +149,7 @@ function collectPermissionCodes(...sources: Array<PermissionCodeCarrier | null |
   ) ];
 }
 
-function normalizePermissionCodes(input: unknown) {
+export function normalizePermissionCodes(input: unknown): PermissionCodeList {
   if (typeof input === 'string') {
     const code = input.trim();
     return code ? [ code ] : [];
@@ -123,4 +165,8 @@ function normalizePermissionCodes(input: unknown) {
       .map(item => item.trim())
       .filter(Boolean)
   ) ];
+}
+
+function resolvePermissionMode(mode?: PermissionMode): PermissionMode {
+  return mode === 'and' ? 'and' : 'or';
 }
