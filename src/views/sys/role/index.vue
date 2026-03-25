@@ -86,7 +86,9 @@ const roleFormRules: FormRules = {
 const showAssignMenuModal = ref(false);
 const selectedRole = ref<RoleRecord | null>(null);
 const checkedMenuIds = ref<Array<string | number>>([]);
-const menuTreeOptions = ref<TreeOption[]>([]);
+const assignMenuKeyword = ref('');
+const expandedMenuKeys = ref<Array<string | number>>([]);
+const rawRoleMenuTree = ref<MenuRecord[]>([]);
 const canCreateRole = computed(() => hasPermission(roleButtonCodes.create));
 const canGrantRoleMenu = computed(() => hasPermission(roleButtonCodes.grant));
 const canUpdateRole = computed(() => hasPermission(roleButtonCodes.update));
@@ -95,6 +97,14 @@ const hasRoleActions = computed(() =>
   canGrantRoleMenu.value || canUpdateRole.value || canDeleteRole.value
 );
 const roleTableColumnCount = computed(() => hasRoleActions.value ? 7 : 6);
+const menuTreeOptions = computed<TreeOption[]>(() =>
+  filterRoleMenuTreeByKeyword(rawRoleMenuTree.value, assignMenuKeyword.value).map(menuToTreeOption)
+);
+const roleMenuIdSet = computed(() => new Set(collectRoleMenuIds(rawRoleMenuTree.value)));
+const roleMenuTreeStats = computed(() => countRoleMenuStats(rawRoleMenuTree.value));
+const checkedRoleMenuCount = computed(() =>
+  checkedMenuIds.value.filter(item => roleMenuIdSet.value.has(Number(item))).length
+);
 
 function formatDateTime(value?: string | null) {
   if (!value)
@@ -114,11 +124,98 @@ function menuToTreeOption(menu: MenuRecord): TreeOption {
 }
 
 async function ensureMenuTreeOptions() {
-  if (menuTreeOptions.value.length)
+  if (rawRoleMenuTree.value.length)
     return;
 
   const { data } = await getMenuTreeApi();
-  menuTreeOptions.value = data.map(menuToTreeOption);
+  rawRoleMenuTree.value = filterAssignableRoleMenus(data);
+}
+
+function filterAssignableRoleMenus(menus: MenuRecord[]) {
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    if (menu.type === 3)
+      return result;
+
+    result.push({
+      ...menu,
+      children: menu.children ? filterAssignableRoleMenus(menu.children) : []
+    });
+    return result;
+  }, []);
+}
+
+function filterRoleMenuTreeByKeyword(menus: MenuRecord[], keyword: string) {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  if (!normalizedKeyword)
+    return menus;
+
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    const children = menu.children
+      ? filterRoleMenuTreeByKeyword(menu.children, normalizedKeyword)
+      : [];
+    const matched = [
+      menu.title,
+      menu.name,
+      menu.path,
+      menu.key,
+      menu.menuKey
+    ].some(value => value?.toLowerCase().includes(normalizedKeyword));
+
+    if (matched || children.length) {
+      result.push({
+        ...menu,
+        children
+      });
+    }
+
+    return result;
+  }, []);
+}
+
+function collectRoleMenuIds(menus: MenuRecord[]) {
+  return menus.flatMap(menu => [
+    menu.id,
+    ...(menu.children ? collectRoleMenuIds(menu.children) : [])
+  ]);
+}
+
+function countRoleMenuStats(menus: MenuRecord[]) {
+  return menus.reduce(
+    (stats, menu) => {
+      if (menu.type === 1)
+        stats.directoryCount += 1;
+      else if (menu.type === 2)
+        stats.menuCount += 1;
+
+      if (menu.children?.length) {
+        const childStats = countRoleMenuStats(menu.children);
+        stats.directoryCount += childStats.directoryCount;
+        stats.menuCount += childStats.menuCount;
+      }
+
+      return stats;
+    },
+    { directoryCount: 0, menuCount: 0 }
+  );
+}
+
+function collectExpandedTreeKeys(options: TreeOption[]) {
+  return options.flatMap(option => [
+    option.key!,
+    ...(option.children?.length ? collectExpandedTreeKeys(option.children) : [])
+  ]);
+}
+
+function expandAllMenus() {
+  expandedMenuKeys.value = collectExpandedTreeKeys(menuTreeOptions.value);
+}
+
+function collapseAllMenus() {
+  expandedMenuKeys.value = [];
+}
+
+function clearCheckedMenus() {
+  checkedMenuIds.value = [];
 }
 
 function resetRoleForm() {
@@ -249,14 +346,18 @@ async function handleDeleteRole(role: RoleRecord) {
 async function openAssignMenu(role: RoleRecord) {
   selectedRole.value = role;
   showAssignMenuModal.value = true;
+  assignMenuKeyword.value = '';
   await ensureMenuTreeOptions();
   const { data } = await getRoleMenusApi(role.id);
-  checkedMenuIds.value = data.menuIds;
+  checkedMenuIds.value = data.menuIds.filter(item => roleMenuIdSet.value.has(item));
+  expandAllMenus();
 }
 
 function closeAssignMenu() {
   showAssignMenuModal.value = false;
   selectedRole.value = null;
+  assignMenuKeyword.value = '';
+  expandedMenuKeys.value = [];
   checkedMenuIds.value = [];
 }
 
@@ -279,6 +380,13 @@ async function submitAssignMenu() {
 
 onMounted(() => {
   fetchRoles();
+});
+
+watch(menuTreeOptions, (options) => {
+  if (!showAssignMenuModal.value)
+    return;
+
+  expandedMenuKeys.value = collectExpandedTreeKeys(options);
 });
 </script>
 
@@ -409,15 +517,50 @@ onMounted(() => {
       当前角色：{{ selectedRole?.name || '-' }}
     </div>
 
+    <div class="assign-panel">
+      <div class="assign-panel__toolbar">
+        <n-input
+          v-model:value="assignMenuKeyword"
+          clearable
+          placeholder="搜索菜单名称、路由名称或访问路径"
+        >
+          <template #prefix>
+            <Icon icon="simple-line-icons:magnifier" />
+          </template>
+        </n-input>
+        <n-button quaternary type="primary" @click="expandAllMenus">
+          展开全部
+        </n-button>
+        <n-button quaternary @click="collapseAllMenus">
+          收起全部
+        </n-button>
+        <n-button quaternary type="warning" @click="clearCheckedMenus">
+          清空勾选
+        </n-button>
+      </div>
+
+      <div class="assign-panel__stats">
+        <n-tag type="info">
+          目录 {{ roleMenuTreeStats.directoryCount }}
+        </n-tag>
+        <n-tag type="success">
+          菜单 {{ roleMenuTreeStats.menuCount }}
+        </n-tag>
+        <n-tag type="primary">
+          已选 {{ checkedRoleMenuCount }}
+        </n-tag>
+      </div>
+    </div>
+
     <n-spin :show="assigning">
       <n-tree
         v-model:checked-keys="checkedMenuIds"
+        v-model:expanded-keys="expandedMenuKeys"
         block-line
         cascade
         checkable
         check-on-click
         expand-on-click
-        default-expand-all
         :data="menuTreeOptions"
       />
     </n-spin>
@@ -535,10 +678,39 @@ onMounted(() => {
   color: var(--text-color-2);
 }
 
+.assign-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.assign-panel__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assign-panel__toolbar :deep(.n-input) {
+  flex: 1;
+}
+
+.assign-panel__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .modal-footer,
 .drawer-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .assign-panel__toolbar {
+    flex-wrap: wrap;
+  }
 }
 </style>
