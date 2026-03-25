@@ -13,6 +13,8 @@ import {
   type MenuRecord,
   type RoleRecord
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 
 interface RoleFormState {
@@ -22,6 +24,9 @@ interface RoleFormState {
   status: boolean;
   remark: string;
 }
+
+const roleButtonCodes = BUTTON_PERMISSION_CODES.systemRole;
+const { hasPermission } = usePermission();
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -82,6 +87,14 @@ const showAssignMenuModal = ref(false);
 const selectedRole = ref<RoleRecord | null>(null);
 const checkedMenuIds = ref<Array<string | number>>([]);
 const menuTreeOptions = ref<TreeOption[]>([]);
+const canCreateRole = computed(() => hasPermission(roleButtonCodes.create));
+const canGrantRoleMenu = computed(() => hasPermission(roleButtonCodes.grant));
+const canUpdateRole = computed(() => hasPermission(roleButtonCodes.update));
+const canDeleteRole = computed(() => hasPermission(roleButtonCodes.delete));
+const hasRoleActions = computed(() =>
+  canGrantRoleMenu.value || canUpdateRole.value || canDeleteRole.value
+);
+const roleTableColumnCount = computed(() => hasRoleActions.value ? 7 : 6);
 
 function formatDateTime(value?: string | null) {
   if (!value)
@@ -300,7 +313,12 @@ onMounted(() => {
 
     <div class="content-card">
       <div class="content-actions">
-        <n-button type="primary" @click="openCreateDrawer">
+        <n-button
+          v-if="canCreateRole"
+          v-permission="roleButtonCodes.create"
+          type="primary"
+          @click="openCreateDrawer"
+        >
           <template #icon>
             <Icon icon="material-symbols:add" />
           </template>
@@ -318,7 +336,7 @@ onMounted(() => {
               <th>排序</th>
               <th>备注</th>
               <th>更新时间</th>
-              <th>操作</th>
+              <th v-if="hasRoleActions">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -333,20 +351,38 @@ onMounted(() => {
               <td>{{ item.sort }}</td>
               <td>{{ item.remark || '-' }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
-              <td class="operation-cell">
-                <n-button quaternary type="primary" @click="openAssignMenu(item)">
+              <td v-if="hasRoleActions" class="operation-cell">
+                <n-button
+                  v-if="canGrantRoleMenu"
+                  v-permission="roleButtonCodes.grant"
+                  quaternary
+                  type="primary"
+                  @click="openAssignMenu(item)"
+                >
                   分配菜单
                 </n-button>
-                <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                <n-button
+                  v-if="canUpdateRole"
+                  v-permission="roleButtonCodes.update"
+                  quaternary
+                  type="primary"
+                  @click="openEditDrawer(item)"
+                >
                   编辑
                 </n-button>
-                <n-button quaternary type="error" @click="handleDeleteRole(item)">
+                <n-button
+                  v-if="canDeleteRole"
+                  v-permission="roleButtonCodes.delete"
+                  quaternary
+                  type="error"
+                  @click="handleDeleteRole(item)"
+                >
                   删除
                 </n-button>
               </td>
             </tr>
             <tr v-if="!roleList.length">
-              <td colspan="7">
+              <td :colspan="roleTableColumnCount">
                 <n-empty description="暂无角色数据" />
               </td>
             </tr>
