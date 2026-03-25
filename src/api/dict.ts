@@ -10,6 +10,7 @@ export interface DictionaryRecord {
   dictValue: string;
   category: string;
   sortCode: number;
+  status?: boolean;
   deleteFlag: string;
   createTime?: string | null;
   createUser?: string | null;
@@ -28,6 +29,7 @@ export interface CreateDictionaryPayload {
   dictValue: string;
   category: string;
   sortCode: number;
+  status?: boolean;
   deleteFlag: string;
   createTime?: string;
   createUser?: string;
@@ -44,6 +46,7 @@ export interface UpdateDictionaryPayload {
   dictValue?: string;
   category?: string;
   sortCode?: number;
+  status?: boolean;
   deleteFlag?: string;
   createTime?: string;
   createUser?: string;
@@ -78,5 +81,18 @@ export function deleteDictApi(id: string) {
   return request<never, boolean>({
     url: `/dict/${id}`,
     method: 'delete'
+  });
+}
+
+export interface DictCacheRefreshResult {
+  cacheKey: string;
+  count: number;
+  refreshedAt: string;
+}
+
+export function refreshDictCacheApi() {
+  return request<never, DictCacheRefreshResult>({
+    url: '/dict/refresh-cache',
+    method: 'post'
   });
 }

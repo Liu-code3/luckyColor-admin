@@ -5,6 +5,7 @@ import {
   createDictApi,
   deleteDictApi,
   getDictDetailApi,
+  refreshDictCacheApi,
   updateDictApi
 } from '@/api'
 import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts'
@@ -25,6 +26,7 @@ interface DictRow {
   dictValue: string
   category: string
   sortCode: number
+  status?: boolean
   deleteFlag: string
   children?: DictRow[]
 }
@@ -44,6 +46,7 @@ interface DictFormState {
   category: string
   sortCode: number | null
   weight: number | null
+  status: boolean
 }
 
 interface ImportDictRow {
@@ -61,6 +64,8 @@ const treeLoading = ref(false)
 const tableLoading = ref(false)
 const submitting = ref(false)
 const importing = ref(false)
+const refreshingCache = ref(false)
+const togglingDictId = ref('')
 const treeData = ref<DictRow[]>([])
 const tableData = ref<DictRow[]>([])
 const page = ref(1)
@@ -88,7 +93,8 @@ const dictForm = reactive<DictFormState>({
   dictValue: '',
   category: 'BIZ',
   sortCode: 10,
-  weight: 10
+  weight: 10,
+  status: true
 })
 
 const dictFormRules: FormRules = {
@@ -291,6 +297,30 @@ function resetDictForm() {
   dictForm.category = 'BIZ'
   dictForm.sortCode = 10
   dictForm.weight = 10
+  dictForm.status = true
+}
+
+function isDictEnabled(row: DictRow) {
+  return row.status !== false
+}
+
+function patchTreeNodeStatus(nodes: DictRow[], targetId: string, status: boolean): DictRow[] {
+  return nodes.map((node) => {
+    if (node.id === targetId) {
+      return {
+        ...node,
+        status
+      }
+    }
+
+    if (!node.children?.length)
+      return node
+
+    return {
+      ...node,
+      children: patchTreeNodeStatus(node.children, targetId, status)
+    }
+  })
 }
 
 function clearSelectedRows() {
@@ -322,13 +352,14 @@ function exportCurrentResults() {
     return
   }
 
-  const header = [ 'parentId', 'name', 'dictLabel', 'dictValue', 'category', 'sortCode', 'weight' ]
+  const header = [ 'parentId', 'name', 'dictLabel', 'dictValue', 'category', 'status', 'sortCode', 'weight' ]
   const rows = tableData.value.map(item => [
     item.parentId || '0',
     item.name || '',
     item.dictLabel,
     item.dictValue,
     item.category || '',
+    isDictEnabled(item) ? '启用' : '停用',
     item.sortCode,
     item.weight
   ])
@@ -533,6 +564,18 @@ function handleRefresh() {
   reloadDictionaryData(page.value)
 }
 
+async function handleRefreshCache() {
+  refreshingCache.value = true
+  try {
+    const { data } = await refreshDictCacheApi()
+    message.success(`字典缓存刷新成功，共同步 ${data.count} 条记录`)
+    await reloadDictionaryData(page.value)
+  }
+  finally {
+    refreshingCache.value = false
+  }
+}
+
 function handleSelectNode(node: DictRow) {
   selectedNodeId.value = node.id
   page.value = 1
@@ -650,6 +693,7 @@ async function openEditDrawer(row: DictRow) {
   dictForm.category = data.category || 'BIZ'
   dictForm.sortCode = data.sortCode ?? 10
   dictForm.weight = data.weight ?? 10
+  dictForm.status = data.status ?? isDictEnabled(row)
 }
 
 function closeDrawer() {
@@ -674,6 +718,7 @@ async function submitDictForm() {
     category: dictForm.category.trim(),
     sortCode: Number(dictForm.sortCode ?? 0),
     weight: Number(dictForm.weight ?? 0),
+    status: dictForm.status,
     deleteFlag: 'NOT_DELETE'
   }
 
@@ -699,6 +744,44 @@ async function submitDictForm() {
   }
   finally {
     submitting.value = false
+  }
+}
+
+async function handleToggleDictStatus(row: DictRow, value: boolean) {
+  const actionText = value ? '启用' : '停用'
+  const scopeLabel = row.parentId === '0' ? '字典类型' : '字典项'
+  const confirmed = await confirmAction({
+    title: `${actionText}${scopeLabel}`,
+    content: `确认${actionText}${scopeLabel}“${row.dictLabel}”吗？`
+  })
+
+  if (!confirmed)
+    return
+
+  togglingDictId.value = row.id
+  try {
+    await updateDictApi(row.id, {
+      status: value
+    })
+
+    treeData.value = patchTreeNodeStatus(treeData.value, row.id, value)
+    tableData.value = tableData.value.map(item =>
+      item.id === row.id
+        ? { ...item, status: value }
+        : item
+    )
+
+    if (previewDict.value?.id === row.id) {
+      previewDict.value = {
+        ...previewDict.value,
+        status: value
+      }
+    }
+
+    message.success(`${scopeLabel}已${actionText}`)
+  }
+  finally {
+    togglingDictId.value = ''
   }
 }
 
@@ -830,6 +913,12 @@ onMounted(async () => {
           </template>
           导入 CSV
         </n-button>
+        <n-button :loading="refreshingCache" @click="handleRefreshCache">
+          <template #icon>
+            <Icon icon="material-symbols:refresh-rounded" />
+          </template>
+          刷新字典缓存
+        </n-button>
         <n-button secondary @click="handleReset">
           <template #icon>
             <Icon icon="system-uicons:reset-forward" />
@@ -957,6 +1046,7 @@ onMounted(async () => {
                   <th>字典值</th>
                   <th>分类</th>
                   <th>层级</th>
+                  <th>状态</th>
                   <th>排序</th>
                   <th>操作</th>
                 </tr>
@@ -988,6 +1078,26 @@ onMounted(async () => {
                       {{ getLevelLabel(row) }}
                     </n-tag>
                   </td>
+                  <td>
+                    <div class="dict-status-cell">
+                      <n-switch
+                        :value="isDictEnabled(row)"
+                        size="small"
+                        :loading="togglingDictId === row.id"
+                        @update:value="value => handleToggleDictStatus(row, value)"
+                      >
+                        <template #checked>
+                          启用
+                        </template>
+                        <template #unchecked>
+                          停用
+                        </template>
+                      </n-switch>
+                      <n-tag size="small" round :type="isDictEnabled(row) ? 'success' : 'warning'">
+                        {{ isDictEnabled(row) ? '启用' : '停用' }}
+                      </n-tag>
+                    </div>
+                  </td>
                   <td>{{ row.sortCode }}</td>
                   <td>
                     <n-space :size="4">
@@ -1012,7 +1122,7 @@ onMounted(async () => {
                   </td>
                 </tr>
                 <tr v-if="!tableLoading && !tableData.length">
-                  <td colspan="7">
+                  <td colspan="8">
                     <n-empty description="当前条件下没有匹配的字典记录" />
                   </td>
                 </tr>
@@ -1083,6 +1193,16 @@ onMounted(async () => {
             <n-form-item-gi label="权重值" path="weight">
               <n-input-number v-model:value="dictForm.weight" class="w-full" :min="0" />
             </n-form-item-gi>
+            <n-form-item-gi :span="2" label="状态" path="status">
+              <n-switch v-model:value="dictForm.status">
+                <template #checked>
+                  启用
+                </template>
+                <template #unchecked>
+                  停用
+                </template>
+              </n-switch>
+            </n-form-item-gi>
           </n-grid>
 
           <div class="drawer-tip">
@@ -1132,6 +1252,10 @@ onMounted(async () => {
         <div class="preview-item">
           <span>权重值</span>
           <strong>{{ previewDict.weight }}</strong>
+        </div>
+        <div class="preview-item">
+          <span>状态</span>
+          <strong>{{ isDictEnabled(previewDict) ? '启用' : '停用' }}</strong>
         </div>
       </div>
       <template #footer>
@@ -1400,6 +1524,12 @@ onMounted(async () => {
 .dict-name-cell span {
   font-size: 12px;
   color: #64748b;
+}
+
+.dict-status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 code {
