@@ -1,6 +1,12 @@
 export const SUPER_BUTTON_CODE_LIST = [ '*', '*:*:*' ] as const;
 
 export const BUTTON_PERMISSION_CODES = {
+  systemUser: {
+    create: 'system:user:create',
+    update: 'system:user:update',
+    delete: 'system:user:delete',
+    assign: 'system:user:assign'
+  },
   tenantManage: {
     create: 'tenant:manage:create',
     update: 'tenant:manage:update'
@@ -13,6 +19,10 @@ export const BUTTON_PERMISSION_CODES = {
 } as const;
 
 export const DEFAULT_ADMIN_BUTTON_CODE_LIST = [
+  BUTTON_PERMISSION_CODES.systemUser.create,
+  BUTTON_PERMISSION_CODES.systemUser.update,
+  BUTTON_PERMISSION_CODES.systemUser.delete,
+  BUTTON_PERMISSION_CODES.systemUser.assign,
   BUTTON_PERMISSION_CODES.tenantManage.create,
   BUTTON_PERMISSION_CODES.tenantManage.update,
   BUTTON_PERMISSION_CODES.tenantPackage.create,

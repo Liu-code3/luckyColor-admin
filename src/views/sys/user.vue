@@ -13,6 +13,8 @@ import {
   type RoleRecord,
   type UserRecord
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 
 interface UserFormState {
@@ -20,6 +22,9 @@ interface UserFormState {
   password: string;
   nickname: string;
 }
+
+const userButtonCodes = BUTTON_PERMISSION_CODES.systemUser;
+const { hasPermission } = usePermission();
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -44,6 +49,14 @@ const showAssignRoleModal = ref(false);
 const selectedUser = ref<UserRecord | null>(null);
 const roleOptions = ref<RoleRecord[]>([]);
 const selectedRoleIds = ref<string[]>([]);
+const canCreateUser = computed(() => hasPermission(userButtonCodes.create));
+const canAssignUserRole = computed(() => hasPermission(userButtonCodes.assign));
+const canUpdateUser = computed(() => hasPermission(userButtonCodes.update));
+const canDeleteUser = computed(() => hasPermission(userButtonCodes.delete));
+const hasUserActions = computed(() =>
+  canAssignUserRole.value || canUpdateUser.value || canDeleteUser.value
+);
+const userTableColumnCount = computed(() => hasUserActions.value ? 5 : 4);
 
 const userFormRules = computed<FormRules>(() => ({
   username: [
@@ -278,7 +291,12 @@ onMounted(() => {
 
     <div class="content-card">
       <div class="content-actions">
-        <n-button type="primary" @click="openCreateDrawer">
+        <n-button
+          v-if="canCreateUser"
+          v-permission="userButtonCodes.create"
+          type="primary"
+          @click="openCreateDrawer"
+        >
           <template #icon>
             <Icon icon="material-symbols:add" />
           </template>
@@ -294,7 +312,7 @@ onMounted(() => {
               <th>昵称</th>
               <th>创建时间</th>
               <th>更新时间</th>
-              <th>操作</th>
+              <th v-if="hasUserActions">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -303,20 +321,38 @@ onMounted(() => {
               <td>{{ item.nickname || '-' }}</td>
               <td>{{ formatDateTime(item.createdAt) }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
-              <td class="operation-cell">
-                <n-button quaternary type="primary" @click="openAssignRole(item)">
+              <td v-if="hasUserActions" class="operation-cell">
+                <n-button
+                  v-if="canAssignUserRole"
+                  v-permission="userButtonCodes.assign"
+                  quaternary
+                  type="primary"
+                  @click="openAssignRole(item)"
+                >
                   分配角色
                 </n-button>
-                <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                <n-button
+                  v-if="canUpdateUser"
+                  v-permission="userButtonCodes.update"
+                  quaternary
+                  type="primary"
+                  @click="openEditDrawer(item)"
+                >
                   编辑
                 </n-button>
-                <n-button quaternary type="error" @click="handleDeleteUser(item)">
+                <n-button
+                  v-if="canDeleteUser"
+                  v-permission="userButtonCodes.delete"
+                  quaternary
+                  type="error"
+                  @click="handleDeleteUser(item)"
+                >
                   删除
                 </n-button>
               </td>
             </tr>
             <tr v-if="!userList.length">
-              <td colspan="5">
+              <td :colspan="userTableColumnCount">
                 <n-empty description="暂无用户数据" />
               </td>
             </tr>
