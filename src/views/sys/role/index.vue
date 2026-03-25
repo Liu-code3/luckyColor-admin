@@ -84,11 +84,17 @@ const roleFormRules: FormRules = {
 };
 
 const showAssignMenuModal = ref(false);
+const showAssignButtonModal = ref(false);
 const selectedRole = ref<RoleRecord | null>(null);
 const checkedMenuIds = ref<Array<string | number>>([]);
+const checkedButtonIds = ref<Array<string | number>>([]);
 const assignMenuKeyword = ref('');
+const assignButtonKeyword = ref('');
 const expandedMenuKeys = ref<Array<string | number>>([]);
+const expandedButtonKeys = ref<Array<string | number>>([]);
 const rawRoleMenuTree = ref<MenuRecord[]>([]);
+const rawRoleButtonTree = ref<MenuRecord[]>([]);
+const buttonTreeLoading = ref(false);
 const canCreateRole = computed(() => hasPermission(roleButtonCodes.create));
 const canGrantRoleMenu = computed(() => hasPermission(roleButtonCodes.grant));
 const canUpdateRole = computed(() => hasPermission(roleButtonCodes.update));
@@ -100,10 +106,24 @@ const roleTableColumnCount = computed(() => hasRoleActions.value ? 7 : 6);
 const menuTreeOptions = computed<TreeOption[]>(() =>
   filterRoleMenuTreeByKeyword(rawRoleMenuTree.value, assignMenuKeyword.value).map(menuToTreeOption)
 );
+const buttonTreeOptions = computed<TreeOption[]>(() =>
+  filterRoleButtonTreeByKeyword(rawRoleButtonTree.value, assignButtonKeyword.value).map(buttonToTreeOption)
+);
 const roleMenuIdSet = computed(() => new Set(collectRoleMenuIds(rawRoleMenuTree.value)));
+const roleButtonIdSet = computed(() => new Set(collectRoleButtonIds(rawRoleButtonTree.value)));
+const roleButtonCodeMap = computed(() => collectRoleButtonCodeMap(rawRoleButtonTree.value));
 const roleMenuTreeStats = computed(() => countRoleMenuStats(rawRoleMenuTree.value));
+const roleButtonTreeStats = computed(() => countRoleButtonStats(rawRoleButtonTree.value));
 const checkedRoleMenuCount = computed(() =>
   checkedMenuIds.value.filter(item => roleMenuIdSet.value.has(Number(item))).length
+);
+const checkedRoleButtonCount = computed(() =>
+  checkedButtonIds.value.filter(item => roleButtonIdSet.value.has(Number(item))).length
+);
+const checkedRoleButtonCodeList = computed(() =>
+  checkedButtonIds.value
+    .map(item => roleButtonCodeMap.value.get(Number(item)))
+    .filter((code): code is string => Boolean(code))
 );
 
 function formatDateTime(value?: string | null) {
@@ -123,12 +143,38 @@ function menuToTreeOption(menu: MenuRecord): TreeOption {
   };
 }
 
+function buttonToTreeOption(menu: MenuRecord): TreeOption {
+  const permissionKey = menu.key || menu.menuKey || '';
+
+  if (menu.type === 3) {
+    return {
+      key: menu.id,
+      label: permissionKey ? `${menu.title} (${permissionKey})` : menu.title
+    };
+  }
+
+  return {
+    key: menu.id,
+    label: `${menu.title} (${menu.path})`,
+    checkboxDisabled: true,
+    children: menu.children?.map(buttonToTreeOption)
+  };
+}
+
 async function ensureMenuTreeOptions() {
   if (rawRoleMenuTree.value.length)
     return;
 
   const { data } = await getMenuTreeApi();
   rawRoleMenuTree.value = filterAssignableRoleMenus(data);
+}
+
+async function ensureButtonTreeOptions() {
+  if (rawRoleButtonTree.value.length)
+    return;
+
+  const { data } = await getMenuTreeApi();
+  rawRoleButtonTree.value = filterAssignableRoleButtons(data);
 }
 
 function filterAssignableRoleMenus(menus: MenuRecord[]) {
@@ -172,11 +218,78 @@ function filterRoleMenuTreeByKeyword(menus: MenuRecord[], keyword: string) {
   }, []);
 }
 
+function filterAssignableRoleButtons(menus: MenuRecord[]) {
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    const children = menu.children ? filterAssignableRoleButtons(menu.children) : [];
+    if (menu.type !== 3 && !children.length)
+      return result;
+
+    result.push({
+      ...menu,
+      children
+    });
+    return result;
+  }, []);
+}
+
+function filterRoleButtonTreeByKeyword(menus: MenuRecord[], keyword: string) {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  if (!normalizedKeyword)
+    return menus;
+
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    const children = menu.children
+      ? filterRoleButtonTreeByKeyword(menu.children, normalizedKeyword)
+      : [];
+    const matched = [
+      menu.title,
+      menu.name,
+      menu.path,
+      menu.key,
+      menu.menuKey
+    ].some(value => value?.toLowerCase().includes(normalizedKeyword));
+
+    if (matched || children.length) {
+      result.push({
+        ...menu,
+        children
+      });
+    }
+
+    return result;
+  }, []);
+}
+
 function collectRoleMenuIds(menus: MenuRecord[]) {
   return menus.flatMap(menu => [
     menu.id,
     ...(menu.children ? collectRoleMenuIds(menu.children) : [])
   ]);
+}
+
+function collectRoleButtonIds(menus: MenuRecord[]) {
+  return menus.flatMap(menu => [
+    ...(menu.type === 3 ? [ menu.id ] : []),
+    ...(menu.children ? collectRoleButtonIds(menu.children) : [])
+  ]);
+}
+
+function collectRoleButtonCodeMap(menus: MenuRecord[]) {
+  return menus.reduce((map, menu) => {
+    if (menu.type === 3) {
+      const permissionKey = menu.key || menu.menuKey;
+      if (permissionKey)
+        map.set(menu.id, permissionKey);
+    }
+
+    if (menu.children?.length) {
+      collectRoleButtonCodeMap(menu.children).forEach((value, key) => {
+        map.set(key, value);
+      });
+    }
+
+    return map;
+  }, new Map<number, string>());
 }
 
 function countRoleMenuStats(menus: MenuRecord[]) {
@@ -199,6 +312,26 @@ function countRoleMenuStats(menus: MenuRecord[]) {
   );
 }
 
+function countRoleButtonStats(menus: MenuRecord[]) {
+  return menus.reduce(
+    (stats, menu) => {
+      if (menu.type === 3)
+        stats.buttonCount += 1;
+      else
+        stats.groupCount += 1;
+
+      if (menu.children?.length) {
+        const childStats = countRoleButtonStats(menu.children);
+        stats.groupCount += childStats.groupCount;
+        stats.buttonCount += childStats.buttonCount;
+      }
+
+      return stats;
+    },
+    { groupCount: 0, buttonCount: 0 }
+  );
+}
+
 function collectExpandedTreeKeys(options: TreeOption[]) {
   return options.flatMap(option => [
     option.key!,
@@ -216,6 +349,18 @@ function collapseAllMenus() {
 
 function clearCheckedMenus() {
   checkedMenuIds.value = [];
+}
+
+function expandAllButtons() {
+  expandedButtonKeys.value = collectExpandedTreeKeys(buttonTreeOptions.value);
+}
+
+function collapseAllButtons() {
+  expandedButtonKeys.value = [];
+}
+
+function clearCheckedButtons() {
+  checkedButtonIds.value = [];
 }
 
 function resetRoleForm() {
@@ -353,12 +498,40 @@ async function openAssignMenu(role: RoleRecord) {
   expandAllMenus();
 }
 
+async function openAssignButton(role: RoleRecord) {
+  selectedRole.value = role;
+  showAssignButtonModal.value = true;
+  assignButtonKeyword.value = '';
+  buttonTreeLoading.value = true;
+  try {
+    await ensureButtonTreeOptions();
+    const { data } = await getRoleMenusApi(role.id);
+    const checkedIds = new Set<number>([
+      ...data.menuIds.filter(item => roleButtonIdSet.value.has(item)),
+      ...data.menus.filter(item => item.type === 3).map(item => item.id)
+    ]);
+    checkedButtonIds.value = [ ...checkedIds ];
+    expandAllButtons();
+  }
+  finally {
+    buttonTreeLoading.value = false;
+  }
+}
+
 function closeAssignMenu() {
   showAssignMenuModal.value = false;
   selectedRole.value = null;
   assignMenuKeyword.value = '';
   expandedMenuKeys.value = [];
   checkedMenuIds.value = [];
+}
+
+function closeAssignButton() {
+  showAssignButtonModal.value = false;
+  selectedRole.value = null;
+  assignButtonKeyword.value = '';
+  expandedButtonKeys.value = [];
+  checkedButtonIds.value = [];
 }
 
 async function submitAssignMenu() {
@@ -387,6 +560,13 @@ watch(menuTreeOptions, (options) => {
     return;
 
   expandedMenuKeys.value = collectExpandedTreeKeys(options);
+});
+
+watch(buttonTreeOptions, (options) => {
+  if (!showAssignButtonModal.value)
+    return;
+
+  expandedButtonKeys.value = collectExpandedTreeKeys(options);
 });
 </script>
 
@@ -468,6 +648,15 @@ watch(menuTreeOptions, (options) => {
                   @click="openAssignMenu(item)"
                 >
                   分配菜单
+                </n-button>
+                <n-button
+                  v-if="canGrantRoleMenu"
+                  v-permission="roleButtonCodes.grant"
+                  quaternary
+                  type="primary"
+                  @click="openAssignButton(item)"
+                >
+                  按钮权限
                 </n-button>
                 <n-button
                   v-if="canUpdateRole"
@@ -572,6 +761,89 @@ watch(menuTreeOptions, (options) => {
         </n-button>
         <n-button type="primary" :loading="assigning" @click="submitAssignMenu">
           保存
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
+
+  <n-modal v-model:show="showAssignButtonModal" preset="card" title="按钮权限树" style="width: 760px;">
+    <div class="assign-summary">
+      当前角色：{{ selectedRole?.name || '-' }}
+    </div>
+
+    <div class="assign-panel">
+      <div class="assign-panel__toolbar">
+        <n-input
+          v-model:value="assignButtonKeyword"
+          clearable
+          placeholder="搜索按钮名称、权限标识或所属路径"
+        >
+          <template #prefix>
+            <Icon icon="simple-line-icons:magnifier" />
+          </template>
+        </n-input>
+        <n-button quaternary type="primary" @click="expandAllButtons">
+          展开全部
+        </n-button>
+        <n-button quaternary @click="collapseAllButtons">
+          收起全部
+        </n-button>
+        <n-button quaternary type="warning" @click="clearCheckedButtons">
+          清空勾选
+        </n-button>
+      </div>
+
+      <div class="assign-panel__stats">
+        <n-tag type="info">
+          分组 {{ roleButtonTreeStats.groupCount }}
+        </n-tag>
+        <n-tag type="success">
+          按钮 {{ roleButtonTreeStats.buttonCount }}
+        </n-tag>
+        <n-tag type="primary">
+          已选 {{ checkedRoleButtonCount }}
+        </n-tag>
+      </div>
+    </div>
+
+    <div class="assign-hint">
+      当前步骤先提供角色按钮权限树浏览与勾选，保存逻辑将在后续 `B4-07` 接入。
+    </div>
+
+    <n-spin :show="buttonTreeLoading">
+      <template v-if="buttonTreeOptions.length">
+        <n-tree
+          v-model:checked-keys="checkedButtonIds"
+          v-model:expanded-keys="expandedButtonKeys"
+          block-line
+          cascade
+          checkable
+          check-on-click
+          expand-on-click
+          :data="buttonTreeOptions"
+        />
+      </template>
+      <n-empty v-else description="暂无可分配的按钮权限节点" />
+    </n-spin>
+
+    <div v-if="checkedRoleButtonCodeList.length" class="checked-code-panel">
+      <div class="checked-code-panel__title">
+        已选权限码预览
+      </div>
+      <n-space>
+        <n-tag v-for="code in checkedRoleButtonCodeList.slice(0, 12)" :key="code" type="warning">
+          {{ code }}
+        </n-tag>
+      </n-space>
+      <div v-if="checkedRoleButtonCodeList.length > 12" class="checked-code-panel__more">
+        仅预览前 12 项，当前共 {{ checkedRoleButtonCodeList.length }} 项。
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="modal-footer">
+        <n-button @click="closeAssignButton">
+          关闭
         </n-button>
       </div>
     </template>
@@ -699,6 +971,31 @@ watch(menuTreeOptions, (options) => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.assign-hint {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
+  border-radius: 8px;
+}
+
+.checked-code-panel {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background-color: var(--table-color-hover);
+  border-radius: 8px;
+}
+
+.checked-code-panel__title {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.checked-code-panel__more {
+  margin-top: 12px;
+  color: var(--text-color-2);
 }
 
 .modal-footer,
