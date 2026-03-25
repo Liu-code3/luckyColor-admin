@@ -200,6 +200,7 @@ body .crud-page {
 }
 
 body .crud-page .toolbar,
+body .crud-page .group-card,
 body .crud-page .content-card,
 body .crud-page .summary-card,
 body .crud-page .package-hint,
@@ -216,6 +217,7 @@ body .crud-page .preview-header {
 }
 
 body .crud-page .toolbar,
+body .crud-page .group-card,
 body .crud-page .content-card {
   border-radius: 24px !important;
 }
@@ -226,6 +228,14 @@ body .crud-page .toolbar {
 
 body .crud-page .content-card {
   padding: 24px 26px !important;
+}
+
+body .crud-page .group-card {
+  padding: 22px !important;
+}
+
+body .crud-page .content-grid {
+  gap: 18px;
 }
 
 body .crud-page .summary-grid {
@@ -311,18 +321,39 @@ body .crud-page .result-list__title {
 body .crud-page .content-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 10px !important;
   margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+body .crud-page .content-actions > * {
+  margin: 0 !important;
 }
 
 body .crud-page .operation-cell {
-  gap: 10px;
+  display: flex;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 34px;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+body .crud-page .operation-cell::-webkit-scrollbar {
+  display: none;
 }
 
 body .crud-page .operation-cell .n-button,
 body .crud-page .content-actions .n-button {
   border-radius: 14px;
+}
+
+body .crud-page .content-actions .n-space {
+  gap: 10px !important;
 }
 
 body .crud-page .pagination-wrap {
@@ -337,6 +368,10 @@ body .crud-page .n-table {
   background: transparent !important;
 }
 
+body .crud-page .n-table table {
+  width: 100%;
+}
+
 body .crud-page .n-table th {
   background: var(--lc-surface-muted) !important;
   color: var(--lc-text-soft) !important;
@@ -344,14 +379,56 @@ body .crud-page .n-table th {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  vertical-align: middle;
+}
+
+body .crud-page .n-table th,
+body .crud-page .n-table td {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
 }
 
 body .crud-page .n-table td {
   border-color: var(--lc-border) !important;
+  color: var(--lc-text-strong);
+  vertical-align: middle;
+}
+
+body .crud-page .n-data-table {
+  background: transparent !important;
+}
+
+body .crud-page .n-data-table .n-data-table-th {
+  background: var(--lc-surface-muted) !important;
+  color: var(--lc-text-soft) !important;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+body .crud-page .n-data-table .n-data-table-th,
+body .crud-page .n-data-table .n-data-table-td {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+body .crud-page .n-data-table .n-data-table-td {
+  color: var(--lc-text-strong) !important;
+  vertical-align: middle;
+}
+
+body .crud-page .n-data-table .n-data-table-td .n-space {
+  gap: 10px !important;
 }
 
 body .crud-page .n-table tr:hover td {
   background: var(--lc-accent-faint);
+}
+
+body .crud-page .n-data-table .n-data-table-tr:hover .n-data-table-td {
+  background: var(--lc-accent-faint) !important;
 }
 
 body .crud-page .n-tag {
@@ -391,6 +468,14 @@ body .lc-form-section__eyebrow {
 
 html.dark body .lc-form-section__eyebrow {
   color: var(--lc-accent-hover);
+}
+
+@media (max-width: 768px) {
+  body .crud-page .operation-cell {
+    flex-wrap: wrap !important;
+    overflow: visible;
+    white-space: normal;
+  }
 }
 
 body .lc-form-section__title {

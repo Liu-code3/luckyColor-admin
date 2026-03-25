@@ -29,8 +29,8 @@ const contentStyle = computed(() => ({
   '--layout-content-offset': globalStore.showTabs ? '110px' : '60px'
 }));
 
-function syncTabs(label: string, path: string, layout = 'top') {
-  tabStore.setActiveTab(path);
+async function syncTabs(label: string, path: string, layout = 'top') {
+  await tabStore.setActiveTab(path);
   const exists = tabStore.tabs.some(item => item.key === path);
   if (!exists) {
     tabStore.addTab({
@@ -60,7 +60,7 @@ function syncTopMenus() {
   menuStore.collapsed = true;
 }
 
-function switchTopMenu(item: LayoutT.MenuItem) {
+async function switchTopMenu(item: LayoutT.MenuItem) {
   if (isExternalLinkMenu(item)) {
     openExternalLink(resolveExternalLinkUrl(item));
     return;
@@ -78,16 +78,16 @@ function switchTopMenu(item: LayoutT.MenuItem) {
     const defaultChildPath = resolveMenuRoutePath(defaultChild);
     menuStore.menuOptions = menuStore.transformMenuData(item.children);
     menuStore.collapsed = false;
-    router.push(defaultChildPath);
-    syncTabs(defaultChild.title, defaultChildPath);
+    await router.push(defaultChildPath);
+    await syncTabs(defaultChild.title, defaultChildPath);
     return;
   }
 
   const targetPath = resolveMenuRoutePath(item);
   menuStore.menuOptions = [];
   menuStore.collapsed = true;
-  router.push(targetPath);
-  syncTabs(item.title, targetPath);
+  await router.push(targetPath);
+  await syncTabs(item.title, targetPath);
 }
 
 watch(() => route.fullPath, () => {
@@ -256,12 +256,40 @@ watch(() => route.fullPath, () => {
 }
 
 .n-content {
+  position: relative;
+  isolation: isolate;
   height: calc(100vh - var(--layout-content-offset));
   overflow: hidden;
   overflow-y: auto;
   padding: 18px 18px 28px;
   box-sizing: border-box;
   background: transparent;
+}
+
+.n-content::before {
+  content: '';
+  position: absolute;
+  inset: 10px 10px 18px;
+  border: 1px solid var(--lc-border);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16)),
+    linear-gradient(135deg, rgba(var(--primary-color), 0.04), transparent 42%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.n-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+:global(html.dark) .n-content::before {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.52), rgba(15, 23, 42, 0.2)),
+    linear-gradient(135deg, rgba(var(--primary-color), 0.08), transparent 42%);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
 }
 
 .n-content::-webkit-scrollbar {
@@ -281,6 +309,11 @@ watch(() => route.fullPath, () => {
 @media (max-width: 768px) {
   .n-content {
     padding: 16px 16px 24px;
+  }
+
+  .n-content::before {
+    inset: 8px 8px 16px;
+    border-radius: 22px;
   }
 }
 </style>

@@ -55,7 +55,7 @@ function resolveActiveModulePath() {
   return activeModule?.path || currentModulePath;
 }
 
-const switchingModules = (item: LayoutT.MenuItem) => {
+const switchingModules = async (item: LayoutT.MenuItem) => {
   if (isExternalLinkMenu(item)) {
     openExternalLink(resolveExternalLinkUrl(item));
     return;
@@ -71,15 +71,15 @@ const switchingModules = (item: LayoutT.MenuItem) => {
       return;
     }
 
-    router.push(defaultChildPath);
-    tabStore.setActiveTab(defaultChildPath);
+    await router.push(defaultChildPath);
+    await tabStore.setActiveTab(defaultChildPath);
     updateTabs(item, defaultChildPath);
     menuStore.collapsed = false;
   }
   else {
     const targetPath = resolveMenuRoutePath(item);
-    router.push(targetPath);
-    tabStore.setActiveTab(targetPath);
+    await router.push(targetPath);
+    await tabStore.setActiveTab(targetPath);
     updateTabs(item, targetPath);
     menuStore.collapsed = true;
   }

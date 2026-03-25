@@ -7,9 +7,9 @@ const tabStore = useTabStore();
 const router = useRouter();
 
 // 标签页切换
-function tabSwitching(value: string) {
-  router.push(value);
-  tabStore.setActiveTab(value);
+async function tabSwitching(value: string) {
+  await router.push(value);
+  await tabStore.setActiveTab(value);
 }
 
 // 关闭标签

@@ -1,85 +1,71 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
-import { useRoute } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 
 const route = useRoute()
-const cachedViews = shallowReactive<Record<string, Component>>({})
-const currentView = computed<Component | null>(() => {
-  const matchedRoute = route.matched[route.matched.length - 1]
-  const matchedComponent = matchedRoute?.components?.default
+const keepAliveRouteNames = ref<string[]>([])
 
-  if (!matchedComponent) {
-    return null
-  }
-
-  return markRaw(matchedComponent as Component)
-})
+function shouldKeepAliveRoute(currentRoute: RouteLocationNormalizedLoaded) {
+  return Boolean(currentRoute.meta?.keepAlive && currentRoute.name)
+}
 
 function resolveRouteRenderKey(currentRoute: RouteLocationNormalizedLoaded) {
-  if (currentRoute.meta?.keepAlive && currentRoute.name) {
+  if (shouldKeepAliveRoute(currentRoute) && currentRoute.name) {
     return String(currentRoute.name)
   }
 
   return currentRoute.fullPath
 }
 
-function shouldKeepAliveRoute(currentRoute: RouteLocationNormalizedLoaded) {
-  return Boolean(currentRoute.meta?.keepAlive && currentRoute.name)
-}
+watch(
+  () => [route.name, route.fullPath, route.meta?.keepAlive],
+  () => {
+    if (!shouldKeepAliveRoute(route) || !route.name) {
+      return
+    }
 
-function ensureCachedRoute(
-  currentRoute: RouteLocationNormalizedLoaded,
-  component: Component
-) {
-  const routeName = resolveRouteRenderKey(currentRoute)
-
-  if (!cachedViews[routeName]) {
-    cachedViews[routeName] = markRaw(component)
-  }
-
-  return routeName
-}
-
-const cachedViewEntries = computed(() =>
-  Object.entries(cachedViews).map(([ name, component ]) => ({
-    name,
-    component
-  }))
+    const routeName = String(route.name)
+    if (!keepAliveRouteNames.value.includes(routeName)) {
+      keepAliveRouteNames.value = [ ...keepAliveRouteNames.value, routeName ]
+    }
+  },
+  { immediate: true }
 )
-
-function resolveCachedViewEntries(
-  currentRoute: RouteLocationNormalizedLoaded,
-  component: Component
-) {
-  ensureCachedRoute(currentRoute, component)
-  return cachedViewEntries.value
-}
-
-function resolveActiveCachedRouteName(
-  currentRoute: RouteLocationNormalizedLoaded,
-  component: Component
-) {
-  if (!shouldKeepAliveRoute(currentRoute)) {
-    return ''
-  }
-
-  return ensureCachedRoute(currentRoute, component)
-}
 </script>
 
 <template>
-  <component
-    v-for="item in (shouldKeepAliveRoute(route) && currentView
-      ? resolveCachedViewEntries(route, currentView)
-      : cachedViewEntries)"
-    :key="item.name"
-    :is="item.component"
-    v-show="item.name === (currentView ? resolveActiveCachedRouteName(route, currentView) : '')"
-  />
-  <component
-    v-if="currentView && !shouldKeepAliveRoute(route)"
-    :is="currentView"
-    :key="resolveRouteRenderKey(route)"
-  />
+  <RouterView v-slot="{ Component, route: currentRoute }">
+    <transition name="layout-route-fade" mode="out-in">
+      <KeepAlive :include="keepAliveRouteNames">
+        <component
+          v-if="Component && shouldKeepAliveRoute(currentRoute)"
+          :is="Component"
+          :key="resolveRouteRenderKey(currentRoute)"
+        />
+      </KeepAlive>
+    </transition>
+
+    <transition name="layout-route-fade" mode="out-in">
+      <component
+        v-if="Component && !shouldKeepAliveRoute(currentRoute)"
+        :is="Component"
+        :key="resolveRouteRenderKey(currentRoute)"
+      />
+    </transition>
+  </RouterView>
 </template>
+
+<style scoped lang="scss">
+.layout-route-fade-enter-active,
+.layout-route-fade-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.layout-route-fade-enter-from,
+.layout-route-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+</style>

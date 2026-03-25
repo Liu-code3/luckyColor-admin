@@ -18,14 +18,14 @@ watch(route, async () => {
 }, { immediate: true });
 
 // 切换菜单
-function handleUpdateValue(key: string, item: LayoutT.TransformedMenuItem) {
+async function handleUpdateValue(key: string, item: LayoutT.TransformedMenuItem) {
   if (isExternalLinkMenu(item)) {
     openExternalLink(resolveExternalLinkUrl(item));
     return;
   }
 
-  router.push(key);
-  tabStore.setActiveTab(key);
+  await router.push(key);
+  await tabStore.setActiveTab(key);
   const exists = tabStore.tabs.some(item => item.key === key);
   if (!exists) {
     const tab = {
