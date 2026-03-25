@@ -35,6 +35,7 @@ const { hasPermission } = usePermission();
 const loading = ref(false);
 const treeLoading = ref(false);
 const submitting = ref(false);
+const switchingDepartmentId = ref<number | null>(null);
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -253,6 +254,25 @@ function closeDepartmentDrawer() {
   departmentFormRef.value?.restoreValidation();
 }
 
+function patchDepartmentTreeStatus(targetId: number, status: boolean, items = departmentTree.value): DepartmentTreeRecord[] {
+  return items.map((item) => {
+    if (item.id === targetId) {
+      return {
+        ...item,
+        status
+      };
+    }
+
+    if (!item.children?.length)
+      return item;
+
+    return {
+      ...item,
+      children: patchDepartmentTreeStatus(targetId, status, item.children)
+    };
+  });
+}
+
 async function submitDepartmentForm() {
   await departmentFormRef.value?.validate();
 
@@ -284,9 +304,11 @@ async function submitDepartmentForm() {
         phone: payload.phone ?? null,
         email: payload.email ?? null
       });
+      message.success('部门信息已更新');
     }
     else {
       await createDepartmentApi(payload);
+      message.success('部门已创建');
     }
 
     closeDepartmentDrawer();
@@ -302,6 +324,35 @@ async function submitDepartmentForm() {
   }
 }
 
+async function handleToggleDepartmentStatus(department: DepartmentRecord, value: boolean) {
+  if (!canUpdateDepartment.value)
+    return;
+
+  const actionText = value ? '启用' : '停用';
+  const confirmed = await confirmAction({
+    title: `${actionText}部门`,
+    content: `确认${actionText}部门“${department.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  switchingDepartmentId.value = department.id;
+  try {
+    await updateDepartmentApi(department.id, { status: value });
+    departmentList.value = departmentList.value.map(item =>
+      item.id === department.id
+        ? { ...item, status: value }
+        : item
+    );
+    departmentTree.value = patchDepartmentTreeStatus(department.id, value);
+    message.success(`部门已${actionText}`);
+  }
+  finally {
+    switchingDepartmentId.value = null;
+  }
+}
+
 async function handleDeleteDepartment(department: DepartmentRecord) {
   const confirmed = await confirmAction({
     title: '删除部门',
@@ -312,6 +363,7 @@ async function handleDeleteDepartment(department: DepartmentRecord) {
     return;
 
   await deleteDepartmentApi(department.id);
+  message.success('部门已删除');
   const nextPage = departmentList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
   page.value = nextPage;
   await Promise.all([
@@ -406,9 +458,25 @@ onMounted(() => {
                 <td>{{ item.leader || '-' }}</td>
                 <td>{{ item.phone || '-' }}</td>
                 <td>
-                  <n-tag :type="item.status ? 'success' : 'warning'">
-                    {{ item.status ? '启用' : '停用' }}
-                  </n-tag>
+                  <div class="status-cell">
+                    <n-switch
+                      :value="item.status"
+                      size="small"
+                      :loading="switchingDepartmentId === item.id"
+                      :disabled="!canUpdateDepartment"
+                      @update:value="value => handleToggleDepartmentStatus(item, value)"
+                    >
+                      <template #checked>
+                        启用
+                      </template>
+                      <template #unchecked>
+                        停用
+                      </template>
+                    </n-switch>
+                    <n-tag size="small" :type="item.status ? 'success' : 'warning'">
+                      {{ item.status ? '启用' : '停用' }}
+                    </n-tag>
+                  </div>
                 </td>
                 <td>{{ item.sort }}</td>
                 <td>{{ formatDateTime(item.updatedAt) }}</td>
@@ -581,6 +649,12 @@ onMounted(() => {
 
 .content-actions {
   margin-bottom: 16px;
+}
+
+.status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .operation-cell {
