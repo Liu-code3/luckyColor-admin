@@ -10,6 +10,9 @@ export interface UserRecord {
   id: string;
   username: string;
   nickname?: string | null;
+  status?: boolean | null;
+  departmentId?: number | null;
+  departmentName?: string | null;
   token?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -35,12 +38,16 @@ export interface CreateUserPayload {
   username: string;
   password: string;
   nickname?: string;
+  status?: boolean;
+  departmentId?: number | null;
 }
 
 export interface UpdateUserPayload {
   username?: string;
   password?: string;
   nickname?: string;
+  status?: boolean;
+  departmentId?: number | null;
 }
 
 export function getUserPageApi(params: UserQueryParams) {
