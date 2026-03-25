@@ -11,6 +11,8 @@ import {
   type DepartmentRecord,
   type DepartmentTreeRecord
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
@@ -26,6 +28,9 @@ interface DepartmentFormState {
   status: boolean;
   remark: string;
 }
+
+const departmentButtonCodes = BUTTON_PERMISSION_CODES.systemDepartment;
+const { hasPermission } = usePermission();
 
 const loading = ref(false);
 const treeLoading = ref(false);
@@ -109,6 +114,13 @@ const departmentTreeOptions = computed<TreeOption[]>(() => [
   },
   ...departmentTree.value.map(item => departmentToTreeOption(item))
 ]);
+const canCreateDepartment = computed(() => hasPermission(departmentButtonCodes.create));
+const canUpdateDepartment = computed(() => hasPermission(departmentButtonCodes.update));
+const canDeleteDepartment = computed(() => hasPermission(departmentButtonCodes.delete));
+const hasDepartmentActions = computed(() =>
+  canCreateDepartment.value || canUpdateDepartment.value || canDeleteDepartment.value
+);
+const departmentTableColumnCount = computed(() => hasDepartmentActions.value ? 8 : 7);
 
 const parentNameMap = computed(() => {
   const map = new Map<number, string>();
@@ -360,8 +372,12 @@ onMounted(() => {
       </div>
 
       <div class="table-card">
-        <div class="content-actions">
-          <n-button type="primary" @click="openCreateDrawer()">
+        <div v-if="canCreateDepartment" class="content-actions">
+          <n-button
+            v-permission="departmentButtonCodes.create"
+            type="primary"
+            @click="openCreateDrawer()"
+          >
             <template #icon>
               <Icon icon="material-symbols:add" />
             </template>
@@ -380,7 +396,7 @@ onMounted(() => {
                 <th>状态</th>
                 <th>排序</th>
                 <th>更新时间</th>
-                <th>操作</th>
+                <th v-if="hasDepartmentActions">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -396,20 +412,38 @@ onMounted(() => {
                 </td>
                 <td>{{ item.sort }}</td>
                 <td>{{ formatDateTime(item.updatedAt) }}</td>
-                <td class="operation-cell">
-                  <n-button quaternary type="primary" @click="openCreateDrawer(item.id)">
+                <td v-if="hasDepartmentActions" class="operation-cell">
+                  <n-button
+                    v-if="canCreateDepartment"
+                    v-permission="departmentButtonCodes.create"
+                    quaternary
+                    type="primary"
+                    @click="openCreateDrawer(item.id)"
+                  >
                     新增子部门
                   </n-button>
-                  <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                  <n-button
+                    v-if="canUpdateDepartment"
+                    v-permission="departmentButtonCodes.update"
+                    quaternary
+                    type="primary"
+                    @click="openEditDrawer(item)"
+                  >
                     编辑
                   </n-button>
-                  <n-button quaternary type="error" @click="handleDeleteDepartment(item)">
+                  <n-button
+                    v-if="canDeleteDepartment"
+                    v-permission="departmentButtonCodes.delete"
+                    quaternary
+                    type="error"
+                    @click="handleDeleteDepartment(item)"
+                  >
                     删除
                   </n-button>
                 </td>
               </tr>
               <tr v-if="!departmentList.length">
-                <td colspan="8">
+                <td :colspan="departmentTableColumnCount">
                   <n-empty description="暂无部门数据" />
                 </td>
               </tr>
