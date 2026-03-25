@@ -10,6 +10,8 @@ import {
   updateMenuApi,
   type MenuRecord
 } from '@/api';
+import { usePermission } from '@/composables/use-permission';
+import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
 
 defineOptions({
@@ -34,6 +36,8 @@ interface MenuFormState {
 }
 
 const message = useMessage();
+const menuButtonCodes = BUTTON_PERMISSION_CODES.systemMenu;
+const { hasPermission } = usePermission();
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -164,101 +168,131 @@ const filteredMenuTree = computed<MenuRecord[]>(() => {
   return walk(rawMenuTree.value);
 });
 
-const tableColumns = computed<DataTableColumns<MenuRecord>>(() => [
-  {
-    key: 'title',
-    title: '名称',
-    render: row => row.title
-  },
-  {
-    key: 'type',
-    title: '类型',
-    width: 90,
-    render: row => {
-      const typeTextMap = {
-        1: '目录',
-        2: '菜单',
-        3: '按钮'
-      };
+const canCreateMenu = computed(() => hasPermission(menuButtonCodes.create));
+const canUpdateMenu = computed(() => hasPermission(menuButtonCodes.update));
+const canDeleteMenu = computed(() => hasPermission(menuButtonCodes.delete));
+const hasMenuActions = computed(() =>
+  canCreateMenu.value || canUpdateMenu.value || canDeleteMenu.value
+);
 
-      return h(
-        NTag,
-        { type: row.type === 3 ? 'warning' : 'primary' },
-        { default: () => typeTextMap[row.type as 1 | 2 | 3] || row.type }
-      );
-    }
-  },
-  {
-    key: 'path',
-    title: '访问路径',
-    minWidth: 180
-  },
-  {
-    key: 'component',
-    title: '组件路径',
-    minWidth: 180
-  },
-  {
-    key: 'key',
-    title: '权限标识',
-    minWidth: 180
-  },
-  {
-    key: 'sort',
-    title: '排序',
-    width: 80
-  },
-  {
-    key: 'isVisible',
-    title: '显示状态',
-    width: 100,
-    render: row => h(
-      NTag,
-      { type: row.isVisible ? 'success' : 'warning' },
-      { default: () => row.isVisible ? '显示' : '隐藏' }
-    )
-  },
-  {
-    key: 'actions',
-    title: '操作',
-    width: 260,
-    render: row => h(
-      NSpace,
-      { size: 4 },
-      {
-        default: () => [
-          h(
-            NButton,
-            {
-              quaternary: true,
-              type: 'primary',
-              onClick: () => openCreateDrawer(row.id)
-            },
-            { default: () => '新增子菜单' }
-          ),
-          h(
-            NButton,
-            {
-              quaternary: true,
-              type: 'primary',
-              onClick: () => openEditDrawer(row)
-            },
-            { default: () => '编辑' }
-          ),
-          h(
-            NButton,
-            {
-              quaternary: true,
-              type: 'error',
-              onClick: () => handleDeleteMenu(row)
-            },
-            { default: () => '删除' }
-          )
-        ]
+const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
+  const columns: DataTableColumns<MenuRecord> = [
+    {
+      key: 'title',
+      title: '名称',
+      render: row => row.title
+    },
+    {
+      key: 'type',
+      title: '类型',
+      width: 90,
+      render: row => {
+        const typeTextMap = {
+          1: '目录',
+          2: '菜单',
+          3: '按钮'
+        };
+
+        return h(
+          NTag,
+          { type: row.type === 3 ? 'warning' : 'primary' },
+          { default: () => typeTextMap[row.type as 1 | 2 | 3] || row.type }
+        );
       }
-    )
+    },
+    {
+      key: 'path',
+      title: '访问路径',
+      minWidth: 180
+    },
+    {
+      key: 'component',
+      title: '组件路径',
+      minWidth: 180
+    },
+    {
+      key: 'key',
+      title: '权限标识',
+      minWidth: 180
+    },
+    {
+      key: 'sort',
+      title: '排序',
+      width: 80
+    },
+    {
+      key: 'isVisible',
+      title: '显示状态',
+      width: 100,
+      render: row => h(
+        NTag,
+        { type: row.isVisible ? 'success' : 'warning' },
+        { default: () => row.isVisible ? '显示' : '隐藏' }
+      )
+    }
+  ];
+
+  if (hasMenuActions.value) {
+    columns.push({
+      key: 'actions',
+      title: '操作',
+      width: 260,
+      render: (row) => {
+        const actions = [];
+
+        if (canCreateMenu.value) {
+          actions.push(
+            h(
+              NButton,
+              {
+                quaternary: true,
+                type: 'primary',
+                onClick: () => openCreateDrawer(row.id)
+              },
+              { default: () => '新增子菜单' }
+            )
+          );
+        }
+
+        if (canUpdateMenu.value) {
+          actions.push(
+            h(
+              NButton,
+              {
+                quaternary: true,
+                type: 'primary',
+                onClick: () => openEditDrawer(row)
+              },
+              { default: () => '编辑' }
+            )
+          );
+        }
+
+        if (canDeleteMenu.value) {
+          actions.push(
+            h(
+              NButton,
+              {
+                quaternary: true,
+                type: 'error',
+                onClick: () => handleDeleteMenu(row)
+              },
+              { default: () => '删除' }
+            )
+          );
+        }
+
+        return h(
+          NSpace,
+          { size: 4 },
+          { default: () => actions }
+        );
+      }
+    });
   }
-]);
+
+  return columns;
+});
 
 function menuToTreeOption(item: MenuRecord): TreeOption {
   return {
@@ -453,8 +487,12 @@ onMounted(() => {
     </div>
 
     <div class="content-card">
-      <div class="content-actions">
-        <n-button type="primary" @click="openCreateDrawer()">
+      <div v-if="canCreateMenu" class="content-actions">
+        <n-button
+          v-permission="menuButtonCodes.create"
+          type="primary"
+          @click="openCreateDrawer()"
+        >
           <template #icon>
             <Icon icon="material-symbols:add" />
           </template>
