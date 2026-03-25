@@ -1,4 +1,5 @@
 import { request } from '@/utils/http';
+import { mergeDataScopeQueryParams } from '@/utils/data-scope';
 
 /**
  * @description 获取树数据
@@ -6,7 +7,8 @@ import { request } from '@/utils/http';
 function getDictTreeApi() {
   return request({
     url: '/dict/tree',
-    method: 'get'
+    method: 'get',
+    params: mergeDataScopeQueryParams()
   });
 }
 
@@ -17,7 +19,7 @@ function getTableDataApi(params: IDict.ITbParams) {
   return request({
     url: '/dict/page',
     method: 'get',
-    params
+    params: mergeDataScopeQueryParams(params)
   });
 }
 

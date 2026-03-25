@@ -1,5 +1,6 @@
 import {
   DEFAULT_ADMIN_BUTTON_CODE_LIST,
+  SUPER_ADMIN_IDENTITY_LIST,
   SUPER_BUTTON_CODE_LIST
 } from '@/constants/permission';
 import { getCurrentUserInfo } from '@/utils/auth';
@@ -29,17 +30,33 @@ export function resolveSessionButtonCodeList(
   ...sources: Array<PermissionCodeCarrier | null | undefined>
 ) {
   const permissionCodes = collectPermissionCodes(...sources);
+  const isSuperAdmin = isSuperAdminIdentity(username);
 
   if (permissionCodes.length) {
-    return permissionCodes;
+    return isSuperAdmin
+      ? mergeSuperPermissionCodes(permissionCodes)
+      : permissionCodes;
   }
 
   // 后端权限字段尚未完全联调时，保留 admin 的演示权限，避免入口全部消失。
-  if (username === 'admin') {
-    return [ ...DEFAULT_ADMIN_BUTTON_CODE_LIST ];
+  if (isSuperAdmin) {
+    return mergeSuperPermissionCodes(DEFAULT_ADMIN_BUTTON_CODE_LIST);
   }
 
   return [];
+}
+
+export function isSuperAdminIdentity(value: unknown) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+  if (!normalizedValue) {
+    return false;
+  }
+
+  return SUPER_ADMIN_IDENTITY_LIST.some(item => item === normalizedValue);
 }
 
 export function hasPermission(
@@ -165,6 +182,13 @@ export function normalizePermissionCodes(input: unknown): PermissionCodeList {
       .map(item => item.trim())
       .filter(Boolean)
   ) ];
+}
+
+function mergeSuperPermissionCodes(permissionCodes: PermissionValue) {
+  return normalizePermissionCodes([
+    ...SUPER_BUTTON_CODE_LIST,
+    ...normalizePermissionCodes(permissionCodes)
+  ]);
 }
 
 function resolvePermissionMode(mode?: PermissionMode): PermissionMode {

@@ -5,17 +5,30 @@ import {
   assignRoleMenusApi,
   createRoleApi,
   deleteRoleApi,
+  getDepartmentTreeApi,
   getMenuTreeApi,
+  getRoleDataScopeApi,
   getRoleDetailApi,
   getRoleMenusApi,
   getRolePageApi,
+  saveRoleDataScopeApi,
   updateRoleApi,
+  type DepartmentTreeRecord,
   type MenuRecord,
   type RoleRecord
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
+import {
+  DATA_SCOPE_LABEL_MAP,
+  DATA_SCOPE_OPTION_LIST,
+  DATA_SCOPE_TYPES,
+  normalizeDataScopeType,
+  type DataScopeType
+} from '@/constants/data-scope';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
+import { message } from '@/utils/message';
+import { isSuperAdminIdentity } from '@/utils/permission';
 
 interface RoleFormState {
   name: string;
@@ -23,6 +36,18 @@ interface RoleFormState {
   sort: number | null;
   status: boolean;
   remark: string;
+}
+
+interface SummaryCard {
+  label: string;
+  value: number;
+  helper: string;
+  tone: 'primary' | 'success' | 'warning' | 'info';
+}
+
+interface RoleDataScopeFormState {
+  dataScopeType: DataScopeType;
+  customDeptIds: number[];
 }
 
 const roleButtonCodes = BUTTON_PERMISSION_CODES.systemRole;
@@ -85,16 +110,26 @@ const roleFormRules: FormRules = {
 
 const showAssignMenuModal = ref(false);
 const showAssignButtonModal = ref(false);
+const showAssignDataScopeModal = ref(false);
 const selectedRole = ref<RoleRecord | null>(null);
 const checkedMenuIds = ref<Array<string | number>>([]);
 const checkedButtonIds = ref<Array<string | number>>([]);
+const reservedMenuIdsForButtonAssign = ref<number[]>([]);
 const assignMenuKeyword = ref('');
 const assignButtonKeyword = ref('');
 const expandedMenuKeys = ref<Array<string | number>>([]);
 const expandedButtonKeys = ref<Array<string | number>>([]);
 const rawRoleMenuTree = ref<MenuRecord[]>([]);
 const rawRoleButtonTree = ref<MenuRecord[]>([]);
+const rawDepartmentTree = ref<DepartmentTreeRecord[]>([]);
 const buttonTreeLoading = ref(false);
+const dataScopeLoading = ref(false);
+const dataScopeSubmitting = ref(false);
+const dataScopeFormRef = ref<FormInst | null>(null);
+const dataScopeForm = reactive<RoleDataScopeFormState>({
+  dataScopeType: DATA_SCOPE_TYPES.TENANT,
+  customDeptIds: []
+});
 const canCreateRole = computed(() => hasPermission(roleButtonCodes.create));
 const canGrantRoleMenu = computed(() => hasPermission(roleButtonCodes.grant));
 const canUpdateRole = computed(() => hasPermission(roleButtonCodes.update));
@@ -103,6 +138,32 @@ const hasRoleActions = computed(() =>
   canGrantRoleMenu.value || canUpdateRole.value || canDeleteRole.value
 );
 const roleTableColumnCount = computed(() => hasRoleActions.value ? 7 : 6);
+const summaryCards = computed<SummaryCard[]>(() => [
+  {
+    label: '\u89d2\u8272\u603b\u6570',
+    value: total.value,
+    helper: '\u8986\u76d6\u5f53\u524d\u67e5\u8be2\u6761\u4ef6\u4e0b\u7684\u5168\u90e8\u89d2\u8272',
+    tone: 'primary'
+  },
+  {
+    label: '\u542f\u7528\u4e2d',
+    value: roleList.value.filter(item => item.status).length,
+    helper: '\u53ef\u6b63\u5e38\u53c2\u4e0e\u6388\u6743\u7684\u89d2\u8272\u6570\u91cf',
+    tone: 'success'
+  },
+  {
+    label: '\u5df2\u586b\u5907\u6ce8',
+    value: roleList.value.filter(item => Boolean(item.remark?.trim())).length,
+    helper: '\u89d2\u8272\u8bf4\u660e\u66f4\u5b8c\u6574\uff0c\u4fbf\u4e8e\u4ea4\u63a5\u548c\u5ba1\u8ba1',
+    tone: 'info'
+  },
+  {
+    label: '\u6700\u9ad8\u6392\u5e8f',
+    value: roleList.value.reduce((max, item) => Math.max(max, item.sort), 0),
+    helper: '\u7528\u4e8e\u611f\u77e5\u5f53\u524d\u89d2\u8272\u6392\u5e8f\u533a\u95f4',
+    tone: 'warning'
+  }
+]);
 const menuTreeOptions = computed<TreeOption[]>(() =>
   filterRoleMenuTreeByKeyword(rawRoleMenuTree.value, assignMenuKeyword.value).map(menuToTreeOption)
 );
@@ -125,6 +186,28 @@ const checkedRoleButtonCodeList = computed(() =>
     .map(item => roleButtonCodeMap.value.get(Number(item)))
     .filter((code): code is string => Boolean(code))
 );
+const selectedRoleIsSuperAdmin = computed(() => isSuperAdminIdentity(selectedRole.value?.code));
+const departmentTreeOptions = computed<TreeOption[]>(() => rawDepartmentTree.value.map(departmentToTreeOption));
+const selectedDataScopeOption = computed(() =>
+  DATA_SCOPE_OPTION_LIST.find(item => item.value === dataScopeForm.dataScopeType) || DATA_SCOPE_OPTION_LIST[1]
+);
+const selectedDataScopeDeptCount = computed(() => dataScopeForm.customDeptIds.length);
+
+const dataScopeFormRules: FormRules = {
+  customDeptIds: [
+    {
+      validator: () => {
+        if (dataScopeForm.dataScopeType !== DATA_SCOPE_TYPES.CUSTOM) {
+          return true;
+        }
+
+        return dataScopeForm.customDeptIds.length > 0;
+      },
+      message: '请选择至少一个自定义部门范围',
+      trigger: [ 'change', 'blur' ]
+    }
+  ]
+};
 
 function formatDateTime(value?: string | null) {
   if (!value)
@@ -133,6 +216,10 @@ function formatDateTime(value?: string | null) {
   return new Date(value).toLocaleString('zh-CN', {
     hour12: false
   });
+}
+
+function getSummaryCardClass(tone: SummaryCard['tone']) {
+  return `summary-card summary-card--${tone}`;
 }
 
 function menuToTreeOption(menu: MenuRecord): TreeOption {
@@ -161,6 +248,14 @@ function buttonToTreeOption(menu: MenuRecord): TreeOption {
   };
 }
 
+function departmentToTreeOption(item: DepartmentTreeRecord): TreeOption {
+  return {
+    key: item.id,
+    label: item.name,
+    children: item.children?.map(departmentToTreeOption)
+  };
+}
+
 async function ensureMenuTreeOptions() {
   if (rawRoleMenuTree.value.length)
     return;
@@ -175,6 +270,14 @@ async function ensureButtonTreeOptions() {
 
   const { data } = await getMenuTreeApi();
   rawRoleButtonTree.value = filterAssignableRoleButtons(data);
+}
+
+async function ensureDepartmentTreeOptions() {
+  if (rawDepartmentTree.value.length)
+    return;
+
+  const { data } = await getDepartmentTreeApi();
+  rawDepartmentTree.value = data;
 }
 
 function filterAssignableRoleMenus(menus: MenuRecord[]) {
@@ -348,6 +451,9 @@ function collapseAllMenus() {
 }
 
 function clearCheckedMenus() {
+  if (selectedRoleIsSuperAdmin.value)
+    return;
+
   checkedMenuIds.value = [];
 }
 
@@ -360,7 +466,23 @@ function collapseAllButtons() {
 }
 
 function clearCheckedButtons() {
+  if (selectedRoleIsSuperAdmin.value)
+    return;
+
   checkedButtonIds.value = [];
+}
+
+function fillAllMenuPermissions() {
+  checkedMenuIds.value = collectRoleMenuIds(rawRoleMenuTree.value);
+}
+
+function fillAllButtonPermissions() {
+  checkedButtonIds.value = collectRoleButtonIds(rawRoleButtonTree.value);
+}
+
+function resetDataScopeForm() {
+  dataScopeForm.dataScopeType = DATA_SCOPE_TYPES.TENANT;
+  dataScopeForm.customDeptIds = [];
 }
 
 function resetRoleForm() {
@@ -493,6 +615,13 @@ async function openAssignMenu(role: RoleRecord) {
   showAssignMenuModal.value = true;
   assignMenuKeyword.value = '';
   await ensureMenuTreeOptions();
+
+  if (isSuperAdminIdentity(role.code)) {
+    fillAllMenuPermissions();
+    expandAllMenus();
+    return;
+  }
+
   const { data } = await getRoleMenusApi(role.id);
   checkedMenuIds.value = data.menuIds.filter(item => roleMenuIdSet.value.has(item));
   expandAllMenus();
@@ -505,7 +634,16 @@ async function openAssignButton(role: RoleRecord) {
   buttonTreeLoading.value = true;
   try {
     await ensureButtonTreeOptions();
+
+    if (isSuperAdminIdentity(role.code)) {
+      reservedMenuIdsForButtonAssign.value = [ ...roleMenuIdSet.value ];
+      fillAllButtonPermissions();
+      expandAllButtons();
+      return;
+    }
+
     const { data } = await getRoleMenusApi(role.id);
+    reservedMenuIdsForButtonAssign.value = data.menuIds.filter(item => roleMenuIdSet.value.has(item));
     const checkedIds = new Set<number>([
       ...data.menuIds.filter(item => roleButtonIdSet.value.has(item)),
       ...data.menus.filter(item => item.type === 3).map(item => item.id)
@@ -515,6 +653,32 @@ async function openAssignButton(role: RoleRecord) {
   }
   finally {
     buttonTreeLoading.value = false;
+  }
+}
+
+async function openAssignDataScope(role: RoleRecord) {
+  selectedRole.value = role;
+  showAssignDataScopeModal.value = true;
+  resetDataScopeForm();
+  await ensureDepartmentTreeOptions();
+
+  if (isSuperAdminIdentity(role.code)) {
+    dataScopeForm.dataScopeType = DATA_SCOPE_TYPES.ALL;
+    dataScopeFormRef.value?.restoreValidation();
+    return;
+  }
+
+  dataScopeLoading.value = true;
+  try {
+    const { data } = await getRoleDataScopeApi(role.id);
+    dataScopeForm.dataScopeType = normalizeDataScopeType(data.dataScopeType);
+    dataScopeForm.customDeptIds = Array.isArray(data.customDeptIds)
+      ? data.customDeptIds
+      : [];
+    dataScopeFormRef.value?.restoreValidation();
+  }
+  finally {
+    dataScopeLoading.value = false;
   }
 }
 
@@ -530,13 +694,26 @@ function closeAssignButton() {
   showAssignButtonModal.value = false;
   selectedRole.value = null;
   assignButtonKeyword.value = '';
+  reservedMenuIdsForButtonAssign.value = [];
   expandedButtonKeys.value = [];
   checkedButtonIds.value = [];
+}
+
+function closeAssignDataScope() {
+  showAssignDataScopeModal.value = false;
+  selectedRole.value = null;
+  resetDataScopeForm();
+  dataScopeFormRef.value?.restoreValidation();
 }
 
 async function submitAssignMenu() {
   if (!selectedRole.value)
     return;
+
+  if (selectedRoleIsSuperAdmin.value) {
+    message.info('超级管理员角色默认拥有全部菜单权限，无需单独保存');
+    return;
+  }
 
   assigning.value = true;
   try {
@@ -544,10 +721,63 @@ async function submitAssignMenu() {
       selectedRole.value.id,
       checkedMenuIds.value.map(item => Number(item))
     );
+    message.success('角色菜单权限保存成功');
     closeAssignMenu();
   }
   finally {
     assigning.value = false;
+  }
+}
+
+async function submitAssignButton() {
+  if (!selectedRole.value)
+    return;
+
+  if (selectedRoleIsSuperAdmin.value) {
+    message.info('超级管理员角色默认拥有全部按钮权限，无需单独保存');
+    return;
+  }
+
+  const nextMenuIds = [ ...new Set([
+    ...reservedMenuIdsForButtonAssign.value,
+    ...checkedButtonIds.value.map(item => Number(item))
+  ]) ];
+
+  assigning.value = true;
+  try {
+    await assignRoleMenusApi(selectedRole.value.id, nextMenuIds);
+    message.success('角色按钮权限保存成功');
+    closeAssignButton();
+  }
+  finally {
+    assigning.value = false;
+  }
+}
+
+async function submitAssignDataScope() {
+  if (!selectedRole.value)
+    return;
+
+  if (selectedRoleIsSuperAdmin.value) {
+    message.info('超级管理员角色默认拥有全部数据权限，无需单独保存');
+    return;
+  }
+
+  await dataScopeFormRef.value?.validate();
+
+  dataScopeSubmitting.value = true;
+  try {
+    await saveRoleDataScopeApi(selectedRole.value.id, {
+      dataScopeType: dataScopeForm.dataScopeType,
+      customDeptIds: dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.CUSTOM
+        ? [ ...dataScopeForm.customDeptIds ]
+        : []
+    });
+    message.success('角色数据权限保存成功');
+    closeAssignDataScope();
+  }
+  finally {
+    dataScopeSubmitting.value = false;
   }
 }
 
@@ -568,12 +798,37 @@ watch(buttonTreeOptions, (options) => {
 
   expandedButtonKeys.value = collectExpandedTreeKeys(options);
 });
+
+watch(
+  () => dataScopeForm.dataScopeType,
+  (value) => {
+    if (value !== DATA_SCOPE_TYPES.CUSTOM) {
+      dataScopeForm.customDeptIds = [];
+    }
+
+    if (showAssignDataScopeModal.value) {
+      dataScopeFormRef.value?.restoreValidation();
+    }
+  }
+);
 </script>
 
 <template>
   <div class="crud-page">
+    <section class="summary-grid">
+      <article
+        v-for="card in summaryCards"
+        :key="card.label"
+        :class="getSummaryCardClass(card.tone)"
+      >
+        <span>{{ card.label }}</span>
+        <strong>{{ card.value }}</strong>
+        <small class="summary-card__helper">{{ card.helper }}</small>
+      </article>
+    </section>
+
     <div class="toolbar">
-      <div class="toolbar-item">
+      <div class="toolbar-item toolbar-item--wide">
         <div class="toolbar-label">
           关键字
         </div>
@@ -629,7 +884,14 @@ watch(buttonTreeOptions, (options) => {
           </thead>
           <tbody>
             <tr v-for="item in roleList" :key="item.id">
-              <td>{{ item.name }}</td>
+              <td>
+                <div class="primary-text">
+                  {{ item.name }}
+                </div>
+                <div class="secondary-text">
+                  ID: {{ item.id }}
+                </div>
+              </td>
               <td>{{ item.code }}</td>
               <td>
                 <n-tag :type="item.status ? 'success' : 'warning'">
@@ -657,6 +919,15 @@ watch(buttonTreeOptions, (options) => {
                   @click="openAssignButton(item)"
                 >
                   按钮权限
+                </n-button>
+                <n-button
+                  v-if="canGrantRoleMenu"
+                  v-permission="roleButtonCodes.grant"
+                  quaternary
+                  type="primary"
+                  @click="openAssignDataScope(item)"
+                >
+                  数据权限
                 </n-button>
                 <n-button
                   v-if="canUpdateRole"
@@ -724,7 +995,12 @@ watch(buttonTreeOptions, (options) => {
           收起全部
         </n-button>
         <n-button quaternary type="warning" @click="clearCheckedMenus">
+          <template v-if="selectedRoleIsSuperAdmin">
+            保留全量
+          </template>
+          <template v-else>
           清空勾选
+          </template>
         </n-button>
       </div>
 
@@ -739,6 +1015,10 @@ watch(buttonTreeOptions, (options) => {
           已选 {{ checkedRoleMenuCount }}
         </n-tag>
       </div>
+    </div>
+
+    <div v-if="selectedRoleIsSuperAdmin" class="assign-hint">
+      超级管理员角色默认直通全部菜单权限，当前为全量预览状态。
     </div>
 
     <n-spin :show="assigning">
@@ -759,8 +1039,8 @@ watch(buttonTreeOptions, (options) => {
         <n-button @click="closeAssignMenu">
           取消
         </n-button>
-        <n-button type="primary" :loading="assigning" @click="submitAssignMenu">
-          保存
+        <n-button type="primary" :loading="assigning" :disabled="selectedRoleIsSuperAdmin" @click="submitAssignMenu">
+          {{ selectedRoleIsSuperAdmin ? '无需保存' : '保存' }}
         </n-button>
       </div>
     </template>
@@ -789,7 +1069,12 @@ watch(buttonTreeOptions, (options) => {
           收起全部
         </n-button>
         <n-button quaternary type="warning" @click="clearCheckedButtons">
+          <template v-if="selectedRoleIsSuperAdmin">
+            保留全量
+          </template>
+          <template v-else>
           清空勾选
+          </template>
         </n-button>
       </div>
 
@@ -807,7 +1092,12 @@ watch(buttonTreeOptions, (options) => {
     </div>
 
     <div class="assign-hint">
-      当前步骤先提供角色按钮权限树浏览与勾选，保存逻辑将在后续 `B4-07` 接入。
+      <template v-if="selectedRoleIsSuperAdmin">
+        超级管理员角色默认直通全部按钮权限，当前为全量预览状态。
+      </template>
+      <template v-else>
+        保存按钮权限时会自动保留当前菜单授权，仅更新本次勾选的按钮节点。
+      </template>
     </div>
 
     <n-spin :show="buttonTreeLoading">
@@ -843,7 +1133,10 @@ watch(buttonTreeOptions, (options) => {
     <template #footer>
       <div class="modal-footer">
         <n-button @click="closeAssignButton">
-          关闭
+          取消
+        </n-button>
+        <n-button type="primary" :loading="assigning" :disabled="selectedRoleIsSuperAdmin" @click="submitAssignButton">
+          {{ selectedRoleIsSuperAdmin ? '无需保存' : '保存' }}
         </n-button>
       </div>
     </template>
@@ -852,6 +1145,19 @@ watch(buttonTreeOptions, (options) => {
   <n-drawer v-model:show="showRoleDrawer" :width="520" placement="right">
     <n-drawer-content :title="isEditMode ? '编辑角色' : '新增角色'">
       <n-form ref="roleFormRef" :model="roleForm" :rules="roleFormRules" label-placement="top">
+        <div class="lc-form-stack">
+          <section class="lc-form-section">
+            <div class="lc-form-section__header">
+              <div>
+                <p class="lc-form-section__eyebrow">Role</p>
+                <h3 class="lc-form-section__title">
+                  {{ isEditMode ? '\u7f16\u8f91\u89d2\u8272' : '\u521b\u5efa\u89d2\u8272' }}
+                </h3>
+                <p class="lc-form-section__description">
+                  {{ '\u4f7f\u89d2\u8272\u547d\u540d\uff0c\u72b6\u6001\u548c\u5907\u6ce8\u4fdd\u6301\u53ef\u7406\u89e3\uff0c\u65b9\u4fbf\u540e\u7eed\u83dc\u5355\u4e0e\u6309\u94ae\u6388\u6743\u3002' }}
+                </p>
+              </div>
+            </div>
         <n-form-item label="角色名称" path="name">
           <n-input v-model:value="roleForm.name" placeholder="请输入角色名称" />
         </n-form-item>
@@ -879,6 +1185,8 @@ watch(buttonTreeOptions, (options) => {
             :autosize="{ minRows: 3, maxRows: 5 }"
           />
         </n-form-item>
+          </section>
+        </div>
       </n-form>
 
       <template #footer>
@@ -893,12 +1201,109 @@ watch(buttonTreeOptions, (options) => {
       </template>
     </n-drawer-content>
   </n-drawer>
+
+  <n-modal v-model:show="showAssignDataScopeModal" preset="card" title="数据权限" style="width: 760px;">
+    <div class="assign-summary">
+      当前角色：{{ selectedRole?.name || '-' }}
+    </div>
+
+    <n-spin :show="dataScopeLoading">
+      <n-form ref="dataScopeFormRef" :model="dataScopeForm" :rules="dataScopeFormRules" label-placement="top">
+        <div class="scope-panel">
+          <div class="scope-panel__intro">
+            <strong>{{ DATA_SCOPE_LABEL_MAP[dataScopeForm.dataScopeType] }}</strong>
+            <span>{{ selectedDataScopeOption.description }}</span>
+          </div>
+
+          <div class="scope-option-list">
+            <button
+              v-for="item in DATA_SCOPE_OPTION_LIST"
+              :key="item.value"
+              type="button"
+              class="scope-option-card"
+              :class="{ 'scope-option-card--active': dataScopeForm.dataScopeType === item.value }"
+              :disabled="selectedRoleIsSuperAdmin"
+              @click="dataScopeForm.dataScopeType = item.value"
+            >
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.description }}</span>
+            </button>
+          </div>
+
+          <div class="scope-meta">
+            <n-tag type="info">
+              当前范围 {{ DATA_SCOPE_LABEL_MAP[dataScopeForm.dataScopeType] }}
+            </n-tag>
+            <n-tag v-if="dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.CUSTOM" type="success">
+              已选部门 {{ selectedDataScopeDeptCount }}
+            </n-tag>
+            <n-tag v-if="dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.SELF" type="warning">
+              自动透传当前用户 ID
+            </n-tag>
+          </div>
+
+          <div v-if="selectedRoleIsSuperAdmin" class="assign-hint">
+            超级管理员角色默认直通全部数据权限，当前为全量预览状态。
+          </div>
+
+          <n-form-item
+            v-if="dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.CUSTOM"
+            label="自定义部门范围"
+            path="customDeptIds"
+          >
+            <div class="scope-select-wrap">
+              <n-tree-select
+                v-model:value="dataScopeForm.customDeptIds"
+                multiple
+                clearable
+                filterable
+                checkable
+                default-expand-all
+                :options="departmentTreeOptions"
+                placeholder="请选择可访问的部门范围"
+              />
+            </div>
+          </n-form-item>
+
+          <div v-if="dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.SELF" class="assign-hint">
+            本人范围下，列表查询会自动携带当前登录人的用户 ID，由后端按本人数据过滤。
+          </div>
+
+          <div v-if="dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.DEPT || dataScopeForm.dataScopeType === DATA_SCOPE_TYPES.DEPT_AND_CHILD" class="assign-hint">
+            部门范围下，列表查询会自动携带当前登录人的用户 ID，由后端换算所属部门后过滤数据。
+          </div>
+        </div>
+      </n-form>
+    </n-spin>
+
+    <template #footer>
+      <div class="modal-footer">
+        <n-button @click="closeAssignDataScope">
+          取消
+        </n-button>
+        <n-button
+          type="primary"
+          :loading="dataScopeSubmitting"
+          :disabled="selectedRoleIsSuperAdmin"
+          @click="submitAssignDataScope"
+        >
+          {{ selectedRoleIsSuperAdmin ? '无需保存' : '保存' }}
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
 </template>
 
 <style scoped lang="less">
 .crud-page {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -906,15 +1311,17 @@ watch(buttonTreeOptions, (options) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .toolbar-item {
   display: flex;
   align-items: center;
   width: 360px;
+}
+
+.toolbar-item--wide {
+  width: 420px;
 }
 
 .toolbar-label {
@@ -924,13 +1331,19 @@ watch(buttonTreeOptions, (options) => {
 
 .content-card {
   min-height: calc(100vh - 236px);
-  padding: 20px 24px;
-  background-color: var(--primary-bgColor);
-  border-radius: 8px;
 }
 
 .content-actions {
   margin-bottom: 16px;
+}
+
+.primary-text {
+  font-weight: 600;
+}
+
+.secondary-text {
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .operation-cell {
@@ -998,6 +1411,84 @@ watch(buttonTreeOptions, (options) => {
   color: var(--text-color-2);
 }
 
+.scope-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scope-panel__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scope-panel__intro strong {
+  font-size: 16px;
+}
+
+.scope-panel__intro span {
+  color: var(--text-color-2);
+  line-height: 1.7;
+}
+
+.scope-option-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.scope-option-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  text-align: left;
+  border: 1px solid var(--lc-border, rgba(148, 163, 184, 0.2));
+  border-radius: 16px;
+  background: var(--lc-surface, var(--card-color));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.scope-option-card strong {
+  color: var(--text-color-1);
+}
+
+.scope-option-card span {
+  color: var(--text-color-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.scope-option-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--primary-color);
+}
+
+.scope-option-card--active {
+  border-color: var(--primary-color);
+  box-shadow: 0 12px 30px rgba(15, 118, 110, 0.12);
+}
+
+.scope-option-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.scope-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scope-select-wrap {
+  width: 100%;
+}
+
+.scope-select-wrap :deep(.n-tree-select) {
+  width: 100%;
+}
+
 .modal-footer,
 .drawer-footer {
   display: flex;
@@ -1005,9 +1496,28 @@ watch(buttonTreeOptions, (options) => {
   gap: 12px;
 }
 
+@media (max-width: 1280px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .assign-panel__toolbar {
     flex-wrap: wrap;
+  }
+
+  .scope-option-list {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-item,
+  .toolbar-item--wide {
+    width: 100%;
   }
 }
 </style>

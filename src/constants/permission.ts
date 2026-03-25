@@ -1,4 +1,5 @@
 export const SUPER_BUTTON_CODE_LIST = [ '*', '*:*:*' ] as const;
+export const SUPER_ADMIN_IDENTITY_LIST = [ 'admin', 'super_admin' ] as const;
 
 export const BUTTON_PERMISSION_CODES = {
   systemUser: {

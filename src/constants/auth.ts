@@ -1,3 +1,5 @@
+import type { DataScopeType } from './data-scope';
+
 export const AUTH_STORAGE_KEYS = {
   accessToken: 'AUTH_ACCESS_TOKEN',
   userInfo: 'AUTH_USER_INFO',
@@ -12,10 +14,13 @@ export interface LoginSessionPayload {
 }
 
 export interface CurrentUserInfo {
+  id?: string;
   username: string;
   displayName: string;
   avatar?: string;
   buttonCodeList: string[];
+  dataScopeType?: DataScopeType;
+  dataScopeDeptIds?: number[];
 }
 
 export interface AuthLocalCacheSchema {

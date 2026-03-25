@@ -1,3 +1,4 @@
+import type { DataScopeType } from '@/constants/data-scope';
 import { request } from '@/utils/http';
 
 export interface LoginRequestPayload {
@@ -13,6 +14,8 @@ export interface LoginResponsePayload {
   buttonCodes?: string[] | null;
   permissions?: string[] | null;
   permissionCodes?: string[] | null;
+  dataScopeType?: DataScopeType | null;
+  dataScopeDeptIds?: number[] | null;
   user: {
     id: string;
     username: string;
@@ -21,6 +24,8 @@ export interface LoginResponsePayload {
     buttonCodes?: string[] | null;
     permissions?: string[] | null;
     permissionCodes?: string[] | null;
+    dataScopeType?: DataScopeType | null;
+    dataScopeDeptIds?: number[] | null;
   };
 }
 

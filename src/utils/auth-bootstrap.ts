@@ -16,9 +16,12 @@ async function bootstrapAuthState(menuStore: MenuStoreLike) {
     tasks.push(
       getProfileApi().then(({ data }) => {
         setCurrentUserInfo({
+          id: data.id,
           username: data.username,
           displayName: data.nickname || data.username,
-          buttonCodeList: resolveSessionButtonCodeList(data.username, data)
+          buttonCodeList: resolveSessionButtonCodeList(data.username, data),
+          dataScopeType: data.dataScopeType || undefined,
+          dataScopeDeptIds: data.dataScopeDeptIds || undefined
         });
       })
     );

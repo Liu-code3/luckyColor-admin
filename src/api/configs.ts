@@ -1,7 +1,8 @@
 import { request } from '@/utils/http';
-import type { PageQueryParams, PageResult } from './types';
+import { mergeDataScopeQueryParams } from '@/utils/data-scope';
+import type { DataScopeQueryParams, PageQueryParams, PageResult } from './types';
 
-export interface ConfigQueryParams extends PageQueryParams {
+export interface ConfigQueryParams extends PageQueryParams, DataScopeQueryParams {
   keyword?: string;
 }
 
@@ -45,7 +46,7 @@ export function getConfigPageApi(params: ConfigQueryParams) {
   return request<ConfigQueryParams, PageResult<ConfigRecord>>({
     url: '/configs',
     method: 'get',
-    params
+    params: mergeDataScopeQueryParams(params)
   });
 }
 

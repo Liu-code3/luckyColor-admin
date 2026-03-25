@@ -1,3 +1,4 @@
+import type { DataScopeType } from '@/constants/data-scope';
 import { request } from '@/utils/http';
 
 export interface LoginUserProfile {
@@ -8,6 +9,8 @@ export interface LoginUserProfile {
   buttonCodes?: string[] | null;
   permissions?: string[] | null;
   permissionCodes?: string[] | null;
+  dataScopeType?: DataScopeType | null;
+  dataScopeDeptIds?: number[] | null;
 }
 
 export function getProfileApi() {

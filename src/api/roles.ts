@@ -1,5 +1,6 @@
 import { request } from '@/utils/http';
 import type { PageQueryParams, PageResult } from './types';
+import type { DataScopeType } from '@/constants/data-scope';
 
 export interface RoleQueryParams extends PageQueryParams {
   keyword?: string;
@@ -52,6 +53,14 @@ export interface RoleMenuAssignment {
   menus: RoleAssignedMenu[];
 }
 
+export interface RoleDataScopeAssignment {
+  roleId: string;
+  name: string;
+  code: string;
+  dataScopeType: DataScopeType;
+  customDeptIds: number[];
+}
+
 export function getRolePageApi(params: RoleQueryParams) {
   return request<RoleQueryParams, PageResult<RoleRecord>>({
     url: '/roles',
@@ -102,5 +111,20 @@ export function assignRoleMenusApi(id: string, menuIds: number[]) {
     url: `/roles/${id}/menus`,
     method: 'put',
     data: { menuIds }
+  });
+}
+
+export function getRoleDataScopeApi(id: string) {
+  return request<never, RoleDataScopeAssignment>({
+    url: `/roles/${id}/data-scope`,
+    method: 'get'
+  });
+}
+
+export function saveRoleDataScopeApi(id: string, data: Pick<RoleDataScopeAssignment, 'dataScopeType' | 'customDeptIds'>) {
+  return request<Pick<RoleDataScopeAssignment, 'dataScopeType' | 'customDeptIds'>, RoleDataScopeAssignment>({
+    url: `/roles/${id}/data-scope`,
+    method: 'put',
+    data
   });
 }

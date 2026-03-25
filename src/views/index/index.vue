@@ -52,6 +52,24 @@ interface TrendChartPoint {
   hitWidth: number
 }
 
+interface QuickEntryItem {
+  title: string
+  description: string
+  path: string
+  icon: string
+  tag: string
+  metric: string
+}
+
+interface TodoItem {
+  title: string
+  summary: string
+  path: string
+  icon: string
+  tag: string
+  actionLabel: string
+}
+
 const router = useRouter()
 
 const loading = ref(false)
@@ -122,8 +140,112 @@ const statCards = computed(() => [
     accent: '#f97316',
     helper: '今日页面访问量',
     footer: `${dashboardData.value.stats.pageViews} 次浏览`
+  },
+  {
+    title: '待办事项',
+    value: todoItems.value.length,
+    unit: '项',
+    icon: 'solar:checklist-minimalistic-linear',
+    accent: '#7c3aed',
+    helper: '当前工作台建议优先处理的运营动作',
+    footer: `${todoItems.value.length} 项待跟进`
   }
 ])
+
+const quickEntryItems = computed<QuickEntryItem[]>(() => [
+  {
+    title: '用户管理',
+    description: '处理账号新增、角色分配与成员维护。',
+    path: '/systemManagement/system/users',
+    icon: 'solar:users-group-rounded-linear',
+    tag: '账号',
+    metric: `${dashboardData.value.recentVisits.length} 条访问`
+  },
+  {
+    title: '角色权限',
+    description: '统一管理菜单、按钮与数据权限策略。',
+    path: '/systemManagement/system/role',
+    icon: 'solar:shield-user-linear',
+    tag: '权限',
+    metric: `${dashboardData.value.notices.length} 条公告关联`
+  },
+  {
+    title: '菜单管理',
+    description: '维护动态菜单结构与可见性配置。',
+    path: '/systemManagement/system/menu',
+    icon: 'solar:widget-4-linear',
+    tag: '导航',
+    metric: `${trendRange.value} 天趋势`
+  },
+  {
+    title: '字典管理',
+    description: '统一维护业务字典与基础选项集。',
+    path: '/systemManagement/system/dict',
+    icon: 'solar:book-bookmark-linear',
+    tag: '基础数据',
+    metric: `${dashboardData.value.stats.pageViews} 次浏览`
+  },
+  {
+    title: '租户管理',
+    description: '查看租户状态、到期信息与初始化结果。',
+    path: '/tenantCenter/tenant',
+    icon: 'solar:buildings-2-linear',
+    tag: 'SaaS',
+    metric: `${dashboardData.value.stats.onlineUsers} 人在线`
+  },
+  {
+    title: '租户套餐',
+    description: '收敛套餐能力、开关与可用范围。',
+    path: '/tenantCenter/tenantPackage',
+    icon: 'solar:box-linear',
+    tag: '套餐',
+    metric: `${dashboardData.value.stats.visitorUv} UV`
+  }
+])
+
+const todoItems = computed<TodoItem[]>(() => {
+  const latestNotice = dashboardData.value.notices[0]
+  const latestVisit = dashboardData.value.recentVisits[0]
+
+  return [
+    {
+      title: latestNotice ? '复核平台公告内容' : '补充平台公告',
+      summary: latestNotice
+        ? `最近一条公告为“${latestNotice.title}”，建议检查发布时间与内容是否仍然有效。`
+        : '当前暂无可展示公告，建议补充系统通知或平台公告。',
+      path: '/systemManagement/system/notice',
+      icon: 'solar:bell-linear',
+      tag: latestNotice ? '公告巡检' : '待发布',
+      actionLabel: latestNotice ? '查看公告' : '前往发布'
+    },
+    {
+      title: '巡检角色授权策略',
+      summary: '重点核对核心角色的菜单权限、按钮权限与数据权限是否匹配当前业务边界。',
+      path: '/systemManagement/system/role',
+      icon: 'solar:shield-keyhole-linear',
+      tag: '权限治理',
+      actionLabel: '检查权限'
+    },
+    {
+      title: '跟进高频访问入口',
+      summary: latestVisit
+        ? `最近访问最高频入口可从“${latestVisit.routeTitle}”开始复查，确认页面数据与操作链路是否正常。`
+        : '当前暂无最近访问记录，可从用户管理或租户管理开始巡检。',
+      path: latestVisit?.routePath || '/systemManagement/system/users',
+      icon: 'solar:cursor-square-linear',
+      tag: '活跃入口',
+      actionLabel: '打开页面'
+    },
+    {
+      title: '关注租户活跃与容量',
+      summary: `当前 ${dashboardData.value.stats.onlineUsers} 位在线用户、${dashboardData.value.stats.visitorUv} 位访客，建议同步检查租户使用情况与套餐容量。`,
+      path: '/tenantCenter/tenant',
+      icon: 'solar:monitor-smartphone-linear',
+      tag: '租户运营',
+      actionLabel: '查看租户'
+    }
+  ]
+})
 
 const trendData = computed(() => {
   const records = dashboardData.value.trend
@@ -368,6 +490,72 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       </article>
     </section>
 
+    <section class="workspace-grid">
+      <article class="panel">
+        <header class="panel-header">
+          <div>
+            <p>Quick Actions</p>
+            <h2>快捷入口</h2>
+          </div>
+        </header>
+
+        <div class="quick-entry-grid">
+          <button
+            v-for="item in quickEntryItems"
+            :key="item.path"
+            type="button"
+            class="quick-entry-card"
+            @click="openPage(item.path)"
+          >
+            <div class="quick-entry-card__head">
+              <div class="quick-entry-card__icon">
+                <Icon :icon="item.icon" />
+              </div>
+              <n-tag size="small" round>{{ item.tag }}</n-tag>
+            </div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.description }}</p>
+            <div class="quick-entry-card__meta">
+              <span>{{ item.metric }}</span>
+              <Icon icon="solar:arrow-right-up-linear" />
+            </div>
+          </button>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-header">
+          <div>
+            <p>Todo Board</p>
+            <h2>待办事项</h2>
+          </div>
+        </header>
+
+        <div class="todo-list">
+          <button
+            v-for="item in todoItems"
+            :key="`${item.title}-${item.path}`"
+            type="button"
+            class="todo-card"
+            @click="openPage(item.path)"
+          >
+            <div class="todo-card__head">
+              <div class="todo-card__icon">
+                <Icon :icon="item.icon" />
+              </div>
+              <n-tag size="small" type="warning" round>{{ item.tag }}</n-tag>
+            </div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.summary }}</p>
+            <div class="todo-card__footer">
+              <span>{{ item.actionLabel }}</span>
+              <Icon icon="solar:arrow-right-linear" />
+            </div>
+          </button>
+        </div>
+      </article>
+    </section>
+
     <section class="info-stack">
       <article class="panel">
         <header class="panel-header">
@@ -387,8 +575,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Notices</p>
-            <h2>通知公告</h2>
+            <p>Platform Notice</p>
+            <h2>平台公告</h2>
           </div>
           <n-button text type="primary" @click="openNoticePage">查看全部</n-button>
         </header>
@@ -722,7 +910,13 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
   gap: 16px;
 }
 
@@ -964,9 +1158,15 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 .visit-list,
 .notice-list,
 .notice-loading,
-.overview-list {
+.overview-list,
+.todo-list,
+.quick-entry-grid {
   display: grid;
   gap: 12px;
+}
+
+.quick-entry-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .notice-list {
@@ -978,7 +1178,9 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 }
 
 .visit-card,
-.notice-card {
+.notice-card,
+.quick-entry-card,
+.todo-card {
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.82);
@@ -986,7 +1188,9 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 }
 
 .visit-card:hover,
-.notice-card:hover {
+.notice-card:hover,
+.quick-entry-card:hover,
+.todo-card:hover {
   transform: translateY(-2px);
   border-color: rgba(14, 165, 233, 0.22);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
@@ -1025,6 +1229,71 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   font-size: 18px;
 }
 
+.quick-entry-card,
+.todo-card {
+  width: 100%;
+  padding: 16px 18px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quick-entry-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-entry-card__head,
+.todo-card__head,
+.quick-entry-card__meta,
+.todo-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quick-entry-card__icon,
+.todo-card__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 20px;
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.quick-entry-card strong,
+.todo-card strong {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.quick-entry-card p,
+.todo-card p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.quick-entry-card__meta,
+.todo-card__footer {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.todo-list {
+  grid-template-columns: 1fr;
+}
+
+.todo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .notice-card {
   width: 100%;
   padding: 16px 18px;
@@ -1060,10 +1329,15 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
 }
 
 @media (max-width: 1280px) {
+  .workspace-grid,
   .content-grid,
   .overview-list,
   .notice-list {
     grid-template-columns: 1fr;
+  }
+
+  .quick-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1080,7 +1354,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .overview-list {
@@ -1094,6 +1368,11 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
   }
 
   .overview-list {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-entry-grid,
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 

@@ -1,7 +1,8 @@
 import { request } from '@/utils/http';
-import type { PageQueryParams, PageResult } from './types';
+import { mergeDataScopeQueryParams } from '@/utils/data-scope';
+import type { DataScopeQueryParams, PageQueryParams, PageResult } from './types';
 
-export interface DepartmentQueryParams extends PageQueryParams {
+export interface DepartmentQueryParams extends PageQueryParams, DataScopeQueryParams {
   keyword?: string;
 }
 
@@ -53,14 +54,15 @@ export function getDepartmentPageApi(params: DepartmentQueryParams) {
   return request<DepartmentQueryParams, PageResult<DepartmentRecord>>({
     url: '/departments',
     method: 'get',
-    params
+    params: mergeDataScopeQueryParams(params)
   });
 }
 
 export function getDepartmentTreeApi() {
-  return request<never, DepartmentTreeRecord[]>({
+  return request<DataScopeQueryParams, DepartmentTreeRecord[]>({
     url: '/departments/tree',
-    method: 'get'
+    method: 'get',
+    params: mergeDataScopeQueryParams()
   });
 }
 

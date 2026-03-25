@@ -1,7 +1,8 @@
 import { request } from '@/utils/http';
-import type { PageQueryParams, PageResult } from './types';
+import { mergeDataScopeQueryParams } from '@/utils/data-scope';
+import type { DataScopeQueryParams, PageQueryParams, PageResult } from './types';
 
-export interface UserQueryParams extends PageQueryParams {
+export interface UserQueryParams extends PageQueryParams, DataScopeQueryParams {
   keyword?: string;
 }
 
@@ -46,7 +47,7 @@ export function getUserPageApi(params: UserQueryParams) {
   return request<UserQueryParams, PageResult<UserRecord>>({
     url: '/users',
     method: 'get',
-    params
+    params: mergeDataScopeQueryParams(params)
   });
 }
 

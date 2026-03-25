@@ -3,6 +3,12 @@ export interface PageQueryParams {
   size?: number;
 }
 
+export interface DataScopeQueryParams {
+  dataScopeType?: string;
+  dataScopeDeptIds?: string;
+  dataScopeUserId?: string;
+}
+
 export interface PageResult<T> {
   total: number;
   current: number;
