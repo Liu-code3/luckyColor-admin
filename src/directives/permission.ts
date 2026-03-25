@@ -5,20 +5,23 @@ import {
   type PermissionValue
 } from '@/utils/permission';
 
-type PermissionDirectiveEffect = 'remove' | 'hide' | 'disable';
+export type PermissionDirectiveEffect = 'remove' | 'hide' | 'disable';
 
-interface PermissionDirectiveOptions {
+export interface PermissionDirectiveOptions {
   permissions: PermissionValue;
   mode?: PermissionMode;
   effect?: PermissionDirectiveEffect;
+  superCodes?: string[];
 }
 
-type PermissionDirectiveBinding = PermissionValue | PermissionDirectiveOptions;
+export type PermissionDirectiveBinding = PermissionValue | PermissionDirectiveOptions;
 
 interface PermissionManagedElement extends HTMLElement {
   __permissionDisplay?: string;
+  __permissionVisibility?: string;
   __permissionPointerEvents?: string;
   __permissionOpacity?: string;
+  __permissionAriaHidden?: string | null;
   __permissionAriaDisabled?: string | null;
   __permissionDisabled?: boolean;
 }
@@ -38,15 +41,19 @@ function applyPermission(
 ) {
   const options = normalizeDirectiveValue(value);
 
-  if (!options)
+  if (!options) {
+    restoreVisualState(el);
+    restoreDisabledState(el);
     return;
+  }
 
   const allowed = hasPermission(options.permissions, {
-    mode: options.mode
+    mode: options.mode,
+    superCodes: options.superCodes
   });
 
   if (allowed) {
-    restoreHiddenState(el);
+    restoreVisualState(el);
     restoreDisabledState(el);
     return;
   }
@@ -58,12 +65,13 @@ function applyPermission(
   }
 
   if (options.effect === 'disable') {
-    restoreHiddenState(el);
+    restoreVisualState(el);
     disableElement(el);
     return;
   }
 
-  el.remove();
+  removeElement(el);
+  restoreDisabledState(el);
 }
 
 function normalizeDirectiveValue(
@@ -86,17 +94,48 @@ function normalizeDirectiveValue(
   };
 }
 
+function removeElement(el: PermissionManagedElement) {
+  preserveVisualState(el);
+  el.style.display = 'none';
+  el.style.visibility = el.__permissionVisibility || '';
+  el.setAttribute('aria-hidden', 'true');
+}
+
 function hideElement(el: PermissionManagedElement) {
+  preserveVisualState(el);
+  el.style.display = el.__permissionDisplay || '';
+  el.style.visibility = 'hidden';
+  el.setAttribute('aria-hidden', 'true');
+}
+
+function preserveVisualState(el: PermissionManagedElement) {
   if (el.__permissionDisplay === undefined) {
     el.__permissionDisplay = el.style.display;
   }
 
-  el.style.display = 'none';
+  if (el.__permissionVisibility === undefined) {
+    el.__permissionVisibility = el.style.visibility;
+  }
+
+  if (el.__permissionAriaHidden === undefined) {
+    el.__permissionAriaHidden = el.getAttribute('aria-hidden');
+  }
 }
 
-function restoreHiddenState(el: PermissionManagedElement) {
+function restoreVisualState(el: PermissionManagedElement) {
   if (el.__permissionDisplay !== undefined) {
     el.style.display = el.__permissionDisplay;
+  }
+
+  if (el.__permissionVisibility !== undefined) {
+    el.style.visibility = el.__permissionVisibility;
+  }
+
+  if (el.__permissionAriaHidden === null) {
+    el.removeAttribute('aria-hidden');
+  }
+  else if (el.__permissionAriaHidden !== undefined) {
+    el.setAttribute('aria-hidden', el.__permissionAriaHidden);
   }
 }
 
