@@ -8,6 +8,7 @@ import {
   getNoticeDetailApi,
   getNoticePageApi,
   publishNoticeApi,
+  revokeNoticeApi,
   updateNoticeApi
 } from '@/api';
 import { confirmAction } from '@/utils/confirm';
@@ -302,6 +303,19 @@ async function handlePublishNotice(notice: NoticeRecord) {
   await fetchNotices(page.value);
 }
 
+async function handleRevokeNotice(notice: NoticeRecord) {
+  const confirmed = await confirmAction({
+    title: '下线公告',
+    content: `确认下线公告“${notice.title}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await revokeNoticeApi(notice.id);
+  await fetchNotices(page.value);
+}
+
 onMounted(() => {
   fetchNotices();
 });
@@ -400,6 +414,14 @@ onMounted(() => {
                     @click="handlePublishNotice(item)"
                   >
                     发布
+                  </n-button>
+                  <n-button
+                    v-if="item.status"
+                    quaternary
+                    type="warning"
+                    @click="handleRevokeNotice(item)"
+                  >
+                    下线
                   </n-button>
                   <n-button quaternary type="primary" @click="openEditDrawer(item)">
                     编辑

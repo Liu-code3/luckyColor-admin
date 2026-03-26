@@ -81,6 +81,13 @@ export function publishNoticeApi(id: string, data: PublishNoticePayload) {
   });
 }
 
+export function revokeNoticeApi(id: string) {
+  return request<never, NoticeRecord>({
+    url: `/notices/${id}/revoke`,
+    method: 'patch'
+  });
+}
+
 export function deleteNoticeApi(id: string) {
   return request<never, boolean>({
     url: `/notices/${id}`,
