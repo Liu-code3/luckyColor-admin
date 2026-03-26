@@ -3,6 +3,7 @@ import type { DataScopeType } from './data-scope';
 export const AUTH_STORAGE_KEYS = {
   accessToken: 'AUTH_ACCESS_TOKEN',
   userInfo: 'AUTH_USER_INFO',
+  currentTenant: 'AUTH_CURRENT_TENANT',
   menuTree: 'AUTH_MENU_TREE',
   lastViewPath: 'AUTH_LAST_VIEW_PATH',
   lockScreenPassword: 'AUTH_LOCK_SCREEN_PASSWORD',

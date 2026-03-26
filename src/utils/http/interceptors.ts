@@ -9,7 +9,8 @@ import sysConfig from '@/config'
 import {
   clearLoginSession,
   getAccessToken,
-  getUsableAccessToken
+  getUsableAccessToken,
+  resolveTenantRequestHeaders
 } from '@/utils/auth'
 import { message } from '@/utils/message.ts'
 import { handlerError, reloadCodes } from '@/utils/http/config.ts'
@@ -58,7 +59,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
       config.params._ = new Date().getTime()
     }
 
-    Object.assign(config.headers, sysConfig.HEADERS)
+    Object.assign(config.headers, sysConfig.HEADERS, resolveTenantRequestHeaders())
     return config
   }
 

@@ -1,8 +1,10 @@
 import {
   AUTH_STORAGE_KEYS,
   type CurrentUserInfo,
-  type LoginSessionPayload
+  type LoginSessionPayload,
+  type TenantContextInfo
 } from '@/constants/auth';
+import sysConfig from '@/config';
 import tool from '@/utils/tool';
 
 const AUTH_SESSION_CLEARED_EVENT = 'auth:session-cleared';
@@ -34,6 +36,46 @@ export function setCurrentUserInfo(userInfo: CurrentUserInfo) {
 
 export function getCurrentUserInfo() {
   return tool.data.get<CurrentUserInfo>(AUTH_STORAGE_KEYS.userInfo);
+}
+
+export function setCurrentTenantContext(tenant: TenantContextInfo) {
+  tool.data.set(AUTH_STORAGE_KEYS.currentTenant, tenant);
+}
+
+export function getCurrentTenantContext() {
+  const cachedTenant = tool.data.get<TenantContextInfo>(AUTH_STORAGE_KEYS.currentTenant);
+
+  if (cachedTenant?.tenantId) {
+    return cachedTenant;
+  }
+
+  if (sysConfig.TENANT_ENABLED && sysConfig.DEFAULT_TENANT_ID) {
+    const fallbackTenant = {
+      tenantId: sysConfig.DEFAULT_TENANT_ID,
+      source: 'env'
+    } satisfies TenantContextInfo;
+
+    setCurrentTenantContext(fallbackTenant);
+    return fallbackTenant;
+  }
+
+  return null;
+}
+
+export function removeCurrentTenantContext() {
+  tool.data.remove(AUTH_STORAGE_KEYS.currentTenant);
+}
+
+export function resolveTenantRequestHeaders() {
+  const tenant = getCurrentTenantContext();
+
+  if (!sysConfig.TENANT_ENABLED || !tenant?.tenantId) {
+    return {};
+  }
+
+  return {
+    [sysConfig.TENANT_HEADER_NAME]: tenant.tenantId
+  };
 }
 
 export function removeCurrentUserInfo() {

@@ -28,6 +28,8 @@ const DEFAULT_CONFIG = {
   TIMEOUT: 60000,
   TOKEN_NAME: 'Authorization',
   TOKEN_PREFIX: 'Bearer ',
+  TENANT_HEADER_NAME: 'x-tenant-id',
+  DEFAULT_TENANT_ID: tenantId,
   HEADERS: tenantEnabled && tenantId
     ? {
         'x-tenant-id': tenantId
