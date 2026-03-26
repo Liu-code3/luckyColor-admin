@@ -7,7 +7,7 @@ import {
   deleteNoticeApi,
   getNoticeDetailApi,
   getNoticePageApi,
-
+  publishNoticeApi,
   updateNoticeApi
 } from '@/api';
 import { confirmAction } from '@/utils/confirm';
@@ -286,6 +286,22 @@ async function handleDeleteNotice(notice: NoticeRecord) {
   await fetchNotices(nextPage);
 }
 
+async function handlePublishNotice(notice: NoticeRecord) {
+  const confirmed = await confirmAction({
+    title: '发布公告',
+    content: `确认发布公告“${notice.title}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await publishNoticeApi(notice.id, {
+    publisher: notice.publisher ?? undefined,
+    publishedAt: notice.publishedAt ?? undefined
+  });
+  await fetchNotices(page.value);
+}
+
 onMounted(() => {
   fetchNotices();
 });
@@ -376,6 +392,14 @@ onMounted(() => {
                 <div class="operation-actions">
                   <n-button quaternary @click="openPreviewModal(item)">
                     预览
+                  </n-button>
+                  <n-button
+                    v-if="!item.status"
+                    quaternary
+                    type="primary"
+                    @click="handlePublishNotice(item)"
+                  >
+                    发布
                   </n-button>
                   <n-button quaternary type="primary" @click="openEditDrawer(item)">
                     编辑

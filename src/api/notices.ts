@@ -36,6 +36,12 @@ export interface UpdateNoticePayload {
   publishedAt?: string | null;
 }
 
+export interface PublishNoticePayload {
+  publisher?: string | null;
+  scheduledPublishAt?: string | null;
+  publishedAt?: string | null;
+}
+
 export function getNoticePageApi(params: NoticeQueryParams) {
   return request<NoticeQueryParams, PageResult<NoticeRecord>>({
     url: '/notices',
@@ -62,6 +68,14 @@ export function createNoticeApi(data: CreateNoticePayload) {
 export function updateNoticeApi(id: string, data: UpdateNoticePayload) {
   return request<UpdateNoticePayload, NoticeRecord>({
     url: `/notices/${id}`,
+    method: 'patch',
+    data
+  });
+}
+
+export function publishNoticeApi(id: string, data: PublishNoticePayload) {
+  return request<PublishNoticePayload, NoticeRecord>({
+    url: `/notices/${id}/publish`,
     method: 'patch',
     data
   });
