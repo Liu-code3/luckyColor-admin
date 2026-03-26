@@ -13,11 +13,23 @@ export interface LoginSessionPayload {
   accessToken: string;
 }
 
+export type TenantContextSource = 'env' | 'login' | 'profile' | 'switch';
+
+export interface TenantContextInfo {
+  tenantId: string;
+  tenantName?: string | null;
+  tenantCode?: string | null;
+  source?: TenantContextSource;
+}
+
 export interface CurrentUserInfo {
   id?: string;
+  tenantId?: string;
+  tenantName?: string | null;
   username: string;
   displayName: string;
   avatar?: string;
+  roleCodes?: string[];
   buttonCodeList: string[];
   dataScopeType?: DataScopeType;
   dataScopeDeptIds?: number[];
@@ -26,6 +38,7 @@ export interface CurrentUserInfo {
 export interface AuthLocalCacheSchema {
   accessToken: string;
   userInfo: CurrentUserInfo;
+  currentTenant: TenantContextInfo;
   menuTree: LayoutT.MenuItem[];
   lastViewPath: string;
   lockScreenPassword: string;

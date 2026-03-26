@@ -19,8 +19,11 @@ export interface LoginResponsePayload {
   dataScopeDeptIds?: number[] | null;
   user: {
     id: string;
+    tenantId: string;
+    tenantName?: string | null;
     username: string;
     nickname?: string | null;
+    roleCodes?: string[] | null;
     buttonCodeList?: string[] | null;
     buttonCodes?: string[] | null;
     permissions?: string[] | null;
