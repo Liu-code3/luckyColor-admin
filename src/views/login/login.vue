@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-import type { FormInst, FormRules } from 'naive-ui';
-import { useRouter } from 'vue-router';
 import type { LoginCaptchaChallengePayload } from '@/api';
+import type { FormInst, FormRules } from 'naive-ui';
+import { Icon } from '@iconify/vue';
+import { useRouter } from 'vue-router';
 import {
   getLoginCaptchaChallengeApi,
   getMenuTreeApi,
@@ -27,11 +27,13 @@ const router = useRouter();
 const menuStore = useMenuStore();
 const formRef = ref<FormInst | null>(null);
 
-const accentColor = ref('#0F766E');
+const accentColor = ref(sysConfig.COLOR || '#0F766E');
 const loginCaptchaEnabled = sysConfig.LOGIN_CAPTCHA_ENABLED;
 const tenantEnabled = sysConfig.TENANT_ENABLED;
 const defaultUsername = sysConfig.DEFAULT_LOGIN_USERNAME;
 const defaultPassword = sysConfig.DEFAULT_LOGIN_PASSWORD;
+const INTEGER_PATTERN = /^-?\d+$/;
+const HEX_COLOR_PATTERN = /^[0-9a-f]{6}$/i;
 
 const formValue = reactive({
   adminName: defaultUsername,
@@ -56,117 +58,71 @@ const rules = computed<FormRules>(() => {
     password: {
       required: true,
       message: '请输入登录密码',
-      trigger: ['input', 'blur']
+      trigger: [ 'input', 'blur' ]
     }
   };
 
-  if (!loginCaptchaEnabled)
+  if (!loginCaptchaEnabled) {
     return baseRules;
+  }
 
   return {
     ...baseRules,
     captchaAnswer: [
       {
         required: true,
-        message: '请输入算术验证码结果',
-        trigger: ['input', 'blur']
+        message: '请输入算术校验结果',
+        trigger: [ 'input', 'blur' ]
       },
       {
-        validator: (_rule, value: string) => /^-?\d+$/.test(String(value ?? '').trim())
+        validator: (_rule, value: string) => INTEGER_PATTERN.test(String(value ?? '').trim())
           ? true
-          : new Error('验证码结果需为数字'),
-        trigger: ['input', 'blur']
+          : new Error('校验结果需为整数'),
+        trigger: [ 'input', 'blur' ]
       }
     ]
   };
 });
 
-const capabilityCards = computed(() => {
-  if (!loginCaptchaEnabled) {
-    return [
-      {
-        title: '开发登录更轻量',
-        description: '当前环境关闭了登录验证码，适合本地联调、联调回归和演示排查。'
-      },
-      {
-        title: '默认账号来自环境变量',
-        description: '登录页与租户初始化默认账号密码保持同源，切环境时不需要重复改页面。'
-      },
-      {
-        title: tenantEnabled ? '租户请求头已开启' : '租户请求头已关闭',
-        description: tenantEnabled
-          ? '前端会按环境变量自动附带租户头，和多租户后端配置保持一致。'
-          : '前端不会再附带租户头，适合单租户或本地最简运行场景。'
-      }
-    ];
-  }
+const authBadges = computed(() => [
+  loginCaptchaEnabled ? '服务端算术校验' : '快速登录模式',
+  tenantEnabled ? '多租户上下文' : '单租户模式'
+]);
 
-  return [
-    {
-      title: '后端实时出题',
-      description: '算式题面由服务端生成并带有效期下发，前端只负责展示与提交答案。'
-    },
-    {
-      title: '先校验后登录',
-      description: '验证码校验通过后才会进入账号密码登录链路，减少直接撞库的成功率。'
-    },
-    {
-      title: '一次性放行令牌',
-      description: '后端验证成功后签发短时 captchaToken，登录接口继续校验，避免被跳过。'
-    }
-  ];
-});
-
-const authSteps = computed(() => loginCaptchaEnabled
-  ? ['账号识别', '算术校验', '令牌登录']
-  : ['账号识别', '口令校验', '直接登录']);
-
-const securityPills = computed(() => {
-  const pills = [
-    tenantEnabled ? '租户请求头开启' : '租户请求头关闭',
-    `默认账号 ${defaultUsername}`
-  ];
-
-  if (loginCaptchaEnabled)
-    pills.unshift('NestJS 后端校验', 'SVG 算术题面');
-  else
-    pills.unshift('验证码已关闭', '本地联调更顺手');
-
-  return pills;
-});
-
-const quickFacts = computed(() => [
+const asideNotes = computed(() => [
   {
-    label: '登录模式',
-    value: loginCaptchaEnabled ? '口令 + 算术校验' : '账号密码'
+    title: '登录优先',
+    description: '首屏把注意力集中在登录动作本身，减少阅读成本和滚动负担。'
   },
   {
-    label: loginCaptchaEnabled ? '题面状态' : '验证码状态',
-    value: loginCaptchaEnabled
-      ? (captchaState.loading ? '加载中' : (captchaState.challenge ? '已就绪' : '待重试'))
-      : '已关闭'
+    title: '配色呼应系统',
+    description: '页面主色恢复为后台统一的青绿色系，品牌感更一致。'
   },
   {
-    label: '租户模式',
-    value: tenantEnabled ? '开启' : '关闭'
+    title: '环境信息收敛',
+    description: tenantEnabled
+      ? '保留必要的租户与验证提示，但不再让说明信息占据主卡片主体。'
+      : '当前为单租户模式，登录路径更简洁，适合本地联调与演示。'
   }
 ]);
 
 const loginPageStyle = computed(() => ({
   '--accent-color': accentColor.value,
-  '--accent-color-soft': hexToRgba(accentColor.value, 0.16),
-  '--accent-color-strong': hexToRgba(accentColor.value, 0.24),
-  '--accent-color-glow': hexToRgba(accentColor.value, 0.42)
+  '--accent-color-soft': hexToRgba(accentColor.value, 0.14),
+  '--accent-color-strong': hexToRgba(accentColor.value, 0.22),
+  '--accent-color-glow': hexToRgba(accentColor.value, 0.34)
 }));
 
 const submitButtonText = computed(() => {
-  if (captchaState.verifying)
+  if (captchaState.verifying) {
     return '校验中...';
+  }
 
-  if (captchaState.submitting)
+  if (captchaState.submitting) {
     return '登录中...';
+  }
 
-  return '安全登录';
+  return '进入工作台';
 });
 
 const canSubmit = computed(() => {
@@ -182,8 +138,9 @@ function hexToRgba(hex: string, alpha: number) {
     ? normalized.split('').map(char => char + char).join('')
     : normalized;
 
-  if (!/^[0-9a-fA-F]{6}$/.test(full))
+  if (!HEX_COLOR_PATTERN.test(full)) {
     return `rgba(15, 118, 110, ${alpha})`;
+  }
 
   const r = Number.parseInt(full.slice(0, 2), 16);
   const g = Number.parseInt(full.slice(2, 4), 16);
@@ -199,8 +156,9 @@ async function refreshCaptcha(showToast = false) {
     return;
   }
 
-  if (captchaState.loading)
+  if (captchaState.loading) {
     return;
+  }
 
   captchaState.loading = true;
   formValue.captchaAnswer = '';
@@ -209,13 +167,15 @@ async function refreshCaptcha(showToast = false) {
     const res = await getLoginCaptchaChallengeApi();
     captchaState.challenge = res.data;
 
-    if (showToast)
-      message.success('已刷新验证码题面');
+    if (showToast) {
+      message.success('已刷新算术题面');
+    }
   }
   catch {
     captchaState.challenge = null;
-    if (showToast)
-      message.error('验证码加载失败，请稍后重试');
+    if (showToast) {
+      message.error('算术题面加载失败，请稍后重试');
+    }
   }
   finally {
     captchaState.loading = false;
@@ -230,8 +190,9 @@ async function performLogin(captchaToken?: string) {
   });
 
   const { code, data } = res;
-  if (code !== 200)
+  if (code !== 200) {
     return;
+  }
 
   setAccessToken(data.accessToken);
   setCurrentTenantContext({
@@ -241,12 +202,12 @@ async function performLogin(captchaToken?: string) {
   });
   setCurrentUserInfo({
     id: data.user.id,
-    username: data.user.username,
     tenantId: data.user.tenantId,
     tenantName: data.user.tenantName ?? null,
+    username: data.user.username,
     displayName: data.user.nickname || data.user.username,
-    buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data),
     roleCodes: data.user.roleCodes || undefined,
+    buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data),
     dataScopeType: data.user.dataScopeType || data.dataScopeType || undefined,
     dataScopeDeptIds: data.user.dataScopeDeptIds || data.dataScopeDeptIds || undefined
   });
@@ -259,8 +220,9 @@ async function performLogin(captchaToken?: string) {
 }
 
 async function handleValidateClick() {
-  if (!formRef.value || captchaState.submitting || captchaState.verifying)
+  if (!formRef.value || captchaState.submitting || captchaState.verifying) {
     return;
+  }
 
   try {
     await formRef.value.validate();
@@ -283,7 +245,7 @@ async function handleValidateClick() {
   }
 
   if (!captchaState.challenge?.captchaId) {
-    message.warning('验证码尚未准备好，请刷新后再试');
+    message.warning('算术题面尚未准备完成，请刷新后再试');
     await refreshCaptcha();
     return;
   }
@@ -301,7 +263,7 @@ async function handleValidateClick() {
     captchaState.verifying = false;
 
     if (!captchaToken) {
-      message.error('验证码校验未返回放行令牌，请检查后端接口');
+      message.error('算术校验未返回放行令牌，请检查后端接口');
       await refreshCaptcha();
       return;
     }
@@ -318,8 +280,9 @@ async function handleValidateClick() {
 }
 
 onMounted(() => {
-  if (loginCaptchaEnabled)
+  if (loginCaptchaEnabled) {
     refreshCaptcha();
+  }
 });
 </script>
 
@@ -332,169 +295,163 @@ onMounted(() => {
     </div>
 
     <div class="theme-switcher">
-      <span>强调色</span>
+      <span>主题色</span>
       <n-color-picker v-model:value="accentColor" :show-alpha="false" />
     </div>
 
     <div class="login-shell">
-      <section class="brand-panel">
-        <div class="brand-panel__inner">
-          <div class="brand-badge">
-            <Icon icon="solar:shield-keyhole-linear" />
-            LuckyColor Admin
-          </div>
-
-          <h1>让登录入口更稳，也让环境切换更省心。</h1>
-          <p class="brand-copy">
-            登录页现在同时支持环境级别的默认账号、验证码开关和租户开关配置。
-            需要安全拦截时启用算术验证码，需要快速联调时也能一键切回轻量登录。
-          </p>
-
-          <div class="fact-grid">
-            <article v-for="fact in quickFacts" :key="fact.label" class="fact-card">
-              <span>{{ fact.label }}</span>
-              <strong>{{ fact.value }}</strong>
-            </article>
-          </div>
-
-          <div class="capability-list">
-            <article v-for="item in capabilityCards" :key="item.title" class="capability-card">
-              <div class="capability-index" />
-              <div>
-                <strong>{{ item.title }}</strong>
-                <p>{{ item.description }}</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
       <section class="auth-panel">
         <div class="auth-card">
+          <div class="auth-card__glow auth-card__glow--top" />
+          <div class="auth-card__glow auth-card__glow--bottom" />
+
           <div class="auth-card__topline">
-            <div class="auth-card__eyebrow">
-              Secure Access
-            </div>
-            <div class="auth-card__signal">
-              <Icon :icon="loginCaptchaEnabled ? 'solar:shield-check-linear' : 'solar:login-3-linear'" />
-              {{ loginCaptchaEnabled ? '后端算术验证' : '验证码已关闭' }}
-            </div>
-          </div>
-
-          <div class="auth-card__header">
-            <div>
-              <h2>欢迎回来</h2>
-              <p>
-                {{ loginCaptchaEnabled
-                  ? '输入账号密码，并通过一次后端算术校验后进入工作台。'
-                  : '当前环境已关闭登录验证码，输入账号密码即可进入工作台。' }}
-              </p>
-            </div>
-            <img src="@/assets/images/luckColor.png" alt="LuckyColor 标志" class="brand-logo">
-          </div>
-
-          <div class="auth-steps">
-            <div v-for="step in authSteps" :key="step" class="auth-step">
-              {{ step }}
+            <div class="auth-card__eyebrow">Secure Access</div>
+            <div class="auth-card__badges">
+              <span v-for="item in authBadges" :key="item" class="auth-card__badge">
+                {{ item }}
+              </span>
             </div>
           </div>
 
-          <div class="security-strip">
-            <span v-for="item in securityPills" :key="item" class="security-pill">
-              {{ item }}
-            </span>
+          <div class="auth-card__hero">
+            <img src="/logo-wordmark.svg" alt="LuckyColor Admin" class="brand-wordmark">
+
+            <div class="auth-card__copy">
+              <h1>欢迎回来</h1>
+              <p>请输入登录信息后进入工作台。</p>
+            </div>
           </div>
 
-          <div class="demo-notice">
-            <span>默认账号</span>
-            <strong>账号 `{{ defaultUsername }}`，密码 `{{ defaultPassword }}`</strong>
+          <div class="demo-credentials">
+            <div class="demo-credentials__label">演示账号</div>
+            <div class="demo-credentials__value">
+              <strong>{{ defaultUsername }}</strong>
+              <span>默认密码 {{ defaultPassword }}</span>
+            </div>
           </div>
 
-          <n-form ref="formRef" :model="formValue" :rules="rules" class="auth-form">
-            <div class="field-label">
-              登录账号
-            </div>
-            <n-form-item path="adminName">
-              <n-input
-                v-model:value="formValue.adminName"
-                clearable
-                placeholder="请输入登录账号"
-                @keyup.enter="handleValidateClick"
-              >
-                <template #prefix>
-                  <Icon icon="solar:user-linear" />
-                </template>
-              </n-input>
-            </n-form-item>
-
-            <div class="field-label">
-              登录密码
-            </div>
-            <n-form-item path="password">
-              <n-input
-                v-model:value="formValue.password"
-                type="password"
-                show-password-on="mousedown"
-                clearable
-                placeholder="请输入登录密码"
-                @keyup.enter="handleValidateClick"
-              >
-                <template #prefix>
-                  <Icon icon="solar:lock-password-linear" />
-                </template>
-              </n-input>
-            </n-form-item>
-
-            <n-form-item
-              v-if="loginCaptchaEnabled"
-              path="captchaAnswer"
-              class="auth-form__captcha-item"
-            >
-              <ArithmeticCaptchaPanel
-                v-model="formValue.captchaAnswer"
-                :challenge="captchaState.challenge"
-                :loading="captchaState.loading"
-                :verifying="captchaState.verifying || captchaState.submitting"
-                @refresh="refreshCaptcha(true)"
-                @submit="handleValidateClick"
-              />
-            </n-form-item>
-
-            <div class="auth-actions">
-              <n-button
-                type="primary"
-                attr-type="button"
-                class="login-button"
-                :disabled="!canSubmit"
-                :loading="captchaState.submitting"
-                @click="handleValidateClick"
-              >
-                {{ submitButtonText }}
-              </n-button>
-
-              <div class="auth-tip">
-                {{ loginCaptchaEnabled
-                  ? '验证码通过后会向后端换取一次性 captchaToken，随后再发起登录请求。'
-                  : '当前环境已跳过验证码步骤，适合本地开发和联调验证。' }}
+          <section class="form-panel">
+            <div class="form-panel__head">
+              <div>
+                <span>Sign In</span>
+                <strong>填写必要信息后即可进入后台</strong>
               </div>
+
+              <button
+                v-if="loginCaptchaEnabled"
+                type="button"
+                class="form-panel__refresh"
+                :disabled="captchaState.loading || captchaState.submitting"
+                @click="refreshCaptcha(true)"
+              >
+                刷新算题
+              </button>
             </div>
-          </n-form>
+
+            <n-form ref="formRef" :model="formValue" :rules="rules" class="auth-form">
+              <div class="field-label">登录账号</div>
+              <n-form-item path="adminName">
+                <n-input
+                  v-model:value="formValue.adminName"
+                  clearable
+                  placeholder="请输入登录账号"
+                  @keyup.enter="handleValidateClick"
+                >
+                  <template #prefix>
+                    <Icon icon="solar:user-linear" />
+                  </template>
+                </n-input>
+              </n-form-item>
+
+              <div v-if="loginCaptchaEnabled" class="field-label">算术校验</div>
+              <n-form-item
+                v-if="loginCaptchaEnabled"
+                path="captchaAnswer"
+                class="auth-form__captcha-item"
+              >
+                <ArithmeticCaptchaPanel
+                  v-model="formValue.captchaAnswer"
+                  :challenge="captchaState.challenge"
+                  :loading="captchaState.loading"
+                  :verifying="captchaState.verifying || captchaState.submitting"
+                  @refresh="refreshCaptcha(true)"
+                  @submit="handleValidateClick"
+                />
+              </n-form-item>
+
+              <div class="field-label">登录密码</div>
+              <n-form-item path="password">
+                <n-input
+                  v-model:value="formValue.password"
+                  type="password"
+                  show-password-on="mousedown"
+                  clearable
+                  placeholder="请输入登录密码"
+                  @keyup.enter="handleValidateClick"
+                >
+                  <template #prefix>
+                    <Icon icon="solar:lock-password-linear" />
+                  </template>
+                </n-input>
+              </n-form-item>
+
+              <div class="auth-actions">
+                <n-button
+                  type="primary"
+                  attr-type="button"
+                  class="login-button"
+                  :disabled="!canSubmit"
+                  :loading="captchaState.submitting"
+                  @click="handleValidateClick"
+                >
+                  {{ submitButtonText }}
+                </n-button>
+
+                <div class="auth-tip">
+                  {{ loginCaptchaEnabled
+                    ? '算术验证通过后会换取一次性 captchaToken，再继续执行登录请求。'
+                    : '当前环境已跳过验证码流程，更适合本地开发和联调验证。' }}
+                </div>
+              </div>
+            </n-form>
+          </section>
         </div>
       </section>
+
+      <aside class="brand-panel">
+        <div class="brand-panel__inner">
+          <div class="brand-badge" v-once>
+            <Icon icon="solar:notes-linear" />
+            System Brief
+          </div>
+
+          <div class="brand-panel__copy">
+            <h2>系统简介退居辅助位，登录信息才是这页的主角。</h2>
+            <p>这里只保留少量背景说明和环境提示，帮助理解，但不会再把登录卡片挤得过高。</p>
+          </div>
+
+          <div class="intro-list">
+            <article v-for="item in asideNotes" :key="item.title" class="intro-card">
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.description }}</p>
+            </article>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
 </template>
 
 <style lang="less" scoped>
 .login-page {
-  --panel-shadow: 0 34px 80px rgba(15, 23, 42, 0.24);
   position: relative;
   min-height: 100vh;
   overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 34%),
     linear-gradient(140deg, #06131d 0%, #0b2230 38%, #103f52 100%);
-  font-family: "Trebuchet MS", "Avenir Next", "Microsoft YaHei", sans-serif;
+  font-family: 'Trebuchet MS', 'Avenir Next', 'Microsoft YaHei', sans-serif;
 }
 
 .login-page__backdrop {
@@ -506,29 +463,29 @@ onMounted(() => {
 .orb {
   position: absolute;
   border-radius: 999px;
-  filter: blur(14px);
+  filter: blur(16px);
 }
 
 .orb--left {
-  width: 480px;
-  height: 480px;
-  left: -120px;
+  width: 460px;
+  height: 460px;
   top: -140px;
-  background: radial-gradient(circle, var(--accent-color-glow) 0%, transparent 68%);
+  left: -120px;
+  background: radial-gradient(circle, var(--accent-color-glow) 0%, transparent 70%);
 }
 
 .orb--right {
-  width: 560px;
-  height: 560px;
-  right: -180px;
-  bottom: -180px;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.2) 0%, transparent 70%);
+  width: 420px;
+  height: 420px;
+  right: -160px;
+  bottom: -120px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.16) 0%, transparent 72%);
 }
 
 .grid-mask {
   position: absolute;
   inset: 0;
-  opacity: 0.18;
+  opacity: 0.16;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
@@ -538,27 +495,27 @@ onMounted(() => {
 
 .theme-switcher {
   position: fixed;
-  top: 22px;
-  right: 22px;
+  top: 18px;
+  right: 18px;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 8px 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  background: rgba(6, 19, 29, 0.44);
-  color: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
+  background: rgba(6, 19, 29, 0.42);
+  color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(14px);
 }
 
 .theme-switcher span {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .theme-switcher :deep(.n-color-picker) {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
 }
 
 .theme-switcher :deep(.n-color-picker-trigger) {
@@ -575,118 +532,10 @@ onMounted(() => {
   z-index: 1;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(430px, 520px);
-  gap: 34px;
+  grid-template-columns: minmax(0, 1.18fr) minmax(280px, 340px);
+  gap: clamp(18px, 3vw, 32px);
   align-items: center;
-  padding: 48px clamp(24px, 5vw, 72px);
-}
-
-.brand-panel {
-  display: flex;
-  justify-content: center;
-}
-
-.brand-panel__inner {
-  max-width: 680px;
-  color: #f8fafc;
-}
-
-.brand-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  letter-spacing: 0.08em;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.brand-badge svg {
-  font-size: 16px;
-}
-
-.brand-panel h1 {
-  margin: 22px 0 18px;
-  font-size: clamp(40px, 5vw, 64px);
-  line-height: 1.05;
-  letter-spacing: 0.02em;
-}
-
-.brand-copy {
-  max-width: 580px;
-  margin: 0;
-  color: rgba(241, 245, 249, 0.8);
-  font-size: 17px;
-  line-height: 1.85;
-}
-
-.fact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.fact-card {
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(14px);
-}
-
-.fact-card span {
-  display: block;
-  font-size: 12px;
-  color: rgba(226, 232, 240, 0.72);
-}
-
-.fact-card strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 21px;
-  line-height: 1.35;
-}
-
-.capability-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.capability-card {
-  display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-  padding: 18px 20px;
-  border-radius: 20px;
-  background: rgba(6, 19, 29, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.capability-index {
-  width: 14px;
-  height: 14px;
-  margin-top: 4px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent-color), #f97316);
-  box-shadow: 0 0 18px var(--accent-color-glow);
-}
-
-.capability-card strong {
-  display: block;
-  font-size: 18px;
-}
-
-.capability-card p {
-  margin: 6px 0 0;
-  color: rgba(226, 232, 240, 0.76);
-  line-height: 1.7;
+  padding: 32px clamp(18px, 4vw, 56px);
 }
 
 .auth-panel {
@@ -695,14 +544,63 @@ onMounted(() => {
 }
 
 .auth-card {
-  width: min(100%, 500px);
-  padding: 30px 30px 28px;
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 680px);
+  padding: 26px;
   border-radius: 30px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94));
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  box-shadow: var(--panel-shadow);
-  backdrop-filter: blur(20px);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.95) 58%, rgba(239, 245, 247, 0.93)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 30px 78px rgba(2, 12, 27, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -1px 0 rgba(148, 163, 184, 0.1);
+  backdrop-filter: blur(22px);
+}
+
+.auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(15, 118, 110, 0.18), rgba(249, 115, 22, 0.12));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.auth-card__glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.auth-card__glow--top {
+  top: -56px;
+  right: 44px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(15, 118, 110, 0.22) 0%, rgba(15, 118, 110, 0.04) 60%, transparent 76%);
+}
+
+.auth-card__glow--bottom {
+  right: -36px;
+  bottom: -70px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.14) 0%, rgba(249, 115, 22, 0.03) 60%, transparent 76%);
 }
 
 .auth-card__topline {
@@ -710,215 +608,395 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.auth-card__eyebrow,
-.auth-card__signal {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .auth-card__eyebrow {
-  background: var(--accent-color-soft);
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(15, 118, 110, 0.06));
   color: #0f172a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.auth-card__signal {
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.08);
-}
-
-.auth-card__header {
+.auth-card__badges {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.auth-card__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.auth-card__hero {
+  display: grid;
+  gap: 16px;
   margin-top: 18px;
 }
 
-.auth-card__header h2 {
+.brand-wordmark {
+  width: min(100%, 248px);
+  height: auto;
+  display: block;
+}
+
+.auth-card__copy h1 {
   margin: 0;
-  font-size: 34px;
-  line-height: 1.1;
   color: #0f172a;
+  font-size: clamp(30px, 4vw, 40px);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
 }
 
-.auth-card__header p {
+.auth-card__copy p {
+  max-width: 520px;
   margin: 10px 0 0;
-  color: #475569;
-  line-height: 1.7;
+  color: #526173;
+  font-size: 15px;
+  line-height: 1.72;
 }
 
-.brand-logo {
-  width: 58px;
-  height: 58px;
-  object-fit: contain;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--accent-color-soft), rgba(249, 115, 22, 0.12));
-  padding: 10px;
+.demo-credentials {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(249, 115, 22, 0.12) 82%),
+    rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
-.auth-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 24px;
+.demo-credentials__label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.auth-step {
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+.demo-credentials__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.demo-credentials__value strong {
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.demo-credentials__value span {
+  color: #526173;
+  font-size: 13px;
+}
+
+.form-panel {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 14px 28px rgba(15, 23, 42, 0.04);
+}
+
+.form-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.form-panel__head span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.form-panel__head strong {
+  display: block;
+  margin-top: 6px;
   color: #334155;
   font-size: 13px;
   font-weight: 700;
-  text-align: center;
 }
 
-.security-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.security-pill {
-  display: inline-flex;
-  align-items: center;
-  height: 32px;
-  padding: 0 12px;
+.form-panel__refresh {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 999px;
-  background: rgba(15, 118, 110, 0.08);
+  background: rgba(255, 255, 255, 0.86);
   color: #0f766e;
   font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.demo-notice {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 22px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), var(--accent-color-soft));
-  color: #334155;
+.form-panel__refresh:hover:not(:disabled) {
+  border-color: rgba(15, 118, 110, 0.28);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
 }
 
-.demo-notice span {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.demo-notice strong {
-  font-size: 15px;
+.form-panel__refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .auth-form {
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .field-label {
-  margin-bottom: 8px;
-  color: #334155;
-  font-size: 13px;
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .auth-form :deep(.n-form-item) {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .auth-form :deep(.n-input-wrapper) {
-  height: 54px !important;
-  border-radius: 16px;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.16);
+  height: 56px !important;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94)) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.16),
+    0 10px 22px rgba(15, 23, 42, 0.05);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.auth-form :deep(.n-input:hover .n-input-wrapper),
+.auth-form :deep(.n-input.n-input--focus .n-input-wrapper) {
+  box-shadow:
+    inset 0 0 0 1px rgba(15, 118, 110, 0.26),
+    0 0 0 4px rgba(15, 118, 110, 0.08),
+    0 16px 30px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .auth-form :deep(.n-input__input-el) {
-  height: 54px !important;
+  height: 56px !important;
+  font-size: 15px;
 }
 
 .auth-form :deep(.n-input__prefix) {
-  color: #64748b;
+  color: #0f766e;
   font-size: 18px;
 }
 
 .auth-form :deep(.n-form-item-feedback-wrapper) {
-  min-height: 18px;
+  min-height: 16px;
 }
 
 .auth-form__captcha-item {
-  margin-top: 6px;
+  margin-top: 0;
+}
+
+.auth-form__captcha-item :deep(.n-form-item-blank) {
+  display: block;
 }
 
 .auth-actions {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .login-button {
   width: 100%;
-  height: 56px;
-  border-radius: 18px;
+  height: 58px;
+  border-radius: 20px;
   border: none;
-  background: linear-gradient(135deg, var(--accent-color), #0f8f84 50%, #f97316 145%);
-  box-shadow: 0 20px 32px var(--accent-color-soft);
+  background: linear-gradient(135deg, var(--accent-color), #0f8f84 52%, #f97316 150%);
+  box-shadow:
+    0 20px 34px rgba(15, 118, 110, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
   font-size: 16px;
   font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .auth-tip {
   margin-top: 12px;
   color: #64748b;
-  font-size: 13px;
-  line-height: 1.75;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
-@media (max-width: 1200px) {
+.brand-panel {
+  display: flex;
+  justify-content: center;
+}
+
+.brand-panel__inner {
+  width: min(100%, 340px);
+  padding: 20px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  color: #f8fafc;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-panel__copy {
+  margin-top: 18px;
+}
+
+.brand-panel__copy h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.24;
+}
+
+.brand-panel__copy p {
+  margin: 10px 0 0;
+  color: rgba(241, 245, 249, 0.76);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.intro-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.intro-card {
+  padding: 14px 15px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.intro-card strong {
+  display: block;
+  font-size: 14px;
+}
+
+.intro-card p {
+  margin: 6px 0 0;
+  color: rgba(241, 245, 249, 0.72);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 1100px) {
   .login-shell {
     grid-template-columns: 1fr;
-    padding-top: 96px;
-    padding-bottom: 40px;
+    padding-top: 82px;
+    padding-bottom: 28px;
+  }
+
+  .brand-panel {
+    order: 2;
   }
 
   .brand-panel__inner {
-    max-width: none;
+    width: 100%;
+    max-width: 680px;
   }
 }
 
 @media (max-width: 768px) {
   .login-shell {
-    gap: 18px;
-    padding: 92px 16px 24px;
+    gap: 16px;
+    padding: 78px 14px 18px;
+  }
+
+  .theme-switcher {
+    top: 12px;
+    right: 12px;
   }
 
   .auth-card {
-    padding: 24px 18px 20px;
+    width: 100%;
+    padding: 20px 16px;
     border-radius: 24px;
   }
 
   .auth-card__topline,
-  .auth-card__header {
+  .form-panel__head,
+  .demo-credentials {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .fact-grid,
-  .auth-steps {
-    grid-template-columns: 1fr;
+  .auth-card__badges,
+  .demo-credentials__value {
+    justify-content: flex-start;
   }
 
-  .brand-panel h1 {
-    font-size: 36px;
+  .form-panel {
+    padding: 16px 14px;
+    border-radius: 20px;
+  }
+
+  .brand-panel__copy h2 {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form :deep(.n-input-wrapper),
+  .login-button,
+  .form-panel__refresh {
+    transition: none;
   }
 }
 </style>
