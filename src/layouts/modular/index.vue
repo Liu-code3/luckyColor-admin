@@ -39,8 +39,8 @@ const contentStyle = computed(() => ({
         >
           <div class="logo-bar">
             <div class="logo-copy">
-              <strong>luckyColor admin</strong>
-              <span>Workspace</span>
+              <img src="/logo-wordmark.svg" alt="LuckyColor Admin SaaS" class="logo-wordmark">
+              <span>Workspace Console</span>
             </div>
           </div>
           <div>
@@ -165,19 +165,22 @@ const contentStyle = computed(() => ({
 .logo-copy {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.logo-copy strong {
-  font-size: 15px;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+.logo-wordmark {
+  width: 100%;
+  max-width: 168px;
+  height: auto;
+  display: block;
 }
 
 .logo-copy span {
-  margin-top: 4px;
+  margin-top: 6px;
   color: rgba(226, 232, 240, 0.64);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 

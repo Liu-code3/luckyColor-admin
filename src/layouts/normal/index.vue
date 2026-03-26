@@ -32,8 +32,8 @@ const contentStyle = computed(() => ({
               <img src="/logo.svg" alt="LuckyColor Admin Logo" class="logo-mark__image">
             </div>
             <div class="logo-copy" :class="{ 'logo-copy--collapsed': menuStore.collapsed }">
-              <strong>luckyColor admin</strong>
-              <span>Workspace</span>
+              <img src="/logo-wordmark.svg" alt="LuckyColor Admin SaaS" class="logo-wordmark">
+              <span>Workspace Console</span>
             </div>
           </div>
           <NavMenu />
@@ -139,7 +139,7 @@ const contentStyle = computed(() => ({
   display: flex;
   flex-direction: column;
   min-width: 0;
-  max-width: 160px;
+  max-width: 168px;
   overflow: hidden;
   white-space: nowrap;
   transition:
@@ -155,19 +155,19 @@ const contentStyle = computed(() => ({
   pointer-events: none;
 }
 
-.logo-copy strong {
-  font-size: 15px;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.logo-wordmark {
+  width: 100%;
+  max-width: 164px;
+  height: auto;
+  display: block;
 }
 
 .logo-copy span {
-  margin-top: 4px;
+  margin-top: 6px;
   color: rgba(226, 232, 240, 0.64);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   overflow: hidden;
   text-overflow: ellipsis;
