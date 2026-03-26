@@ -1,5 +1,9 @@
 import { getMenuTreeApi, getProfileApi } from '@/api';
-import { getCurrentUserInfo, setCurrentUserInfo } from '@/utils/auth';
+import {
+  getCurrentUserInfo,
+  setCurrentTenantContext,
+  setCurrentUserInfo
+} from '@/utils/auth';
 import { resolveSessionButtonCodeList } from '@/utils/permission';
 
 interface MenuStoreLike {
@@ -15,10 +19,18 @@ async function bootstrapAuthState(menuStore: MenuStoreLike) {
   if (!getCurrentUserInfo()) {
     tasks.push(
       getProfileApi().then(({ data }) => {
+        setCurrentTenantContext({
+          tenantId: data.tenantId,
+          tenantName: data.tenantName ?? null,
+          source: 'profile'
+        });
         setCurrentUserInfo({
           id: data.id,
+          tenantId: data.tenantId,
+          tenantName: data.tenantName ?? null,
           username: data.username,
           displayName: data.nickname || data.username,
+          roleCodes: data.roleCodes || undefined,
           buttonCodeList: resolveSessionButtonCodeList(data.username, data),
           dataScopeType: data.dataScopeType || undefined,
           dataScopeDeptIds: data.dataScopeDeptIds || undefined

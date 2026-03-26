@@ -12,7 +12,11 @@ import {
 import sysConfig from '@/config';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useMenuStore } from '@/store/modules/menu.ts';
-import { setAccessToken, setCurrentUserInfo } from '@/utils/auth';
+import {
+  setAccessToken,
+  setCurrentTenantContext,
+  setCurrentUserInfo
+} from '@/utils/auth';
 import { Encrypt } from '@/utils/crypto-md5';
 import { message } from '@/utils/message.ts';
 import { resolveSessionButtonCodeList } from '@/utils/permission';
@@ -230,11 +234,19 @@ async function performLogin(captchaToken?: string) {
     return;
 
   setAccessToken(data.accessToken);
+  setCurrentTenantContext({
+    tenantId: data.user.tenantId,
+    tenantName: data.user.tenantName ?? null,
+    source: 'login'
+  });
   setCurrentUserInfo({
     id: data.user.id,
     username: data.user.username,
+    tenantId: data.user.tenantId,
+    tenantName: data.user.tenantName ?? null,
     displayName: data.user.nickname || data.user.username,
     buttonCodeList: resolveSessionButtonCodeList(data.user.username, data.user, data),
+    roleCodes: data.user.roleCodes || undefined,
     dataScopeType: data.user.dataScopeType || data.dataScopeType || undefined,
     dataScopeDeptIds: data.user.dataScopeDeptIds || data.dataScopeDeptIds || undefined
   });
