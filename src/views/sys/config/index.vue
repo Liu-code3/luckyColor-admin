@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
+import type { ConfigRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
+
   createConfigApi,
   deleteConfigApi,
   getConfigDetailApi,
   getConfigPageApi,
   refreshConfigCacheApi,
-  updateConfigApi,
-  type ConfigRecord
+  updateConfigApi
 } from '@/api';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
@@ -112,7 +113,7 @@ const configFormRules = computed<FormRules>(() => ({
       trigger: [ 'blur', 'input' ]
     },
     {
-      validator: (_, value: string) => /^[a-zA-Z][a-zA-Z0-9_.:-]{1,50}$/.test(value),
+      validator: (_, value: string) => /^[a-z][\w.:-]{1,50}$/i.test(value),
       message: '配置键需以字母开头，支持字母、数字、点、下划线、冒号和中划线',
       trigger: [ 'blur', 'input' ]
     }
@@ -567,16 +568,16 @@ onMounted(() => {
                 <td>
                   <div class="config-status">
                     <n-switch
-                    :value="item.status"
-                    :loading="togglingConfigId === item.id"
-                    @update:value="value => handleToggleStatus(item, value)"
-                  >
-                    <template #checked>
-                      启用
-                    </template>
-                    <template #unchecked>
-                      停用
-                    </template>
+                      :value="item.status"
+                      :loading="togglingConfigId === item.id"
+                      @update:value="value => handleToggleStatus(item, value)"
+                    >
+                      <template #checked>
+                        启用
+                      </template>
+                      <template #unchecked>
+                        停用
+                      </template>
                     </n-switch>
                   </div>
                 </td>
@@ -585,13 +586,15 @@ onMounted(() => {
                     {{ formatDateTime(item.updatedAt) }}
                   </div>
                 </td>
-                <td class="operation-cell operation-cell--end">
-                  <n-button quaternary type="primary" @click="openEditDrawer(item)">
-                    编辑
-                  </n-button>
-                  <n-button quaternary type="error" @click="handleDeleteConfig(item)">
-                    删除
-                  </n-button>
+                <td class="operation-cell">
+                  <div class="operation-actions operation-actions--end">
+                    <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                      编辑
+                    </n-button>
+                    <n-button quaternary type="error" @click="handleDeleteConfig(item)">
+                      删除
+                    </n-button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!configList.length">
@@ -874,16 +877,7 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.operation-cell--end {
-  justify-content: flex-end;
-  align-items: center;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;
@@ -919,4 +913,3 @@ onMounted(() => {
   }
 }
 </style>
-

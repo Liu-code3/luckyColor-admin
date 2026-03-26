@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DataTableColumns, FormInst, FormRules, TreeOption } from 'naive-ui';
-import { NButton, NSpace, NSwitch, NTag, useMessage } from 'naive-ui';
+import { NButton, NSwitch, NTag, useMessage } from 'naive-ui';
 import { Icon } from '@iconify/vue';
 import { h } from 'vue';
 import {
@@ -277,6 +277,7 @@ const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
       key: 'actions',
       title: '操作',
       width: 260,
+      className: 'operation-cell',
       render: (row) => {
         const actions = [];
 
@@ -322,11 +323,7 @@ const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
           );
         }
 
-        return h(
-          NSpace,
-          { size: 4 },
-          { default: () => actions }
-        );
+        return h('div', { class: 'operation-actions' }, actions);
       }
     });
   }
@@ -750,6 +747,8 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
 }
+
+@import '@/styles/table-operation.less';
 
 .drawer-footer {
   display: flex;

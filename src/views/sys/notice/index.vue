@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
+import type { NoticeRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   createNoticeApi,
   deleteNoticeApi,
   getNoticeDetailApi,
   getNoticePageApi,
-  updateNoticeApi,
-  type NoticeRecord
+
+  updateNoticeApi
 } from '@/api';
 import { confirmAction } from '@/utils/confirm';
 
@@ -58,27 +59,27 @@ const noticeTypeOptions = [
 
 const summaryCards = computed<SummaryCard[]>(() => [
   {
-    label: '\u516c\u544a\u603b\u6570',
+    label: '\u516C\u544A\u603B\u6570',
     value: total.value,
-    helper: '\u57fa\u4e8e\u5f53\u524d\u68c0\u7d22\u6761\u4ef6\u7684\u5168\u90e8\u5185\u5bb9',
+    helper: '\u57FA\u4E8E\u5F53\u524D\u68C0\u7D22\u6761\u4EF6\u7684\u5168\u90E8\u5185\u5BB9',
     tone: 'primary'
   },
   {
-    label: '\u5df2\u53d1\u5e03',
+    label: '\u5DF2\u53D1\u5E03',
     value: noticeList.value.filter(item => item.status).length,
-    helper: '\u5df2\u8fdb\u5165\u7ebf\u4e0a\u89e6\u8fbe\u72b6\u6001\u7684\u5185\u5bb9',
+    helper: '\u5DF2\u8FDB\u5165\u7EBF\u4E0A\u89E6\u8FBE\u72B6\u6001\u7684\u5185\u5BB9',
     tone: 'success'
   },
   {
-    label: '\u8349\u7a3f',
+    label: '\u8349\u7A3F',
     value: noticeList.value.filter(item => !item.status).length,
-    helper: '\u9002\u5408\u7ee7\u7eed\u7f16\u8f91\u6216\u5b89\u6392\u53d1\u5e03\u65f6\u673a',
+    helper: '\u9002\u5408\u7EE7\u7EED\u7F16\u8F91\u6216\u5B89\u6392\u53D1\u5E03\u65F6\u673A',
     tone: 'warning'
   },
   {
-    label: '\u53d1\u5e03\u4eba',
+    label: '\u53D1\u5E03\u4EBA',
     value: new Set(noticeList.value.map(item => item.publisher?.trim()).filter(Boolean)).size,
-    helper: '\u5f53\u524d\u5217\u8868\u4e2d\u7684\u5185\u5bb9\u8d1f\u8d23\u4eba\u6570',
+    helper: '\u5F53\u524D\u5217\u8868\u4E2D\u7684\u5185\u5BB9\u8D1F\u8D23\u4EBA\u6570',
     tone: 'info'
   }
 ]);
@@ -372,15 +373,17 @@ onMounted(() => {
               <td>{{ item.publisher || '-' }}</td>
               <td>{{ formatDateTime(item.publishedAt) }}</td>
               <td class="operation-cell">
-                <n-button quaternary @click="openPreviewModal(item)">
-                  预览
-                </n-button>
-                <n-button quaternary type="primary" @click="openEditDrawer(item)">
-                  编辑
-                </n-button>
-                <n-button quaternary type="error" @click="handleDeleteNotice(item)">
-                  删除
-                </n-button>
+                <div class="operation-actions">
+                  <n-button quaternary @click="openPreviewModal(item)">
+                    预览
+                  </n-button>
+                  <n-button quaternary type="primary" @click="openEditDrawer(item)">
+                    编辑
+                  </n-button>
+                  <n-button quaternary type="error" @click="handleDeleteNotice(item)">
+                    删除
+                  </n-button>
+                </div>
               </td>
             </tr>
             <tr v-if="!noticeList.length">
@@ -413,7 +416,9 @@ onMounted(() => {
           <section class="lc-form-section">
             <div class="lc-form-section__header">
               <div>
-                <p class="lc-form-section__eyebrow">Publish</p>
+                <p class="lc-form-section__eyebrow">
+                  Publish
+                </p>
                 <h3 class="lc-form-section__title">
                   {{ isEditMode ? '\u7f16\u8f91\u516c\u544a' : '\u521b\u5efa\u516c\u544a' }}
                 </h3>
@@ -422,41 +427,41 @@ onMounted(() => {
                 </p>
               </div>
             </div>
-        <n-form-item label="公告标题" path="title">
-          <n-input v-model:value="noticeForm.title" placeholder="请输入公告标题" />
-        </n-form-item>
-        <n-form-item label="公告类型" path="type">
-          <n-select v-model:value="noticeForm.type" :options="noticeTypeOptions" />
-        </n-form-item>
-        <n-form-item label="发布状态" path="status">
-          <n-switch v-model:value="noticeForm.status">
-            <template #checked>
-              已发布
-            </template>
-            <template #unchecked>
-              草稿
-            </template>
-          </n-switch>
-        </n-form-item>
-        <n-form-item label="发布人" path="publisher">
-          <n-input v-model:value="noticeForm.publisher" placeholder="请输入发布人" />
-        </n-form-item>
-        <n-form-item label="发布时间" path="publishedAt">
-          <n-date-picker
-            v-model:value="noticeForm.publishedAt"
-            class="w-full"
-            clearable
-            type="datetime"
-          />
-        </n-form-item>
-        <n-form-item label="公告内容" path="content">
-          <n-input
-            v-model:value="noticeForm.content"
-            type="textarea"
-            placeholder="请输入公告内容"
-            :autosize="{ minRows: 5, maxRows: 8 }"
-          />
-        </n-form-item>
+            <n-form-item label="公告标题" path="title">
+              <n-input v-model:value="noticeForm.title" placeholder="请输入公告标题" />
+            </n-form-item>
+            <n-form-item label="公告类型" path="type">
+              <n-select v-model:value="noticeForm.type" :options="noticeTypeOptions" />
+            </n-form-item>
+            <n-form-item label="发布状态" path="status">
+              <n-switch v-model:value="noticeForm.status">
+                <template #checked>
+                  已发布
+                </template>
+                <template #unchecked>
+                  草稿
+                </template>
+              </n-switch>
+            </n-form-item>
+            <n-form-item label="发布人" path="publisher">
+              <n-input v-model:value="noticeForm.publisher" placeholder="请输入发布人" />
+            </n-form-item>
+            <n-form-item label="发布时间" path="publishedAt">
+              <n-date-picker
+                v-model:value="noticeForm.publishedAt"
+                class="w-full"
+                clearable
+                type="datetime"
+              />
+            </n-form-item>
+            <n-form-item label="公告内容" path="content">
+              <n-input
+                v-model:value="noticeForm.content"
+                type="textarea"
+                placeholder="请输入公告内容"
+                :autosize="{ minRows: 5, maxRows: 8 }"
+              />
+            </n-form-item>
           </section>
         </div>
       </n-form>
@@ -568,11 +573,7 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;

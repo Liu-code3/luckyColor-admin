@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, TreeOption } from 'naive-ui';
+import type { DepartmentRecord, DepartmentTreeRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   createDepartmentApi,
   deleteDepartmentApi,
+
   getDepartmentDetailApi,
   getDepartmentPageApi,
   getDepartmentTreeApi,
-  updateDepartmentApi,
-  type DepartmentRecord,
-  type DepartmentTreeRecord
+  updateDepartmentApi
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
@@ -94,7 +94,7 @@ const departmentFormRules: FormRules = {
   ],
   email: [
     {
-      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(value),
       message: '请输入正确的邮箱地址',
       trigger: [ 'blur', 'input' ]
     }
@@ -448,7 +448,9 @@ onMounted(() => {
                 <th>状态</th>
                 <th>排序</th>
                 <th>更新时间</th>
-                <th v-if="hasDepartmentActions">操作</th>
+                <th v-if="hasDepartmentActions">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -481,33 +483,35 @@ onMounted(() => {
                 <td>{{ item.sort }}</td>
                 <td>{{ formatDateTime(item.updatedAt) }}</td>
                 <td v-if="hasDepartmentActions" class="operation-cell">
-                  <n-button
-                    v-if="canCreateDepartment"
-                    v-permission="departmentButtonCodes.create"
-                    quaternary
-                    type="primary"
-                    @click="openCreateDrawer(item.id)"
-                  >
-                    新增子部门
-                  </n-button>
-                  <n-button
-                    v-if="canUpdateDepartment"
-                    v-permission="departmentButtonCodes.update"
-                    quaternary
-                    type="primary"
-                    @click="openEditDrawer(item)"
-                  >
-                    编辑
-                  </n-button>
-                  <n-button
-                    v-if="canDeleteDepartment"
-                    v-permission="departmentButtonCodes.delete"
-                    quaternary
-                    type="error"
-                    @click="handleDeleteDepartment(item)"
-                  >
-                    删除
-                  </n-button>
+                  <div class="operation-actions">
+                    <n-button
+                      v-if="canCreateDepartment"
+                      v-permission="departmentButtonCodes.create"
+                      quaternary
+                      type="primary"
+                      @click="openCreateDrawer(item.id)"
+                    >
+                      新增子部门
+                    </n-button>
+                    <n-button
+                      v-if="canUpdateDepartment"
+                      v-permission="departmentButtonCodes.update"
+                      quaternary
+                      type="primary"
+                      @click="openEditDrawer(item)"
+                    >
+                      编辑
+                    </n-button>
+                    <n-button
+                      v-if="canDeleteDepartment"
+                      v-permission="departmentButtonCodes.delete"
+                      quaternary
+                      type="error"
+                      @click="handleDeleteDepartment(item)"
+                    >
+                      删除
+                    </n-button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!departmentList.length">
@@ -657,11 +661,7 @@ onMounted(() => {
   gap: 10px;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;

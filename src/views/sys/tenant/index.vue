@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
+import type { TenantInitResult, TenantPackageRecord, TenantRecord, TenantStatus } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   createTenantApi,
   getTenantDetailApi,
-  getTenantPageApi,
   getTenantPackagePageApi,
-  updateTenantApi,
-  type TenantInitResult,
-  type TenantPackageRecord,
-  type TenantRecord,
-  type TenantStatus
+  getTenantPageApi,
+
+  updateTenantApi
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import sysConfig from '@/config';
@@ -18,7 +16,7 @@ import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { message } from '@/utils/message';
 
 defineOptions({
-  name: 'systemTenant'
+  name: 'SystemTenant'
 });
 
 interface TenantFormState {
@@ -158,7 +156,7 @@ const tenantFormRules = computed<FormRules>(() => ({
   ],
   contactEmail: [
     {
-      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
+      validator: (_, value: string) => !value || /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(value.trim()),
       message: '请输入合法的联系邮箱',
       trigger: [ 'blur', 'input' ]
     }
@@ -172,7 +170,7 @@ const tenantFormRules = computed<FormRules>(() => ({
           trigger: [ 'blur', 'input' ]
         },
         {
-          validator: (_, value: string) => /^[a-zA-Z0-9_]{3,20}$/.test(value.trim()),
+          validator: (_, value: string) => /^\w{3,20}$/.test(value.trim()),
           message: '管理员账号需为 3-20 位字母、数字或下划线',
           trigger: [ 'blur', 'input' ]
         }
@@ -521,14 +519,16 @@ onMounted(async () => {
               <td>{{ formatExpiresAt(item.expiresAt) }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td v-if="canUpdateTenant" class="operation-cell">
-                <n-button
-                  v-permission="tenantButtonCodes.update"
-                  quaternary
-                  type="primary"
-                  @click="openEditDrawer(item)"
-                >
-                  编辑
-                </n-button>
+                <div class="operation-actions">
+                  <n-button
+                    v-permission="tenantButtonCodes.update"
+                    quaternary
+                    type="primary"
+                    @click="openEditDrawer(item)"
+                  >
+                    编辑
+                  </n-button>
+                </div>
               </td>
             </tr>
             <tr v-if="!tenantList.length">
@@ -561,7 +561,9 @@ onMounted(async () => {
           <section class="lc-form-section">
             <div class="lc-form-section__header">
               <div>
-                <p class="lc-form-section__eyebrow">Tenant</p>
+                <p class="lc-form-section__eyebrow">
+                  Tenant
+                </p>
                 <h3 class="lc-form-section__title">
                   {{ isEditMode ? '\u7f16\u8f91\u79df\u6237' : '\u521b\u5efa\u79df\u6237' }}
                 </h3>
@@ -570,89 +572,89 @@ onMounted(async () => {
                 </p>
               </div>
             </div>
-        <n-grid :cols="2" :x-gap="12">
-          <n-form-item-gi label="租户编码" path="code">
-            <n-input
-              v-model:value="tenantForm.code"
-              :disabled="isEditMode"
-              placeholder="例如 acme"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi label="租户名称" path="name">
-            <n-input v-model:value="tenantForm.name" placeholder="请输入租户名称" />
-          </n-form-item-gi>
-          <n-form-item-gi label="租户套餐" path="packageId">
-            <n-select
-              v-model:value="tenantForm.packageId"
-              clearable
-              :loading="packageLoading"
-              :options="tenantPackageOptions"
-              placeholder="请选择租户套餐"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi label="租户状态" path="status">
-            <n-select v-model:value="tenantForm.status" :options="tenantStatusOptions" />
-          </n-form-item-gi>
-          <n-form-item-gi label="到期时间" path="expiresAt">
-            <n-date-picker
-              v-model:value="tenantForm.expiresAt"
-              class="w-full"
-              clearable
-              type="datetime"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi label="联系人" path="contactName">
-            <n-input v-model:value="tenantForm.contactName" placeholder="请输入联系人" />
-          </n-form-item-gi>
-          <n-form-item-gi label="联系电话" path="contactPhone">
-            <n-input v-model:value="tenantForm.contactPhone" placeholder="请输入联系电话" />
-          </n-form-item-gi>
-          <n-form-item-gi label="联系邮箱" path="contactEmail">
-            <n-input v-model:value="tenantForm.contactEmail" placeholder="请输入联系邮箱" />
-          </n-form-item-gi>
-        </n-grid>
+            <n-grid :cols="2" :x-gap="12">
+              <n-form-item-gi label="租户编码" path="code">
+                <n-input
+                  v-model:value="tenantForm.code"
+                  :disabled="isEditMode"
+                  placeholder="例如 acme"
+                />
+              </n-form-item-gi>
+              <n-form-item-gi label="租户名称" path="name">
+                <n-input v-model:value="tenantForm.name" placeholder="请输入租户名称" />
+              </n-form-item-gi>
+              <n-form-item-gi label="租户套餐" path="packageId">
+                <n-select
+                  v-model:value="tenantForm.packageId"
+                  clearable
+                  :loading="packageLoading"
+                  :options="tenantPackageOptions"
+                  placeholder="请选择租户套餐"
+                />
+              </n-form-item-gi>
+              <n-form-item-gi label="租户状态" path="status">
+                <n-select v-model:value="tenantForm.status" :options="tenantStatusOptions" />
+              </n-form-item-gi>
+              <n-form-item-gi label="到期时间" path="expiresAt">
+                <n-date-picker
+                  v-model:value="tenantForm.expiresAt"
+                  class="w-full"
+                  clearable
+                  type="datetime"
+                />
+              </n-form-item-gi>
+              <n-form-item-gi label="联系人" path="contactName">
+                <n-input v-model:value="tenantForm.contactName" placeholder="请输入联系人" />
+              </n-form-item-gi>
+              <n-form-item-gi label="联系电话" path="contactPhone">
+                <n-input v-model:value="tenantForm.contactPhone" placeholder="请输入联系电话" />
+              </n-form-item-gi>
+              <n-form-item-gi label="联系邮箱" path="contactEmail">
+                <n-input v-model:value="tenantForm.contactEmail" placeholder="请输入联系邮箱" />
+              </n-form-item-gi>
+            </n-grid>
 
-        <div v-if="selectedPackage" class="package-hint">
-          <div class="package-hint__header">
-            <strong>{{ selectedPackage.name }}</strong>
-            <n-tag size="small" :type="selectedPackage.status ? 'success' : 'warning'">
-              {{ selectedPackage.status ? '可用' : '已停用' }}
-            </n-tag>
-          </div>
-          <div class="package-hint__meta">
-            用户上限 {{ selectedPackage.maxUsers ?? 0 }} / 角色上限 {{ selectedPackage.maxRoles ?? 0 }} /
-            菜单上限 {{ selectedPackage.maxMenus ?? 0 }}
-          </div>
-        </div>
+            <div v-if="selectedPackage" class="package-hint">
+              <div class="package-hint__header">
+                <strong>{{ selectedPackage.name }}</strong>
+                <n-tag size="small" :type="selectedPackage.status ? 'success' : 'warning'">
+                  {{ selectedPackage.status ? '可用' : '已停用' }}
+                </n-tag>
+              </div>
+              <div class="package-hint__meta">
+                用户上限 {{ selectedPackage.maxUsers ?? 0 }} / 角色上限 {{ selectedPackage.maxRoles ?? 0 }} /
+                菜单上限 {{ selectedPackage.maxMenus ?? 0 }}
+              </div>
+            </div>
 
-        <template v-if="!isEditMode">
-          <n-divider>初始化管理员</n-divider>
-          <n-grid :cols="2" :x-gap="12">
-            <n-form-item-gi label="管理员账号" path="adminUsername">
-              <n-input v-model:value="tenantForm.adminUsername" placeholder="默认 admin" />
-            </n-form-item-gi>
-            <n-form-item-gi label="管理员昵称" path="adminNickname">
-              <n-input v-model:value="tenantForm.adminNickname" placeholder="选填" />
-            </n-form-item-gi>
-            <n-form-item-gi :span="2" label="管理员初始密码" path="adminPassword">
+            <template v-if="!isEditMode">
+              <n-divider>初始化管理员</n-divider>
+              <n-grid :cols="2" :x-gap="12">
+                <n-form-item-gi label="管理员账号" path="adminUsername">
+                  <n-input v-model:value="tenantForm.adminUsername" placeholder="默认 admin" />
+                </n-form-item-gi>
+                <n-form-item-gi label="管理员昵称" path="adminNickname">
+                  <n-input v-model:value="tenantForm.adminNickname" placeholder="选填" />
+                </n-form-item-gi>
+                <n-form-item-gi :span="2" label="管理员初始密码" path="adminPassword">
+                  <n-input
+                    v-model:value="tenantForm.adminPassword"
+                    type="password"
+                    show-password-on="mousedown"
+                    placeholder="请输入管理员初始密码"
+                  />
+                </n-form-item-gi>
+              </n-grid>
+            </template>
+
+            <n-form-item label="备注" path="remark">
               <n-input
-                v-model:value="tenantForm.adminPassword"
-                type="password"
-                show-password-on="mousedown"
-                placeholder="请输入管理员初始密码"
+                v-model:value="tenantForm.remark"
+                type="textarea"
+                placeholder="请输入备注"
+                :autosize="{ minRows: 3, maxRows: 5 }"
               />
-            </n-form-item-gi>
-          </n-grid>
-        </template>
-
-        <n-form-item label="备注" path="remark">
-          <n-input
-            v-model:value="tenantForm.remark"
-            type="textarea"
-            placeholder="请输入备注"
-            :autosize="{ minRows: 3, maxRows: 5 }"
-          />
-        </n-form-item>
+            </n-form-item>
           </section>
         </div>
       </n-form>
@@ -810,11 +812,7 @@ onMounted(async () => {
   font-size: 12px;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;

@@ -1,0 +1,59 @@
+:deep(.operation-cell) {
+  vertical-align: middle;
+}
+
+:deep(.operation-actions) {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+:deep(.operation-actions--end) {
+  justify-content: flex-end;
+}
+
+:deep(.operation-actions .n-button) {
+  min-width: 70px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 10px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+:deep(.operation-actions .n-button .n-button__content) {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:deep(.operation-actions .n-button.n-button--quaternary-type) {
+  background-color: rgba(15, 23, 42, 0.04);
+}
+
+:deep(.operation-actions .n-button.n-button--quaternary-type:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+:deep(.operation-actions .n-button.n-button--primary-type.n-button--quaternary-type) {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+:deep(.operation-actions .n-button.n-button--warning-type.n-button--quaternary-type) {
+  background-color: rgba(245, 158, 11, 0.12);
+}
+
+:deep(.operation-actions .n-button.n-button--error-type.n-button--quaternary-type) {
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+:deep(.operation-actions .n-button.n-button--error-type.n-button--quaternary-type:hover) {
+  background-color: rgba(239, 68, 68, 0.12);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
+}

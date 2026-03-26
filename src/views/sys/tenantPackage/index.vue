@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { FormInst, FormRules } from 'naive-ui';
+import type { TenantPackageRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   createTenantPackageApi,
   deleteTenantPackageApi,
   getTenantPackageDetailApi,
   getTenantPackagePageApi,
-  updateTenantPackageApi,
-  type TenantPackageRecord
+
+  updateTenantPackageApi
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
@@ -15,7 +16,7 @@ import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
 defineOptions({
-  name: 'systemTenantPackage'
+  name: 'SystemTenantPackage'
 });
 
 interface TenantPackageFormState {
@@ -458,22 +459,24 @@ onMounted(() => {
               </td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td v-if="hasPackageActions" class="operation-cell">
-                <n-button
-                  v-permission="packageButtonCodes.update"
-                  quaternary
-                  type="primary"
-                  @click="openEditDrawer(item)"
-                >
-                  编辑
-                </n-button>
-                <n-button
-                  v-permission="packageButtonCodes.delete"
-                  quaternary
-                  type="error"
-                  @click="handleDeletePackage(item)"
-                >
-                  删除
-                </n-button>
+                <div class="operation-actions">
+                  <n-button
+                    v-permission="packageButtonCodes.update"
+                    quaternary
+                    type="primary"
+                    @click="openEditDrawer(item)"
+                  >
+                    编辑
+                  </n-button>
+                  <n-button
+                    v-permission="packageButtonCodes.delete"
+                    quaternary
+                    type="error"
+                    @click="handleDeletePackage(item)"
+                  >
+                    删除
+                  </n-button>
+                </div>
               </td>
             </tr>
             <tr v-if="!packageList.length">
@@ -641,11 +644,7 @@ onMounted(() => {
   white-space: normal;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;

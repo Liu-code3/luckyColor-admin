@@ -1,29 +1,30 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, TreeOption } from 'naive-ui';
+import type { DepartmentTreeRecord, MenuRecord, RoleRecord } from '@/api';
+import type { DataScopeType } from '@/constants/data-scope';
 import { Icon } from '@iconify/vue';
 import {
   assignRoleMenusApi,
   createRoleApi,
   deleteRoleApi,
+
   getDepartmentTreeApi,
   getMenuTreeApi,
   getRoleDataScopeApi,
   getRoleDetailApi,
   getRoleMenusApi,
   getRolePageApi,
+
   saveRoleDataScopeApi,
-  updateRoleApi,
-  type DepartmentTreeRecord,
-  type MenuRecord,
-  type RoleRecord
+  updateRoleApi
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import {
   DATA_SCOPE_LABEL_MAP,
   DATA_SCOPE_OPTION_LIST,
   DATA_SCOPE_TYPES,
-  normalizeDataScopeType,
-  type DataScopeType
+
+  normalizeDataScopeType
 } from '@/constants/data-scope';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { confirmAction } from '@/utils/confirm';
@@ -141,27 +142,27 @@ const hasRoleActions = computed(() =>
 const roleTableColumnCount = computed(() => hasRoleActions.value ? 7 : 6);
 const summaryCards = computed<SummaryCard[]>(() => [
   {
-    label: '\u89d2\u8272\u603b\u6570',
+    label: '\u89D2\u8272\u603B\u6570',
     value: total.value,
-    helper: '\u8986\u76d6\u5f53\u524d\u67e5\u8be2\u6761\u4ef6\u4e0b\u7684\u5168\u90e8\u89d2\u8272',
+    helper: '\u8986\u76D6\u5F53\u524D\u67E5\u8BE2\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u89D2\u8272',
     tone: 'primary'
   },
   {
-    label: '\u542f\u7528\u4e2d',
+    label: '\u542F\u7528\u4E2D',
     value: roleList.value.filter(item => item.status).length,
-    helper: '\u53ef\u6b63\u5e38\u53c2\u4e0e\u6388\u6743\u7684\u89d2\u8272\u6570\u91cf',
+    helper: '\u53EF\u6B63\u5E38\u53C2\u4E0E\u6388\u6743\u7684\u89D2\u8272\u6570\u91CF',
     tone: 'success'
   },
   {
-    label: '\u5df2\u586b\u5907\u6ce8',
+    label: '\u5DF2\u586B\u5907\u6CE8',
     value: roleList.value.filter(item => Boolean(item.remark?.trim())).length,
-    helper: '\u89d2\u8272\u8bf4\u660e\u66f4\u5b8c\u6574\uff0c\u4fbf\u4e8e\u4ea4\u63a5\u548c\u5ba1\u8ba1',
+    helper: '\u89D2\u8272\u8BF4\u660E\u66F4\u5B8C\u6574\uFF0C\u4FBF\u4E8E\u4EA4\u63A5\u548C\u5BA1\u8BA1',
     tone: 'info'
   },
   {
-    label: '\u6700\u9ad8\u6392\u5e8f',
+    label: '\u6700\u9AD8\u6392\u5E8F',
     value: roleList.value.reduce((max, item) => Math.max(max, item.sort), 0),
-    helper: '\u7528\u4e8e\u611f\u77e5\u5f53\u524d\u89d2\u8272\u6392\u5e8f\u533a\u95f4',
+    helper: '\u7528\u4E8E\u611F\u77E5\u5F53\u524D\u89D2\u8272\u6392\u5E8F\u533A\u95F4',
     tone: 'warning'
   }
 ]);
@@ -915,7 +916,9 @@ watch(
               <th>排序</th>
               <th>备注</th>
               <th>更新时间</th>
-              <th v-if="hasRoleActions">操作</th>
+              <th v-if="hasRoleActions">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -960,51 +963,53 @@ watch(
               <td>{{ item.remark || '-' }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td v-if="hasRoleActions" class="operation-cell">
-                <n-button
-                  v-if="canGrantRoleMenu"
-                  v-permission="roleButtonCodes.grant"
-                  quaternary
-                  type="primary"
-                  @click="openAssignMenu(item)"
-                >
-                  分配菜单
-                </n-button>
-                <n-button
-                  v-if="canGrantRoleMenu"
-                  v-permission="roleButtonCodes.grant"
-                  quaternary
-                  type="primary"
-                  @click="openAssignButton(item)"
-                >
-                  按钮权限
-                </n-button>
-                <n-button
-                  v-if="canGrantRoleMenu"
-                  v-permission="roleButtonCodes.grant"
-                  quaternary
-                  type="primary"
-                  @click="openAssignDataScope(item)"
-                >
-                  数据权限
-                </n-button>
-                <n-button
-                  v-if="canUpdateRole"
-                  v-permission="roleButtonCodes.update"
-                  quaternary
-                  type="primary"
-                  @click="openEditDrawer(item)"
-                >
-                  编辑
-                </n-button>
-                <n-button
-                  v-if="canDeleteRole"
-                  v-permission="roleButtonCodes.delete"
-                  quaternary
-                  type="error"
-                  @click="handleDeleteRole(item)"
-                >
-                  删除
-                </n-button>
+                <div class="operation-actions">
+                  <n-button
+                    v-if="canGrantRoleMenu"
+                    v-permission="roleButtonCodes.grant"
+                    quaternary
+                    type="primary"
+                    @click="openAssignMenu(item)"
+                  >
+                    分配菜单
+                  </n-button>
+                  <n-button
+                    v-if="canGrantRoleMenu"
+                    v-permission="roleButtonCodes.grant"
+                    quaternary
+                    type="primary"
+                    @click="openAssignButton(item)"
+                  >
+                    按钮权限
+                  </n-button>
+                  <n-button
+                    v-if="canGrantRoleMenu"
+                    v-permission="roleButtonCodes.grant"
+                    quaternary
+                    type="primary"
+                    @click="openAssignDataScope(item)"
+                  >
+                    数据权限
+                  </n-button>
+                  <n-button
+                    v-if="canUpdateRole"
+                    v-permission="roleButtonCodes.update"
+                    quaternary
+                    type="primary"
+                    @click="openEditDrawer(item)"
+                  >
+                    编辑
+                  </n-button>
+                  <n-button
+                    v-if="canDeleteRole"
+                    v-permission="roleButtonCodes.delete"
+                    quaternary
+                    type="error"
+                    @click="handleDeleteRole(item)"
+                  >
+                    删除
+                  </n-button>
+                </div>
               </td>
             </tr>
             <tr v-if="!roleList.length">
@@ -1057,7 +1062,7 @@ watch(
             保留全量
           </template>
           <template v-else>
-          清空勾选
+            清空勾选
           </template>
         </n-button>
       </div>
@@ -1131,7 +1136,7 @@ watch(
             保留全量
           </template>
           <template v-else>
-          清空勾选
+            清空勾选
           </template>
         </n-button>
       </div>
@@ -1207,7 +1212,9 @@ watch(
           <section class="lc-form-section">
             <div class="lc-form-section__header">
               <div>
-                <p class="lc-form-section__eyebrow">Role</p>
+                <p class="lc-form-section__eyebrow">
+                  Role
+                </p>
                 <h3 class="lc-form-section__title">
                   {{ isEditMode ? '\u7f16\u8f91\u89d2\u8272' : '\u521b\u5efa\u89d2\u8272' }}
                 </h3>
@@ -1216,33 +1223,33 @@ watch(
                 </p>
               </div>
             </div>
-        <n-form-item label="角色名称" path="name">
-          <n-input v-model:value="roleForm.name" placeholder="请输入角色名称" />
-        </n-form-item>
-        <n-form-item label="角色编码" path="code">
-          <n-input v-model:value="roleForm.code" placeholder="请输入角色编码" />
-        </n-form-item>
-        <n-form-item label="排序" path="sort">
-          <n-input-number v-model:value="roleForm.sort" class="w-full" :min="0" />
-        </n-form-item>
-        <n-form-item label="状态" path="status">
-          <n-switch v-model:value="roleForm.status">
-            <template #checked>
-              启用
-            </template>
-            <template #unchecked>
-              停用
-            </template>
-          </n-switch>
-        </n-form-item>
-        <n-form-item label="备注" path="remark">
-          <n-input
-            v-model:value="roleForm.remark"
-            type="textarea"
-            placeholder="请输入备注"
-            :autosize="{ minRows: 3, maxRows: 5 }"
-          />
-        </n-form-item>
+            <n-form-item label="角色名称" path="name">
+              <n-input v-model:value="roleForm.name" placeholder="请输入角色名称" />
+            </n-form-item>
+            <n-form-item label="角色编码" path="code">
+              <n-input v-model:value="roleForm.code" placeholder="请输入角色编码" />
+            </n-form-item>
+            <n-form-item label="排序" path="sort">
+              <n-input-number v-model:value="roleForm.sort" class="w-full" :min="0" />
+            </n-form-item>
+            <n-form-item label="状态" path="status">
+              <n-switch v-model:value="roleForm.status">
+                <template #checked>
+                  启用
+                </template>
+                <template #unchecked>
+                  停用
+                </template>
+              </n-switch>
+            </n-form-item>
+            <n-form-item label="备注" path="remark">
+              <n-input
+                v-model:value="roleForm.remark"
+                type="textarea"
+                placeholder="请输入备注"
+                :autosize="{ minRows: 3, maxRows: 5 }"
+              />
+            </n-form-item>
           </section>
         </div>
       </n-form>
@@ -1424,11 +1431,7 @@ watch(
   color: var(--warning-color, #f0a020);
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .pagination-wrap {
   display: flex;
@@ -1525,7 +1528,10 @@ watch(
   border: 1px solid var(--lc-border, rgba(148, 163, 184, 0.2));
   border-radius: 16px;
   background: var(--lc-surface, var(--card-color));
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .scope-option-card strong {

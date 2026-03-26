@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, TreeOption } from 'naive-ui';
+import type { DepartmentTreeRecord, RoleRecord, UserRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   assignUserRolesApi,
   createUserApi,
   deleteUserApi,
+
   getDepartmentTreeApi,
   getRolePageApi,
   getUserDetailApi,
   getUserPageApi,
   getUserRolesApi,
-  updateUserApi,
-  type DepartmentTreeRecord,
-  type RoleRecord,
-  type UserRecord
+
+  updateUserApi
+
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
@@ -21,7 +22,7 @@ import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
 defineOptions({
-  name: 'systemUser'
+  name: 'SystemUser'
 });
 
 interface UserFormState {
@@ -161,7 +162,7 @@ const userFormRules = computed<FormRules>(() => ({
       trigger: [ 'blur', 'input' ]
     },
     {
-      validator: (_, value: string) => /^[a-zA-Z0-9_]{3,20}$/.test(value),
+      validator: (_, value: string) => /^\w{3,20}$/.test(value),
       message: '用户名需为 3-20 位字母、数字或下划线',
       trigger: [ 'blur', 'input' ]
     }
@@ -560,7 +561,7 @@ function closeResetPasswordModal() {
 
 function generateTemporaryPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-  const value = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const value = Array.from({ length: 10 }).fill(chars[Math.floor(Math.random() * chars.length)]).join('');
   resetPasswordForm.password = value;
   resetPasswordForm.confirmPassword = value;
 }
@@ -701,7 +702,7 @@ function parseImportRows(content: string) {
 
 function validateImportRows(rows: ImportUserRow[]) {
   const invalid = rows.find((row) => {
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(row.username.trim()))
+    if (!/^\w{3,20}$/.test(row.username.trim()))
       return true;
 
     if (row.password.trim().length < 6)
@@ -720,14 +721,14 @@ function validateImportRows(rows: ImportUserRow[]) {
     return;
 
   if (Number.isNaN(invalid.departmentId)) {
-    throw new Error(`第 ${invalid.lineNo} 行部门 ID 格式错误，请填写正整数或留空`);
+    throw new TypeError(`第 ${invalid.lineNo} 行部门 ID 格式错误，请填写正整数或留空`);
   }
 
   if (typeof invalid.departmentId === 'number' && !availableDepartmentIdSet.value.has(invalid.departmentId)) {
     throw new Error(`第 ${invalid.lineNo} 行部门 ID 不存在，请检查部门树`);
   }
 
-  if (!/^[a-zA-Z0-9_]{3,20}$/.test(invalid.username.trim())) {
+  if (!/^\w{3,20}$/.test(invalid.username.trim())) {
     throw new Error(`第 ${invalid.lineNo} 行用户名不符合 3-20 位规则`);
   }
 
@@ -948,7 +949,9 @@ onMounted(() => {
               <th>所属部门</th>
               <th>状态</th>
               <th>更新时间</th>
-              <th v-if="hasUserActions">操作</th>
+              <th v-if="hasUserActions">
+                操作
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -996,42 +999,44 @@ onMounted(() => {
               </td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
               <td v-if="hasUserActions" class="operation-cell">
-                <n-button
-                  v-if="canAssignUserRole"
-                  v-permission="userButtonCodes.assign"
-                  quaternary
-                  type="primary"
-                  @click="openAssignRole(item)"
-                >
-                  分配角色
-                </n-button>
-                <n-button
-                  v-if="canUpdateUser"
-                  v-permission="userButtonCodes.update"
-                  quaternary
-                  type="warning"
-                  @click="openResetPasswordModal(item)"
-                >
-                  重置密码
-                </n-button>
-                <n-button
-                  v-if="canUpdateUser"
-                  v-permission="userButtonCodes.update"
-                  quaternary
-                  type="primary"
-                  @click="openEditDrawer(item)"
-                >
-                  编辑
-                </n-button>
-                <n-button
-                  v-if="canDeleteUser"
-                  v-permission="userButtonCodes.delete"
-                  quaternary
-                  type="error"
-                  @click="handleDeleteUser(item)"
-                >
-                  删除
-                </n-button>
+                <div class="operation-actions">
+                  <n-button
+                    v-if="canAssignUserRole"
+                    v-permission="userButtonCodes.assign"
+                    quaternary
+                    type="primary"
+                    @click="openAssignRole(item)"
+                  >
+                    分配角色
+                  </n-button>
+                  <n-button
+                    v-if="canUpdateUser"
+                    v-permission="userButtonCodes.update"
+                    quaternary
+                    type="warning"
+                    @click="openResetPasswordModal(item)"
+                  >
+                    重置密码
+                  </n-button>
+                  <n-button
+                    v-if="canUpdateUser"
+                    v-permission="userButtonCodes.update"
+                    quaternary
+                    type="primary"
+                    @click="openEditDrawer(item)"
+                  >
+                    编辑
+                  </n-button>
+                  <n-button
+                    v-if="canDeleteUser"
+                    v-permission="userButtonCodes.delete"
+                    quaternary
+                    type="error"
+                    @click="handleDeleteUser(item)"
+                  >
+                    删除
+                  </n-button>
+                </div>
               </td>
             </tr>
             <tr v-if="!userList.length">
@@ -1159,7 +1164,9 @@ onMounted(() => {
             <section class="lc-form-section">
               <div class="lc-form-section__header">
                 <div>
-                  <p class="lc-form-section__eyebrow">Account</p>
+                  <p class="lc-form-section__eyebrow">
+                    Account
+                  </p>
                   <h3 class="lc-form-section__title">
                     {{ isEditMode ? '编辑账号' : '创建账号' }}
                   </h3>
@@ -1352,11 +1359,7 @@ onMounted(() => {
   min-width: 110px;
 }
 
-.operation-cell {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+@import '@/styles/table-operation.less';
 
 .table-wrap {
   overflow: hidden;
