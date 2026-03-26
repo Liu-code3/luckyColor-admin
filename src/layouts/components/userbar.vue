@@ -10,7 +10,8 @@ import { useGlobalStore } from '@/store/modules/global.ts';
 import {
   clearLoginSession,
   getCurrentTenantContext,
-  getCurrentUserInfo
+  getCurrentUserInfo,
+  setCurrentTenantContext
 } from '@/utils/auth';
 import { isSuperAdminIdentity } from '@/utils/permission';
 import { useTabStore } from '@/store/modules/tab.ts';
@@ -61,6 +62,25 @@ const currentTenantLabel = computed(() => {
   }
 
   return '未识别租户';
+});
+
+const selectedTenantRecord = computed(() => {
+  if (!selectedTenantId.value) {
+    return null;
+  }
+
+  return tenantRecords.value.find(item => item.id === selectedTenantId.value) || null;
+});
+
+const canConfirmTenantSwitch = computed(() => {
+  const selectedTenant = selectedTenantRecord.value;
+
+  if (!selectedTenant) {
+    return false;
+  }
+
+  return selectedTenant.status === 'ACTIVE'
+    && selectedTenant.id !== currentTenant.value?.tenantId;
 });
 
 const filteredTenantRecords = computed(() => {
@@ -195,6 +215,56 @@ function selectTenant(record: TenantRecord) {
   selectedTenantId.value = record.id;
 }
 
+function resetTenantDrawerState() {
+  tenantKeyword.value = '';
+  selectedTenantId.value = currentTenant.value?.tenantId ?? null;
+}
+
+function closeTenantDrawer() {
+  tenantDrawer.value = false;
+  resetTenantDrawerState();
+}
+
+function buildTenantSwitchMessage(record: TenantRecord) {
+  if (record.status !== 'ACTIVE') {
+    return '仅支持切换到运行中的租户';
+  }
+
+  if (record.id === currentTenant.value?.tenantId) {
+    return '当前已经处于该租户上下文';
+  }
+
+  return '';
+}
+
+function confirmTenantSwitch() {
+  const selectedTenant = selectedTenantRecord.value;
+
+  if (!selectedTenant) {
+    message.warning('请先选择一个目标租户');
+    return;
+  }
+
+  const guardMessage = buildTenantSwitchMessage(selectedTenant);
+  if (guardMessage) {
+    message.warning(guardMessage);
+    return;
+  }
+
+  setCurrentTenantContext({
+    tenantId: selectedTenant.id,
+    tenantName: selectedTenant.name,
+    tenantCode: selectedTenant.code,
+    source: 'switch'
+  });
+  clearLoginSession();
+  globalStore.updateIsLock(false);
+  menuStore.clearMenuState();
+  tabStore.$reset();
+  tenantDrawer.value = false;
+  window.location.replace('/login');
+}
+
 const settingDrawer = ref(false);
 const onUpdateSettingDrawer = (val: boolean) => {
   settingDrawer.value = val;
@@ -300,7 +370,7 @@ const options = computed(() => {
             <div class="tenant-switcher__hero">
               <span>Tenant Context</span>
               <strong>{{ currentTenantLabel }}</strong>
-              <p>平台管理员可在这里查看并选择目标租户，当前已完成入口与列表准备。</p>
+              <p>切换租户后会清空当前登录态并返回登录页，使用目标租户上下文重新进入系统。</p>
             </div>
 
             <n-input
@@ -349,6 +419,27 @@ const options = computed(() => {
 
             <n-empty v-else description="暂无可切换租户" />
           </div>
+
+          <template #footer>
+            <div class="tenant-switcher__footer">
+              <div class="tenant-switcher__summary">
+                <span>目标租户</span>
+                <strong>{{ selectedTenantRecord?.name || currentTenantLabel }}</strong>
+                <p v-if="selectedTenantRecord">
+                  {{ selectedTenantRecord.code }} · {{ buildTenantSwitchMessage(selectedTenantRecord) || '切换后将返回登录页重新认证' }}
+                </p>
+              </div>
+
+              <div class="tenant-switcher__actions">
+                <n-button @click="closeTenantDrawer">
+                  取消
+                </n-button>
+                <n-button type="primary" :disabled="!canConfirmTenantSwitch" @click="confirmTenantSwitch">
+                  切换并重新登录
+                </n-button>
+              </div>
+            </div>
+          </template>
         </n-drawer-content>
       </n-drawer>
     </div>
@@ -498,6 +589,42 @@ const options = computed(() => {
   gap: 12px;
 }
 
+.tenant-switcher__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tenant-switcher__summary {
+  min-width: 0;
+}
+
+.tenant-switcher__summary span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.tenant-switcher__summary strong {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.tenant-switcher__summary p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tenant-switcher__actions {
+  display: flex;
+  gap: 10px;
+}
+
 .tenant-card {
   display: grid;
   gap: 12px;
@@ -578,6 +705,19 @@ const options = computed(() => {
 
   .tenant-entry {
     display: none;
+  }
+
+  .tenant-switcher__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tenant-switcher__actions {
+    width: 100%;
+  }
+
+  .tenant-switcher__actions :deep(.n-button) {
+    flex: 1;
   }
 }
 </style>
