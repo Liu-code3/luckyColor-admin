@@ -7,6 +7,7 @@ import {
   deleteNoticeApi,
   getNoticeDetailApi,
   getNoticePageApi,
+  pinNoticeApi,
   publishNoticeApi,
   revokeNoticeApi,
   updateNoticeApi
@@ -316,6 +317,21 @@ async function handleRevokeNotice(notice: NoticeRecord) {
   await fetchNotices(page.value);
 }
 
+async function handlePinNotice(notice: NoticeRecord, pinned: boolean) {
+  const confirmed = await confirmAction({
+    title: pinned ? '置顶公告' : '取消置顶',
+    content: pinned
+      ? `确认将公告“${notice.title}”置顶吗？`
+      : `确认取消公告“${notice.title}”的置顶状态吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await pinNoticeApi(notice.id, { pinned });
+  await fetchNotices(page.value);
+}
+
 onMounted(() => {
   fetchNotices();
 });
@@ -387,8 +403,13 @@ onMounted(() => {
           <tbody>
             <tr v-for="item in noticeList" :key="item.id">
               <td>
-                <div class="primary-text">
-                  {{ item.title }}
+                <div class="notice-title-row">
+                  <span class="primary-text">
+                    {{ item.title }}
+                  </span>
+                  <n-tag v-if="item.isPinned" size="small" type="warning" round>
+                    置顶
+                  </n-tag>
                 </div>
                 <div class="secondary-text notice-snippet">
                   {{ item.content }}
@@ -422,6 +443,21 @@ onMounted(() => {
                     @click="handleRevokeNotice(item)"
                   >
                     下线
+                  </n-button>
+                  <n-button
+                    v-if="!item.isPinned"
+                    quaternary
+                    type="warning"
+                    @click="handlePinNotice(item, true)"
+                  >
+                    置顶
+                  </n-button>
+                  <n-button
+                    v-else
+                    quaternary
+                    @click="handlePinNotice(item, false)"
+                  >
+                    取消置顶
                   </n-button>
                   <n-button quaternary type="primary" @click="openEditDrawer(item)">
                     编辑
@@ -540,6 +576,7 @@ onMounted(() => {
         <div class="preview-meta">
           <span>类型：{{ getNoticeTypeLabel(previewNotice.type) }}</span>
           <span>状态：{{ previewNotice.status ? '已发布' : '草稿' }}</span>
+          <span>置顶：{{ previewNotice.isPinned ? '是' : '否' }}</span>
           <span>发布人：{{ previewNotice.publisher || '-' }}</span>
           <span>发布时间：{{ formatDateTime(previewNotice.publishedAt) }}</span>
         </div>
@@ -604,6 +641,12 @@ onMounted(() => {
 
 .primary-text {
   font-weight: 600;
+}
+
+.notice-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .secondary-text {

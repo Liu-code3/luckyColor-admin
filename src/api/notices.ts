@@ -12,6 +12,7 @@ export interface NoticeRecord {
   content: string;
   type: string;
   status: boolean;
+  isPinned?: boolean;
   publisher?: string | null;
   publishedAt?: string | null;
   createdAt: string;
@@ -40,6 +41,10 @@ export interface PublishNoticePayload {
   publisher?: string | null;
   scheduledPublishAt?: string | null;
   publishedAt?: string | null;
+}
+
+export interface PinNoticePayload {
+  pinned: boolean;
 }
 
 export function getNoticePageApi(params: NoticeQueryParams) {
@@ -85,6 +90,14 @@ export function revokeNoticeApi(id: string) {
   return request<never, NoticeRecord>({
     url: `/notices/${id}/revoke`,
     method: 'patch'
+  });
+}
+
+export function pinNoticeApi(id: string, data: PinNoticePayload) {
+  return request<PinNoticePayload, NoticeRecord>({
+    url: `/notices/${id}/pin`,
+    method: 'patch',
+    data
   });
 }
 
