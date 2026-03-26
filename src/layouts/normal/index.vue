@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue';
 import Tags from '@/layouts/components/tags.vue';
 import UserBar from '@/layouts/components/userbar.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
@@ -30,7 +29,7 @@ const contentStyle = computed(() => ({
         >
           <div class="logo-bar" :class="{ 'logo-bar--collapsed': menuStore.collapsed }">
             <div class="logo-mark">
-              <Icon class="text-26px" icon="cryptocurrency-color:ltc" />
+              <img src="/logo.svg" alt="LuckyColor Admin Logo" class="logo-mark__image">
             </div>
             <div class="logo-copy" :class="{ 'logo-copy--collapsed': menuStore.collapsed }">
               <strong>luckyColor admin</strong>
@@ -128,6 +127,12 @@ const contentStyle = computed(() => ({
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.1);
   flex: none;
+}
+
+.logo-mark__image {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .logo-copy {

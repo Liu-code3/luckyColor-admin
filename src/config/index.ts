@@ -56,7 +56,7 @@ const DEFAULT_CONFIG = {
   warning: '#faad14',
   error: '#f5222f',
   SYS_BASE_CONFIG: {
-    LUCK_SYS_LOGO: '/img/logo.png',
+    LUCK_SYS_LOGO: '/logo.svg',
     LUCK_SYS_API_URL: import.meta.env.VITE_API_BASEURL,
     LUCK_SYS_NAME: 'LuckyColor-admin',
     LUCK_SYS_VERSION: '2.0',

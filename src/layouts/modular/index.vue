@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Icon } from '@iconify/vue';
 import Tags from '@/layouts/components/tags.vue';
 import NavMenu from '@/layouts/components/NavMenu.vue';
 import Modular from '@/layouts/components/modular.vue';
@@ -21,7 +20,7 @@ const contentStyle = computed(() => ({
       <n-layout has-sider>
         <div class="modular">
           <div class="logo-bar logo-bar--compact">
-            <Icon icon="cryptocurrency-color:ltc" />
+            <img src="/logo.svg" alt="LuckyColor Admin Logo" class="logo-mark__image">
           </div>
           <div class="modular-eyebrow">
             Modules
@@ -83,11 +82,16 @@ const contentStyle = computed(() => ({
     align-items: center;
     justify-content: center;
     padding: 0;
-    font-size: 34px;
     flex: none;
     margin: 0;
     color: var(--layout-sider-text-active);
   }
+}
+
+.logo-mark__image {
+  width: 32px;
+  height: 32px;
+  display: block;
 }
 
 .modular-eyebrow {

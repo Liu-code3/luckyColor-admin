@@ -1,5 +1,43 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="48" fill="#0F766E"/>
-  <path d="M58 154C58 113.131 91.1309 80 132 80H186V112H132C108.804 112 90 130.804 90 154V176H58V154Z" fill="#F8FAFC"/>
-  <path d="M198 102C198 142.869 164.869 176 124 176H70V144H124C147.196 144 166 125.196 166 102V80H198V102Z" fill="#99F6E4"/>
+  <defs>
+    <linearGradient id="admin-bg" x1="34" y1="28" x2="216" y2="228" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08252C"/>
+      <stop offset="0.52" stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="admin-ribbon" x1="60" y1="184" x2="184" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CCFBF1"/>
+      <stop offset="1" stop-color="#99F6E4"/>
+    </linearGradient>
+    <linearGradient id="admin-panel" x1="96" y1="94" x2="160" y2="162" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#0B1F2A" stop-opacity="0.1"/>
+    </linearGradient>
+    <filter id="admin-shadow" x="18" y="18" width="220" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="12"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0156863 0 0 0 0 0.0901961 0 0 0 0 0.117647 0 0 0 0.22 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#admin-shadow)">
+    <rect x="28" y="28" width="200" height="200" rx="48" fill="url(#admin-bg)"/>
+    <rect x="28.75" y="28.75" width="198.5" height="198.5" rx="47.25" stroke="white" stroke-opacity="0.12" stroke-width="1.5"/>
+
+    <path d="M56 154C56 108.713 92.7132 72 138 72H194V108H138C112.595 108 92 128.595 92 154V184H56V154Z" fill="#F8FAFC"/>
+    <path d="M200 102C200 147.287 163.287 184 118 184H62V148H118C143.405 148 164 127.405 164 102V72H200V102Z" fill="url(#admin-ribbon)"/>
+
+    <rect x="92" y="92" width="72" height="72" rx="20" fill="url(#admin-panel)" stroke="white" stroke-opacity="0.24" stroke-width="1.5"/>
+    <rect x="104" y="106" width="48" height="8" rx="4" fill="#E6FFFB" fill-opacity="0.9"/>
+    <rect x="104" y="122" width="20" height="20" rx="6" fill="#F8FAFC"/>
+    <rect x="132" y="122" width="20" height="20" rx="6" fill="#99F6E4"/>
+    <rect x="104" y="148" width="48" height="6" rx="3" fill="#E6FFFB" fill-opacity="0.52"/>
+    <circle cx="176" cy="82" r="10" fill="#F59E0B"/>
+    <circle cx="176" cy="82" r="4" fill="#FEF3C7"/>
+  </g>
 </svg>

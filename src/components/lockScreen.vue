@@ -43,7 +43,7 @@ onBeforeUnmount(() => {
     <div class="cover">
       <div class="content">
         <div class="layout-abs-center h-40 w-40 rd-50%" style="background-color: rgba(78, 136, 243, .2);">
-          <img class="h-28 w-28 rd-3" src="@/assets/images/luckColor.png" alt="">
+          <img class="h-28 w-28 rd-3" src="/logo.svg" alt="LuckyColor Admin Logo">
         </div>
         <Icon icon="gravity-ui:lock" class="text-10" />
         <h3 class="my-0">
