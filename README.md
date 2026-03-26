@@ -4,7 +4,7 @@ LuckyColor 的后台管理前端项目，负责登录鉴权、动态菜单、权
 
 项目基于 `Vue 3`、`Vite`、`TypeScript`、`Pinia`、`Naive UI` 构建，开发环境通过 Vite 代理将 `/api` 请求转发到同级目录的后端服务 `luckyColor-admin-serve`。
 
-![luckyColor-admin 预览图](./src/assets/images/luckColor.png)
+![luckyColor-admin 标志](./public/logo.svg)
 
 ## 项目概览
 
