@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router';
 import { getCurrentTenantContext, getCurrentUserInfo } from '@/utils/auth';
 
 const props = defineProps<{
   show: boolean;
 }>();
 
+const route = useRoute();
+const watermarkRenderKey = ref(0);
 const currentUserInfo = computed(() => getCurrentUserInfo());
 const currentTenant = computed(() => getCurrentTenantContext());
 
@@ -20,11 +23,34 @@ const watermarkContent = computed(() => {
     tenantLabel ? `租户 ${tenantLabel}` : null
   ].filter((item): item is string => Boolean(item));
 });
+
+watch(() => route.fullPath, async () => {
+  if (!props.show) {
+    return;
+  }
+
+  await nextTick();
+  watermarkRenderKey.value += 1;
+}, {
+  flush: 'post'
+});
+
+watch(() => props.show, async (show) => {
+  if (!show) {
+    return;
+  }
+
+  await nextTick();
+  watermarkRenderKey.value += 1;
+}, {
+  flush: 'post'
+});
 </script>
 
 <template>
   <n-watermark
     v-if="props.show"
+    :key="watermarkRenderKey"
     class="app-watermark-layer"
     :content="watermarkContent"
     cross
