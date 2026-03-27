@@ -1,9 +1,25 @@
 <script setup lang="ts">
+import { getCurrentTenantContext, getCurrentUserInfo } from '@/utils/auth';
+
 const props = defineProps<{
   show: boolean;
 }>();
 
-const watermarkContent = 'LuckyColor Admin';
+const currentUserInfo = computed(() => getCurrentUserInfo());
+const currentTenant = computed(() => getCurrentTenantContext());
+
+const watermarkContent = computed(() => {
+  const displayName = currentUserInfo.value?.displayName || currentUserInfo.value?.username || 'LuckyColor Admin';
+  const username = currentUserInfo.value?.username;
+  const tenantLabel = currentTenant.value?.tenantName || currentTenant.value?.tenantId;
+
+  return [
+    'LuckyColor Admin',
+    displayName,
+    username ? `账号 ${username}` : null,
+    tenantLabel ? `租户 ${tenantLabel}` : null
+  ].filter((item): item is string => Boolean(item));
+});
 </script>
 
 <template>
