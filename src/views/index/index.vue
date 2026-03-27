@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { getDashboardOverviewApi } from '@/api'
 
@@ -71,6 +72,7 @@ interface TodoItem {
 }
 
 const router = useRouter()
+const { locale, t } = useI18n()
 
 const loading = ref(false)
 const currentTime = ref(new Date())
@@ -81,7 +83,7 @@ const dashboardData = ref<DashboardViewState>({
   user: {
     id: '',
     username: 'admin',
-    nickname: '平台管理员'
+    nickname: 'Platform Admin'
   },
   stats: {
     onlineUsers: 0,
@@ -94,112 +96,141 @@ const dashboardData = ref<DashboardViewState>({
   notices: []
 })
 
+const currentLocale = computed(() => locale.value === 'en-US' ? 'en-US' : 'zh-CN')
 const displayName = computed(() => dashboardData.value.user.nickname || dashboardData.value.user.username)
 const avatarText = computed(() => displayName.value.slice(0, 1).toUpperCase())
 
 const greeting = computed(() => {
   const hour = currentTime.value.getHours()
-  if (hour < 6) return '夜深了'
-  if (hour < 12) return '早上好'
-  if (hour < 14) return '中午好'
-  if (hour < 18) return '下午好'
-  return '晚上好'
+  if (hour < 6) return t('dashboard.greeting.night')
+  if (hour < 12) return t('dashboard.greeting.morning')
+  if (hour < 14) return t('dashboard.greeting.noon')
+  if (hour < 18) return t('dashboard.greeting.afternoon')
+  return t('dashboard.greeting.evening')
 })
 
-const dateText = computed(() => {
-  const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  return `${currentTime.value.getFullYear()}年${currentTime.value.getMonth() + 1}月${currentTime.value.getDate()}日 ${weekNames[currentTime.value.getDay()]}`
-})
+const dateText = computed(() => new Intl.DateTimeFormat(currentLocale.value, {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long'
+}).format(currentTime.value))
 
-const timeText = computed(() => `${pad(currentTime.value.getHours())}:${pad(currentTime.value.getMinutes())}`)
+const timeText = computed(() => currentTime.value.toLocaleTimeString(currentLocale.value, {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+}))
 
 const statCards = computed(() => [
   {
-    title: '在线用户',
+    title: t('dashboard.stats.onlineUsers.title'),
     value: dashboardData.value.stats.onlineUsers,
-    unit: '人',
+    unit: t('dashboard.stats.onlineUsers.unit'),
     icon: 'solar:users-group-rounded-linear',
     accent: '#0f766e',
-    helper: `最近 ${Math.floor(dashboardData.value.stats.onlineWindowSeconds / 60)} 分钟活跃会话`,
-    footer: `${dashboardData.value.stats.onlineUsers} 人在线`
+    helper: t('dashboard.stats.onlineUsers.helper', {
+      minutes: Math.floor(dashboardData.value.stats.onlineWindowSeconds / 60)
+    }),
+    footer: t('dashboard.stats.onlineUsers.footer', {
+      count: dashboardData.value.stats.onlineUsers
+    })
   },
   {
-    title: '访客数 UV',
+    title: t('dashboard.stats.visitorUv.title'),
     value: dashboardData.value.stats.visitorUv,
     unit: '',
     icon: 'solar:user-id-linear',
     accent: '#2563eb',
-    helper: '今日独立访客数',
-    footer: `${dashboardData.value.stats.visitorUv} 位访客`
+    helper: t('dashboard.stats.visitorUv.helper'),
+    footer: t('dashboard.stats.visitorUv.footer', {
+      count: dashboardData.value.stats.visitorUv
+    })
   },
   {
-    title: '浏览量 PV',
+    title: t('dashboard.stats.pageViews.title'),
     value: dashboardData.value.stats.pageViews,
     unit: '',
     icon: 'solar:eye-linear',
     accent: '#f97316',
-    helper: '今日页面访问量',
-    footer: `${dashboardData.value.stats.pageViews} 次浏览`
+    helper: t('dashboard.stats.pageViews.helper'),
+    footer: t('dashboard.stats.pageViews.footer', {
+      count: dashboardData.value.stats.pageViews
+    })
   },
   {
-    title: '待办事项',
+    title: t('dashboard.stats.todos.title'),
     value: todoItems.value.length,
-    unit: '项',
+    unit: t('dashboard.stats.todos.unit'),
     icon: 'solar:checklist-minimalistic-linear',
     accent: '#7c3aed',
-    helper: '当前工作台建议优先处理的运营动作',
-    footer: `${todoItems.value.length} 项待跟进`
+    helper: t('dashboard.stats.todos.helper'),
+    footer: t('dashboard.stats.todos.footer', {
+      count: todoItems.value.length
+    })
   }
 ])
 
 const quickEntryItems = computed<QuickEntryItem[]>(() => [
   {
-    title: '用户管理',
-    description: '处理账号新增、角色分配与成员维护。',
+    title: t('dashboard.quickEntries.userManagement.title'),
+    description: t('dashboard.quickEntries.userManagement.description'),
     path: '/systemManagement/system/users',
     icon: 'solar:users-group-rounded-linear',
-    tag: '账号',
-    metric: `${dashboardData.value.recentVisits.length} 条访问`
+    tag: t('dashboard.quickEntries.userManagement.tag'),
+    metric: t('dashboard.quickEntries.metrics.recentVisits', {
+      count: dashboardData.value.recentVisits.length
+    })
   },
   {
-    title: '角色权限',
-    description: '统一管理菜单、按钮与数据权限策略。',
+    title: t('dashboard.quickEntries.rolePermission.title'),
+    description: t('dashboard.quickEntries.rolePermission.description'),
     path: '/systemManagement/system/role',
     icon: 'solar:shield-user-linear',
-    tag: '权限',
-    metric: `${dashboardData.value.notices.length} 条公告关联`
+    tag: t('dashboard.quickEntries.rolePermission.tag'),
+    metric: t('dashboard.quickEntries.metrics.notices', {
+      count: dashboardData.value.notices.length
+    })
   },
   {
-    title: '菜单管理',
-    description: '维护动态菜单结构与可见性配置。',
+    title: t('dashboard.quickEntries.menuManagement.title'),
+    description: t('dashboard.quickEntries.menuManagement.description'),
     path: '/systemManagement/system/menu',
     icon: 'solar:widget-4-linear',
-    tag: '导航',
-    metric: `${trendRange.value} 天趋势`
+    tag: t('dashboard.quickEntries.menuManagement.tag'),
+    metric: t('dashboard.quickEntries.metrics.trendDays', {
+      count: trendRange.value
+    })
   },
   {
-    title: '字典管理',
-    description: '统一维护业务字典与基础选项集。',
+    title: t('dashboard.quickEntries.dictManagement.title'),
+    description: t('dashboard.quickEntries.dictManagement.description'),
     path: '/systemManagement/system/dict',
     icon: 'solar:book-bookmark-linear',
-    tag: '基础数据',
-    metric: `${dashboardData.value.stats.pageViews} 次浏览`
+    tag: t('dashboard.quickEntries.dictManagement.tag'),
+    metric: t('dashboard.quickEntries.metrics.pageViews', {
+      count: dashboardData.value.stats.pageViews
+    })
   },
   {
-    title: '租户管理',
-    description: '查看租户状态、到期信息与初始化结果。',
+    title: t('dashboard.quickEntries.tenantManagement.title'),
+    description: t('dashboard.quickEntries.tenantManagement.description'),
     path: '/tenantCenter/tenant',
     icon: 'solar:buildings-2-linear',
-    tag: 'SaaS',
-    metric: `${dashboardData.value.stats.onlineUsers} 人在线`
+    tag: t('dashboard.quickEntries.tenantManagement.tag'),
+    metric: t('dashboard.quickEntries.metrics.onlineUsers', {
+      count: dashboardData.value.stats.onlineUsers
+    })
   },
   {
-    title: '租户套餐',
-    description: '收敛套餐能力、开关与可用范围。',
+    title: t('dashboard.quickEntries.tenantPackage.title'),
+    description: t('dashboard.quickEntries.tenantPackage.description'),
     path: '/tenantCenter/tenantPackage',
     icon: 'solar:box-linear',
-    tag: '套餐',
-    metric: `${dashboardData.value.stats.visitorUv} UV`
+    tag: t('dashboard.quickEntries.tenantPackage.tag'),
+    metric: t('dashboard.quickEntries.metrics.visitorUv', {
+      count: dashboardData.value.stats.visitorUv
+    })
   }
 ])
 
@@ -209,40 +240,43 @@ const todoItems = computed<TodoItem[]>(() => {
 
   return [
     {
-      title: latestNotice ? '复核平台公告内容' : '补充平台公告',
+      title: latestNotice ? t('dashboard.todos.noticeReview') : t('dashboard.todos.noticeCreate'),
       summary: latestNotice
-        ? `最近一条公告为“${latestNotice.title}”，建议检查发布时间与内容是否仍然有效。`
-        : '当前暂无可展示公告，建议补充系统通知或平台公告。',
+        ? t('dashboard.todos.noticeReviewSummary', { title: latestNotice.title })
+        : t('dashboard.todos.noticeCreateSummary'),
       path: '/systemManagement/system/notice',
       icon: 'solar:bell-linear',
-      tag: latestNotice ? '公告巡检' : '待发布',
-      actionLabel: latestNotice ? '查看公告' : '前往发布'
+      tag: latestNotice ? t('dashboard.todos.noticeReviewTag') : t('dashboard.todos.noticeCreateTag'),
+      actionLabel: latestNotice ? t('dashboard.todos.noticeReviewAction') : t('dashboard.todos.noticeCreateAction')
     },
     {
-      title: '巡检角色授权策略',
-      summary: '重点核对核心角色的菜单权限、按钮权限与数据权限是否匹配当前业务边界。',
+      title: t('dashboard.todos.roleAuditTitle'),
+      summary: t('dashboard.todos.roleAuditSummary'),
       path: '/systemManagement/system/role',
       icon: 'solar:shield-keyhole-linear',
-      tag: '权限治理',
-      actionLabel: '检查权限'
+      tag: t('dashboard.todos.roleAuditTag'),
+      actionLabel: t('dashboard.todos.roleAuditAction')
     },
     {
-      title: '跟进高频访问入口',
+      title: t('dashboard.todos.visitFollowTitle'),
       summary: latestVisit
-        ? `最近访问最高频入口可从“${latestVisit.routeTitle}”开始复查，确认页面数据与操作链路是否正常。`
-        : '当前暂无最近访问记录，可从用户管理或租户管理开始巡检。',
+        ? t('dashboard.todos.visitFollowSummary', { title: latestVisit.routeTitle })
+        : t('dashboard.todos.visitFollowEmptySummary'),
       path: latestVisit?.routePath || '/systemManagement/system/users',
       icon: 'solar:cursor-square-linear',
-      tag: '活跃入口',
-      actionLabel: '打开页面'
+      tag: t('dashboard.todos.visitFollowTag'),
+      actionLabel: t('dashboard.todos.visitFollowAction')
     },
     {
-      title: '关注租户活跃与容量',
-      summary: `当前 ${dashboardData.value.stats.onlineUsers} 位在线用户、${dashboardData.value.stats.visitorUv} 位访客，建议同步检查租户使用情况与套餐容量。`,
+      title: t('dashboard.todos.tenantFocusTitle'),
+      summary: t('dashboard.todos.tenantFocusSummary', {
+        onlineUsers: dashboardData.value.stats.onlineUsers,
+        visitorUv: dashboardData.value.stats.visitorUv
+      }),
       path: '/tenantCenter/tenant',
       icon: 'solar:monitor-smartphone-linear',
-      tag: '租户运营',
-      actionLabel: '查看租户'
+      tag: t('dashboard.todos.tenantFocusTag'),
+      actionLabel: t('dashboard.todos.tenantFocusAction')
     }
   ]
 })
@@ -291,10 +325,10 @@ const activeTrendTooltip = computed(() => {
 })
 
 const overviewItems = computed(() => [
-  { label: '当前账号', value: dashboardData.value.user.username || '--' },
-  { label: '最近访问', value: `${dashboardData.value.recentVisits.length} 项` },
-  { label: '公告条数', value: `${dashboardData.value.notices.length} 条` },
-  { label: '趋势周期', value: `最近 ${trendRange.value} 天` }
+  { label: t('dashboard.overview.currentAccount'), value: dashboardData.value.user.username || '--' },
+  { label: t('dashboard.overview.recentVisits'), value: t('dashboard.overview.pages', { count: dashboardData.value.recentVisits.length }) },
+  { label: t('dashboard.overview.notices'), value: t('dashboard.overview.items', { count: dashboardData.value.notices.length }) },
+  { label: t('dashboard.overview.trendRange'), value: t('dashboard.overview.days', { count: trendRange.value }) }
 ])
 
 onMounted(async () => {
@@ -348,16 +382,18 @@ function clamp(value: number, min: number, max: number) {
 
 function noticeDate(value?: string | null) {
   if (!value) return '--'
-  const date = new Date(value)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  return new Intl.DateTimeFormat(currentLocale.value, {
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date(value))
 }
 
 function noticeType(type: string) {
   return ({
-    NOTICE: '通知',
-    ANNOUNCEMENT: '公告',
-    SYSTEM: '系统',
-    system: '系统'
+    NOTICE: t('dashboard.notices.types.notice'),
+    ANNOUNCEMENT: t('dashboard.notices.types.announcement'),
+    SYSTEM: t('dashboard.notices.types.system'),
+    system: t('dashboard.notices.types.system')
   } as Record<string, string>)[type] || type
 }
 
@@ -459,15 +495,15 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
         <div class="hero-avatar">{{ avatarText }}</div>
         <div class="hero-copy">
           <div class="hero-date">{{ dateText }}</div>
-          <h1>{{ greeting }}，{{ displayName }}</h1>
-          <p>当前账号 {{ dashboardData.user.username }}，这里汇总了今天的访问概况、最近访问和通知公告，所有核心数字均来自后端实时统计接口。</p>
+          <h1>{{ greeting }}, {{ displayName }}</h1>
+          <p>{{ t('dashboard.hero.description', { username: dashboardData.user.username }) }}</p>
         </div>
       </div>
       <div class="hero-side">
         <div class="hero-time">{{ timeText }}</div>
         <div class="hero-tags">
-          <span>租户后台</span>
-          <span>真实数据</span>
+          <span>{{ t('dashboard.hero.tags.tenant') }}</span>
+          <span>{{ t('dashboard.hero.tags.data') }}</span>
         </div>
       </div>
     </section>
@@ -494,8 +530,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Quick Actions</p>
-            <h2>快捷入口</h2>
+            <p>{{ t('dashboard.sections.quickActions') }}</p>
+            <h2>{{ t('dashboard.sections.quickActionsTitle') }}</h2>
           </div>
         </header>
 
@@ -526,8 +562,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Todo Board</p>
-            <h2>待办事项</h2>
+            <p>{{ t('dashboard.sections.todoBoard') }}</p>
+            <h2>{{ t('dashboard.sections.todoBoardTitle') }}</h2>
           </div>
         </header>
 
@@ -560,8 +596,8 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>System Snapshot</p>
-            <h2>系统概览</h2>
+            <p>{{ t('dashboard.sections.systemSnapshot') }}</p>
+            <h2>{{ t('dashboard.sections.systemSnapshotTitle') }}</h2>
           </div>
         </header>
         <div class="overview-list">
@@ -575,10 +611,10 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Platform Notice</p>
-            <h2>平台公告</h2>
+            <p>{{ t('dashboard.sections.platformNotice') }}</p>
+            <h2>{{ t('dashboard.sections.platformNoticeTitle') }}</h2>
           </div>
-          <n-button text type="primary" @click="openNoticePage">查看全部</n-button>
+          <n-button text type="primary" @click="openNoticePage">{{ t('dashboard.notices.viewAll') }}</n-button>
         </header>
 
         <div v-if="loading" class="notice-loading">
@@ -592,12 +628,12 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             </div>
             <p>{{ item.content }}</p>
             <div class="notice-meta">
-              <span>{{ item.publisher || '系统发布' }}</span>
+              <span>{{ item.publisher || t('dashboard.notices.systemPublisher') }}</span>
               <span>{{ noticeDate(item.publishedAt || item.createdAt) }}</span>
             </div>
           </button>
         </div>
-        <n-empty v-else description="暂无公告内容" />
+        <n-empty v-else :description="t('dashboard.notices.empty')" />
       </article>
     </section>
 
@@ -605,18 +641,18 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Access Trend</p>
-            <h2>访问趋势</h2>
+            <p>{{ t('dashboard.sections.accessTrend') }}</p>
+            <h2>{{ t('dashboard.sections.accessTrendTitle') }}</h2>
           </div>
           <div class="panel-actions">
-            <n-button size="small" :type="trendRange === 7 ? 'primary' : 'default'" @click="trendRange = 7">最近 7 天</n-button>
-            <n-button size="small" :type="trendRange === 30 ? 'primary' : 'default'" @click="trendRange = 30">最近 30 天</n-button>
+            <n-button size="small" :type="trendRange === 7 ? 'primary' : 'default'" @click="trendRange = 7">{{ t('dashboard.trend.last7Days') }}</n-button>
+            <n-button size="small" :type="trendRange === 30 ? 'primary' : 'default'" @click="trendRange = 30">{{ t('dashboard.trend.last30Days') }}</n-button>
           </div>
         </header>
 
         <div class="chart-wrap" @mouseleave="clearActiveTrend">
           <n-skeleton v-if="loading" text :repeat="8" />
-          <svg v-else :viewBox="`0 0 ${chart.width} ${chart.height}`" role="img" aria-label="访问趋势图">
+          <svg v-else :viewBox="`0 0 ${chart.width} ${chart.height}`" role="img" :aria-label="t('dashboard.trend.ariaLabel')">
             <line
               v-for="row in chart.rows"
               :key="`row-${row.y}`"
@@ -721,16 +757,16 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
         </div>
 
         <div class="legend">
-          <div><span class="legend-dot legend-dot--pv" /> 浏览量 PV</div>
-          <div><span class="legend-dot legend-dot--uv" /> 访客数 UV</div>
+          <div><span class="legend-dot legend-dot--pv" /> {{ t('dashboard.trend.pv') }}</div>
+          <div><span class="legend-dot legend-dot--uv" /> {{ t('dashboard.trend.uv') }}</div>
         </div>
       </article>
 
       <article class="panel">
         <header class="panel-header">
           <div>
-            <p>Recent Visit</p>
-            <h2>最近访问</h2>
+            <p>{{ t('dashboard.sections.recentVisit') }}</p>
+            <h2>{{ t('dashboard.sections.recentVisitTitle') }}</h2>
           </div>
         </header>
 
@@ -742,11 +778,11 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             <div class="visit-icon"><Icon :icon="item.routeIcon || 'solar:history-linear'" /></div>
             <div class="visit-copy">
               <strong>{{ item.routeTitle }}</strong>
-              <span>{{ noticeDate(item.lastVisitedAt) }} 最近访问</span>
+              <span>{{ noticeDate(item.lastVisitedAt) }} {{ t('dashboard.recentVisit.label') }}</span>
             </div>
             <Icon icon="solar:arrow-right-up-linear" class="visit-arrow" />
           </button>
-          <n-empty v-if="!dashboardData.recentVisits.length" description="暂无最近访问记录" />
+          <n-empty v-if="!dashboardData.recentVisits.length" :description="t('dashboard.recentVisit.empty')" />
         </div>
       </article>
     </section>
@@ -758,7 +794,7 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             <p>Notices</p>
             <h2>通知公告</h2>
           </div>
-          <n-button text type="primary" @click="openNoticePage">查看全部</n-button>
+          <n-button text type="primary" @click="openNoticePage">{{ t('dashboard.notices.viewAll') }}</n-button>
         </header>
 
         <div v-if="loading" class="notice-loading">
@@ -772,20 +808,20 @@ function areaPath(points: Array<{ x: number, y: number }>, bottomY: number) {
             </div>
             <p>{{ item.content }}</p>
             <div class="notice-meta">
-              <span>{{ item.publisher || '系统发布' }}</span>
+              <span>{{ item.publisher || t('dashboard.notices.systemPublisher') }}</span>
               <span>{{ noticeDate(item.publishedAt || item.createdAt) }}</span>
             </div>
           </button>
         </div>
-        <n-empty v-else description="暂无公告内容" />
+        <n-empty v-else :description="t('dashboard.notices.empty')" />
       </article>
 
       <div class="side-stack">
         <article class="panel">
           <header class="panel-header">
             <div>
-              <p>System Snapshot</p>
-              <h2>系统概览</h2>
+              <p>{{ t('dashboard.sections.systemSnapshot') }}</p>
+              <h2>{{ t('dashboard.sections.systemSnapshotTitle') }}</h2>
             </div>
           </header>
           <div class="overview-list">

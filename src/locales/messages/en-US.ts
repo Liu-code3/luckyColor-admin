@@ -127,6 +127,153 @@ const enUS = {
       expiresSoon: 'This challenge is about to expire. Please complete it soon.',
       expiresAt: 'Please complete the input before {time}'
     }
+  },
+  dashboard: {
+    greeting: {
+      night: 'Late night',
+      morning: 'Good morning',
+      noon: 'Good noon',
+      afternoon: 'Good afternoon',
+      evening: 'Good evening'
+    },
+    hero: {
+      description: "Current account {username}. This workspace summarizes today's traffic overview, recent visits, and platform notices, with the core figures coming from real-time backend APIs.",
+      tags: {
+        tenant: 'Tenant admin',
+        data: 'Live data'
+      }
+    },
+    stats: {
+      onlineUsers: {
+        title: 'Online users',
+        helper: 'Active sessions in the last {minutes} minutes',
+        footer: '{count} users online',
+        unit: 'users'
+      },
+      visitorUv: {
+        title: 'Visitor UV',
+        helper: 'Unique visitors today',
+        footer: '{count} visitors'
+      },
+      pageViews: {
+        title: 'Page views PV',
+        helper: 'Page visits today',
+        footer: '{count} page views'
+      },
+      todos: {
+        title: 'Todo items',
+        helper: 'Operational actions currently recommended by the workspace',
+        footer: '{count} items to follow up',
+        unit: 'items'
+      }
+    },
+    sections: {
+      quickActions: 'Quick Actions',
+      quickActionsTitle: 'Quick links',
+      todoBoard: 'Todo Board',
+      todoBoardTitle: 'Todo items',
+      systemSnapshot: 'System Snapshot',
+      systemSnapshotTitle: 'Overview',
+      platformNotice: 'Platform Notice',
+      platformNoticeTitle: 'Platform notices',
+      accessTrend: 'Access Trend',
+      accessTrendTitle: 'Traffic trend',
+      recentVisit: 'Recent Visit',
+      recentVisitTitle: 'Recent visits'
+    },
+    quickEntries: {
+      userManagement: {
+        title: 'User management',
+        description: 'Handle account creation, role assignment, and member maintenance.',
+        tag: 'Account'
+      },
+      rolePermission: {
+        title: 'Role permissions',
+        description: 'Manage menu, button, and data permission strategies in one place.',
+        tag: 'Permission'
+      },
+      menuManagement: {
+        title: 'Menu management',
+        description: 'Maintain dynamic menu structure and visibility settings.',
+        tag: 'Navigation'
+      },
+      dictManagement: {
+        title: 'Dictionary management',
+        description: 'Maintain business dictionaries and shared option sets.',
+        tag: 'Base data'
+      },
+      tenantManagement: {
+        title: 'Tenant management',
+        description: 'Review tenant status, expiration, and initialization results.',
+        tag: 'SaaS'
+      },
+      tenantPackage: {
+        title: 'Tenant packages',
+        description: 'Review package capabilities, switches, and available scopes.',
+        tag: 'Package'
+      },
+      metrics: {
+        recentVisits: '{count} visits',
+        notices: '{count} linked notices',
+        trendDays: '{count}-day trend',
+        pageViews: '{count} page views',
+        onlineUsers: '{count} online',
+        visitorUv: '{count} UV'
+      }
+    },
+    todos: {
+      noticeReview: 'Review platform notice content',
+      noticeCreate: 'Publish a platform notice',
+      noticeReviewSummary: 'The latest notice is "{title}". It is worth reviewing whether the publish time and content are still valid.',
+      noticeCreateSummary: 'There is no notice to display yet. Consider publishing a system or platform notice.',
+      noticeReviewTag: 'Notice audit',
+      noticeCreateTag: 'Pending publish',
+      noticeReviewAction: 'View notice',
+      noticeCreateAction: 'Go publish',
+      roleAuditTitle: 'Audit role authorization strategy',
+      roleAuditSummary: 'Focus on whether menu permissions, button permissions, and data permissions for core roles still match the current business boundary.',
+      roleAuditTag: 'Permission governance',
+      roleAuditAction: 'Check permissions',
+      visitFollowTitle: 'Follow high-frequency entries',
+      visitFollowSummary: 'The most recently visited high-frequency entry can be reviewed from "{title}" first to confirm that data and actions still behave normally.',
+      visitFollowEmptySummary: 'There is no recent visit record yet. Start from user management or tenant management for a quick inspection.',
+      visitFollowTag: 'Active entry',
+      visitFollowAction: 'Open page',
+      tenantFocusTitle: 'Watch tenant activity and capacity',
+      tenantFocusSummary: 'There are currently {onlineUsers} online users and {visitorUv} visitors. It is worth checking tenant usage and package capacity together.',
+      tenantFocusTag: 'Tenant ops',
+      tenantFocusAction: 'View tenants'
+    },
+    overview: {
+      currentAccount: 'Current account',
+      recentVisits: 'Recent visits',
+      notices: 'Notices',
+      trendRange: 'Trend range',
+      pages: '{count} pages',
+      items: '{count} items',
+      days: 'Last {count} days'
+    },
+    notices: {
+      viewAll: 'View all',
+      empty: 'No notices available',
+      systemPublisher: 'System',
+      types: {
+        notice: 'Notice',
+        announcement: 'Announcement',
+        system: 'System'
+      }
+    },
+    trend: {
+      last7Days: 'Last 7 days',
+      last30Days: 'Last 30 days',
+      ariaLabel: 'Access trend chart',
+      pv: 'Page views PV',
+      uv: 'Visitors UV'
+    },
+    recentVisit: {
+      empty: 'No recent visit records',
+      label: 'Recently visited'
+    }
   }
 };
 
