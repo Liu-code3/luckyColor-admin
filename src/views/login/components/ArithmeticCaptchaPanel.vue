@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LoginCaptchaChallengePayload } from '@/api';
 import { Icon } from '@iconify/vue';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(defineProps<{
   challenge: LoginCaptchaChallengePayload | null;
@@ -18,30 +19,33 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
+const { locale, t } = useI18n();
 const NON_CALC_CHARS = /[^\d-]/g;
 
 const isDisabled = computed(() =>
   props.loading || props.verifying || !props.challenge?.captchaSvg
 );
 
-const promptText = computed(() => props.challenge?.prompt || '完成右侧算式后输入结果');
+const promptText = computed(() => t('login.captcha.defaultPrompt'));
 
 const helperText = computed(() => {
   if (!props.challenge?.expiresAt) {
-    return '点击右侧题面可刷新';
+    return t('login.captcha.refreshHint');
   }
 
   const expiresAt = new Date(props.challenge.expiresAt);
   if (Number.isNaN(expiresAt.getTime())) {
-    return '题面已就绪，请尽快完成校验';
+    return t('login.captcha.expiresSoon');
   }
 
-  return `请在 ${expiresAt.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  })} 前完成输入`;
+  return t('login.captcha.expiresAt', {
+    time: expiresAt.toLocaleTimeString(locale.value === 'en-US' ? 'en-US' : 'zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  });
 });
 
 function handleInput(value: string) {
@@ -62,7 +66,7 @@ function handleInput(value: string) {
           :disabled="isDisabled"
           class="captcha-panel__input"
           clearable
-          placeholder="请输入结果"
+          :placeholder="t('login.captcha.inputPlaceholder')"
           maxlength="10"
           @update:value="handleInput"
           @keyup.enter="emit('submit')"
@@ -83,7 +87,7 @@ function handleInput(value: string) {
         <n-spin :show="loading">
           <div v-if="challenge?.captchaSvg" class="captcha-panel__svg" v-html="challenge.captchaSvg" />
           <div v-else class="captcha-panel__empty">
-            点击刷新
+            {{ t('login.captcha.empty') }}
           </div>
         </n-spin>
       </button>

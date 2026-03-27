@@ -2,6 +2,7 @@
 import type { LoginCaptchaChallengePayload } from '@/api';
 import type { FormInst, FormRules } from 'naive-ui';
 import { Icon } from '@iconify/vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import {
   getLoginCaptchaChallengeApi,
@@ -26,6 +27,7 @@ import ArithmeticCaptchaPanel from './components/ArithmeticCaptchaPanel.vue';
 
 const router = useRouter();
 const menuStore = useMenuStore();
+const { t } = useI18n();
 const formRef = ref<FormInst | null>(null);
 
 const accentColor = ref(sysConfig.COLOR || '#0F766E');
@@ -53,13 +55,13 @@ const rules = computed<FormRules>(() => {
   const baseRules: FormRules = {
     adminName: {
       required: true,
-      message: '请输入登录账号',
+      message: t('login.validation.usernameRequired'),
       trigger: 'blur'
     },
     password: {
       required: true,
-      message: '请输入登录密码',
-      trigger: [ 'input', 'blur' ]
+      message: t('login.validation.passwordRequired'),
+      trigger: ['input', 'blur']
     }
   };
 
@@ -72,38 +74,36 @@ const rules = computed<FormRules>(() => {
     captchaAnswer: [
       {
         required: true,
-        message: '请输入算术校验结果',
-        trigger: [ 'input', 'blur' ]
+        message: t('login.validation.captchaRequired'),
+        trigger: ['input', 'blur']
       },
       {
         validator: (_rule, value: string) => INTEGER_PATTERN.test(String(value ?? '').trim())
           ? true
-          : new Error('校验结果需为整数'),
-        trigger: [ 'input', 'blur' ]
+          : new Error(t('login.validation.captchaMustInteger')),
+        trigger: ['input', 'blur']
       }
     ]
   };
 });
 
 const authBadges = computed(() => [
-  loginCaptchaEnabled ? '服务端算术校验' : '快速登录模式',
-  tenantEnabled ? '多租户上下文' : '单租户模式'
+  loginCaptchaEnabled ? t('login.badges.captchaEnabled') : t('login.badges.captchaDisabled'),
+  tenantEnabled ? t('login.badges.tenantEnabled') : t('login.badges.tenantDisabled')
 ]);
 
 const asideNotes = computed(() => [
   {
-    title: '登录优先',
-    description: '首屏把注意力集中在登录动作本身，减少阅读成本和滚动负担。'
+    title: t('login.notes.focus.title'),
+    description: t('login.notes.focus.description')
   },
   {
-    title: '配色呼应系统',
-    description: '页面主色恢复为后台统一的青绿色系，品牌感更一致。'
+    title: t('login.notes.palette.title'),
+    description: t('login.notes.palette.description')
   },
   {
-    title: '环境信息收敛',
-    description: tenantEnabled
-      ? '保留必要的租户与验证提示，但不再让说明信息占据主卡片主体。'
-      : '当前为单租户模式，登录路径更简洁，适合本地联调与演示。'
+    title: t('login.notes.tenant.title'),
+    description: tenantEnabled ? t('login.notes.tenant.enabled') : t('login.notes.tenant.disabled')
   }
 ]);
 
@@ -116,15 +116,19 @@ const loginPageStyle = computed(() => ({
 
 const submitButtonText = computed(() => {
   if (captchaState.verifying) {
-    return '校验中...';
+    return t('login.actions.verifying');
   }
 
   if (captchaState.submitting) {
-    return '登录中...';
+    return t('login.actions.signingIn');
   }
 
-  return '进入工作台';
+  return t('login.actions.enterWorkspace');
 });
+
+const authTipText = computed(() =>
+  loginCaptchaEnabled ? t('login.tips.captchaEnabled') : t('login.tips.captchaDisabled')
+);
 
 const canSubmit = computed(() => {
   return !captchaState.loading
@@ -169,13 +173,13 @@ async function refreshCaptcha(showToast = false) {
     captchaState.challenge = res.data;
 
     if (showToast) {
-      message.success('已刷新算术题面');
+      message.success(t('login.messages.captchaRefreshed'));
     }
   }
   catch {
     captchaState.challenge = null;
     if (showToast) {
-      message.error('算术题面加载失败，请稍后重试');
+      message.error(t('login.messages.captchaLoadFailed'));
     }
   }
   finally {
@@ -246,7 +250,7 @@ async function handleValidateClick() {
   }
 
   if (!captchaState.challenge?.captchaId) {
-    message.warning('算术题面尚未准备完成，请刷新后再试');
+    message.warning(t('login.messages.captchaNotReady'));
     await refreshCaptcha();
     return;
   }
@@ -264,7 +268,7 @@ async function handleValidateClick() {
     captchaState.verifying = false;
 
     if (!captchaToken) {
-      message.error('算术校验未返回放行令牌，请检查后端接口');
+      message.error(t('login.messages.captchaTokenMissing'));
       await refreshCaptcha();
       return;
     }
@@ -296,7 +300,7 @@ onMounted(() => {
     </div>
 
     <div class="theme-switcher">
-      <span>主题色</span>
+      <span>{{ t('login.themeLabel') }}</span>
       <n-color-picker v-model:value="accentColor" :show-alpha="false" />
     </div>
 
@@ -307,7 +311,7 @@ onMounted(() => {
           <div class="auth-card__glow auth-card__glow--bottom" />
 
           <div class="auth-card__topline">
-            <div class="auth-card__eyebrow">Secure Access</div>
+            <div class="auth-card__eyebrow">{{ t('login.eyebrow') }}</div>
             <div class="auth-card__badges">
               <span v-for="item in authBadges" :key="item" class="auth-card__badge">
                 {{ item }}
@@ -319,24 +323,24 @@ onMounted(() => {
             <img src="/logo-wordmark.svg" alt="LuckyColor Admin" class="brand-wordmark">
 
             <div class="auth-card__copy">
-              <h1>欢迎回来</h1>
-              <p>请输入登录信息后进入工作台。</p>
+              <h1>{{ t('login.hero.title') }}</h1>
+              <p>{{ t('login.hero.description') }}</p>
             </div>
           </div>
 
           <div class="demo-credentials">
-            <div class="demo-credentials__label">演示账号</div>
+            <div class="demo-credentials__label">{{ t('login.demo.label') }}</div>
             <div class="demo-credentials__value">
               <strong>{{ defaultUsername }}</strong>
-              <span>默认密码 {{ defaultPassword }}</span>
+              <span>{{ t('login.demo.defaultPassword', { password: defaultPassword }) }}</span>
             </div>
           </div>
 
           <section class="form-panel">
             <div class="form-panel__head">
               <div>
-                <span>Sign In</span>
-                <strong>填写必要信息后即可进入后台</strong>
+                <span>{{ t('login.secureAccess') }}</span>
+                <strong>{{ t('login.form.headline') }}</strong>
               </div>
 
               <button
@@ -346,17 +350,17 @@ onMounted(() => {
                 :disabled="captchaState.loading || captchaState.submitting"
                 @click="refreshCaptcha(true)"
               >
-                刷新算题
+                {{ t('login.form.refreshCaptcha') }}
               </button>
             </div>
 
             <n-form ref="formRef" :model="formValue" :rules="rules" class="auth-form">
-              <div class="field-label">登录账号</div>
+              <div class="field-label">{{ t('login.form.username') }}</div>
               <n-form-item path="adminName">
                 <n-input
                   v-model:value="formValue.adminName"
                   clearable
-                  placeholder="请输入登录账号"
+                  :placeholder="t('login.form.usernamePlaceholder')"
                   @keyup.enter="handleValidateClick"
                 >
                   <template #prefix>
@@ -365,7 +369,7 @@ onMounted(() => {
                 </n-input>
               </n-form-item>
 
-              <div v-if="loginCaptchaEnabled" class="field-label">算术校验</div>
+              <div v-if="loginCaptchaEnabled" class="field-label">{{ t('login.form.captcha') }}</div>
               <n-form-item
                 v-if="loginCaptchaEnabled"
                 path="captchaAnswer"
@@ -381,14 +385,14 @@ onMounted(() => {
                 />
               </n-form-item>
 
-              <div class="field-label">登录密码</div>
+              <div class="field-label">{{ t('login.form.password') }}</div>
               <n-form-item path="password">
                 <n-input
                   v-model:value="formValue.password"
                   type="password"
                   show-password-on="mousedown"
                   clearable
-                  placeholder="请输入登录密码"
+                  :placeholder="t('login.form.passwordPlaceholder')"
                   @keyup.enter="handleValidateClick"
                 >
                   <template #prefix>
@@ -410,9 +414,7 @@ onMounted(() => {
                 </n-button>
 
                 <div class="auth-tip">
-                  {{ loginCaptchaEnabled
-                    ? '算术验证通过后会换取一次性 captchaToken，再继续执行登录请求。'
-                    : '当前环境已跳过验证码流程，更适合本地开发和联调验证。' }}
+                  {{ authTipText }}
                 </div>
               </div>
             </n-form>
@@ -424,12 +426,12 @@ onMounted(() => {
         <div class="brand-panel__inner">
           <div class="brand-badge" v-once>
             <Icon icon="solar:notes-linear" />
-            System Brief
+            {{ t('login.brand.badge') }}
           </div>
 
           <div class="brand-panel__copy">
-            <h2>系统简介退居辅助位，登录信息才是这页的主角。</h2>
-            <p>这里只保留少量背景说明和环境提示，帮助理解，但不会再把登录卡片挤得过高。</p>
+            <h2>{{ t('login.brand.title') }}</h2>
+            <p>{{ t('login.brand.description') }}</p>
           </div>
 
           <div class="intro-list">
