@@ -26,7 +26,9 @@ export const BUTTON_PERMISSION_CODES = {
   },
   tenantManage: {
     create: 'tenant:manage:create',
-    update: 'tenant:manage:update'
+    update: 'tenant:manage:update',
+    delete: 'tenant:manage:delete',
+    changeStatus: 'tenant:manage:change-status'
   },
   tenantPackage: {
     create: 'tenant:package:create',
@@ -52,6 +54,8 @@ export const DEFAULT_ADMIN_BUTTON_CODE_LIST = [
   BUTTON_PERMISSION_CODES.systemDepartment.delete,
   BUTTON_PERMISSION_CODES.tenantManage.create,
   BUTTON_PERMISSION_CODES.tenantManage.update,
+  BUTTON_PERMISSION_CODES.tenantManage.delete,
+  BUTTON_PERMISSION_CODES.tenantManage.changeStatus,
   BUTTON_PERMISSION_CODES.tenantPackage.create,
   BUTTON_PERMISSION_CODES.tenantPackage.update,
   BUTTON_PERMISSION_CODES.tenantPackage.delete

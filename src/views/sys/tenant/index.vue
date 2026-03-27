@@ -13,6 +13,7 @@ import {
 import { usePermission } from '@/composables/use-permission';
 import sysConfig from '@/config';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
+import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 
 defineOptions({
@@ -54,6 +55,7 @@ const tenantStatusOptions: Array<{ label: string; value: TenantStatus }> = [
 const loading = ref(false);
 const submitting = ref(false);
 const packageLoading = ref(false);
+const switchingTenantId = ref('');
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -97,7 +99,9 @@ const selectedPackage = computed(() =>
 );
 const canCreateTenant = computed(() => hasPermission(tenantButtonCodes.create));
 const canUpdateTenant = computed(() => hasPermission(tenantButtonCodes.update));
-const tenantTableColumnCount = computed(() => canUpdateTenant.value ? 8 : 7);
+const canChangeTenantStatus = computed(() => hasPermission(tenantButtonCodes.changeStatus));
+const hasTenantActions = computed(() => canUpdateTenant.value || canChangeTenantStatus.value);
+const tenantTableColumnCount = computed(() => hasTenantActions.value ? 8 : 7);
 
 const summaryCards = computed<SummaryCard[]>(() => {
   const now = Date.now();
@@ -343,6 +347,43 @@ function closeInitResultModal() {
   tenantInitResult.value = null;
 }
 
+function getTenantStatusActionLabel(status: TenantStatus) {
+  return status === 'ACTIVE' ? '停用' : '启用';
+}
+
+function resolveNextTenantStatus(status: TenantStatus): TenantStatus {
+  return status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+}
+
+async function handleToggleTenantStatus(tenant: TenantRecord) {
+  if (!canChangeTenantStatus.value)
+    return;
+
+  const nextStatus = resolveNextTenantStatus(tenant.status);
+  const actionText = getTenantStatusActionLabel(tenant.status);
+  const confirmed = await confirmAction({
+    title: `${actionText}租户`,
+    content: `确认${actionText}租户“${tenant.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  switchingTenantId.value = tenant.id;
+  try {
+    await updateTenantApi(tenant.id, { status: nextStatus });
+    tenantList.value = tenantList.value.map(item =>
+      item.id === tenant.id
+        ? { ...item, status: nextStatus }
+        : item
+    );
+    message.success(`已${actionText}租户`);
+  }
+  finally {
+    switchingTenantId.value = '';
+  }
+}
+
 async function submitTenantForm() {
   await tenantFormRef.value?.validate();
 
@@ -479,7 +520,7 @@ onMounted(async () => {
               <th>联系人</th>
               <th>到期时间</th>
               <th>更新时间</th>
-              <th v-if="canUpdateTenant">
+              <th v-if="hasTenantActions">
                 操作
               </th>
             </tr>
@@ -518,7 +559,7 @@ onMounted(async () => {
               </td>
               <td>{{ formatExpiresAt(item.expiresAt) }}</td>
               <td>{{ formatDateTime(item.updatedAt) }}</td>
-              <td v-if="canUpdateTenant" class="operation-cell">
+              <td v-if="hasTenantActions" class="operation-cell">
                 <div class="operation-actions">
                   <n-button
                     v-permission="tenantButtonCodes.update"
@@ -527,6 +568,15 @@ onMounted(async () => {
                     @click="openEditDrawer(item)"
                   >
                     编辑
+                  </n-button>
+                  <n-button
+                    v-permission="tenantButtonCodes.changeStatus"
+                    quaternary
+                    :loading="switchingTenantId === item.id"
+                    :type="item.status === 'ACTIVE' ? 'warning' : 'success'"
+                    @click="handleToggleTenantStatus(item)"
+                  >
+                    {{ getTenantStatusActionLabel(item.status) }}
                   </n-button>
                 </div>
               </td>
