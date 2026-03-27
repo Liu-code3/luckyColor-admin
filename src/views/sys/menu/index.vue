@@ -12,7 +12,9 @@ import {
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
+import { belongsToCurrentTenant, filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 defineOptions({
   name: 'menu'
@@ -178,6 +180,10 @@ const canDeleteMenu = computed(() => hasPermission(menuButtonCodes.delete));
 const hasMenuActions = computed(() =>
   canCreateMenu.value || canUpdateMenu.value || canDeleteMenu.value
 );
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '\u672a\u8bc6\u522b\u79df\u6237'
+);
 
 const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
   const columns: DataTableColumns<MenuRecord> = [
@@ -288,7 +294,7 @@ const tableColumns = computed<DataTableColumns<MenuRecord>>(() => {
               {
                 quaternary: true,
                 type: 'primary',
-                onClick: () => openCreateDrawer(row.id)
+                onClick: () => openCreateDrawer(row.id, row)
               },
               { default: () => '新增子菜单' }
             )
@@ -346,6 +352,14 @@ function formatJsonMeta(meta?: Record<string, unknown> | null) {
   return JSON.stringify(meta, null, 2);
 }
 
+function ensureMenuTenantAccess(menu: MenuRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(menu))
+    return true;
+
+  message.error(`\u5f53\u524d\u79df\u6237\u4e0a\u4e0b\u6587\u65e0\u6cd5${actionLabel}\u83dc\u5355\u201c${menu.title}\u201d`);
+  return false;
+}
+
 function resetMenuForm() {
   editingMenuId.value = null;
   menuForm.id = null;
@@ -369,7 +383,7 @@ async function fetchMenuTree() {
   loading.value = true;
   try {
     const { data } = await getMenuTreeApi();
-    rawMenuTree.value = data;
+    rawMenuTree.value = filterTreeRecordsByCurrentTenant(data);
   }
   finally {
     loading.value = false;
@@ -385,7 +399,10 @@ function handleReset() {
   searchTitle.value = '';
 }
 
-function openCreateDrawer(parentId = 0) {
+function openCreateDrawer(parentId = 0, parentMenu?: MenuRecord) {
+  if (parentMenu && !ensureMenuTenantAccess(parentMenu, '\u65b0\u589e\u5b50\u83dc\u5355'))
+    return;
+
   isEditMode.value = false;
   resetMenuForm();
   menuForm.parentId = parentId;
@@ -393,6 +410,9 @@ function openCreateDrawer(parentId = 0) {
 }
 
 async function openEditDrawer(menu: MenuRecord) {
+  if (!ensureMenuTenantAccess(menu, '\u7f16\u8f91'))
+    return;
+
   isEditMode.value = true;
   resetMenuForm();
   editingMenuId.value = menu.id;
@@ -509,6 +529,9 @@ async function handleToggleMenuVisible(menu: MenuRecord, value: boolean) {
   if (!confirmed)
     return;
 
+  if (!ensureMenuTenantAccess(menu, value ? '\u663e\u793a' : '\u9690\u85cf'))
+    return;
+
   visibilitySwitchingId.value = menu.id;
   try {
     await updateMenuApi(menu.id, { isVisible: value });
@@ -533,6 +556,9 @@ async function handleToggleMenuStatus(menu: MenuRecord, value: boolean) {
   if (!confirmed)
     return;
 
+  if (!ensureMenuTenantAccess(menu, value ? '\u542f\u7528' : '\u505c\u7528'))
+    return;
+
   statusSwitchingId.value = menu.id;
   try {
     await updateMenuApi(menu.id, { status: value });
@@ -545,6 +571,9 @@ async function handleToggleMenuStatus(menu: MenuRecord, value: boolean) {
 }
 
 async function handleDeleteMenu(menu: MenuRecord) {
+  if (!ensureMenuTenantAccess(menu, '\u5220\u9664'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除菜单',
     content: `确认删除菜单“${menu.title}”吗？`
@@ -565,6 +594,12 @@ onMounted(() => {
 
 <template>
   <div class="crud-page">
+    <div class="tenant-scope-banner">
+      <strong>Tenant Scope:</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>Menu data is filtered by the current tenant context, and cross-tenant actions are blocked.</span>
+    </div>
+
     <div class="toolbar">
       <div class="toolbar-item">
         <div class="toolbar-label">
@@ -714,6 +749,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .toolbar {

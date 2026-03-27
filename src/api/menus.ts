@@ -10,6 +10,8 @@ export interface MenuRecord {
   pid?: number;
   parentId?: number | null;
   id: number;
+  tenantId?: string | null;
+  tenantName?: string | null;
   title: string;
   name: string;
   type: number;
