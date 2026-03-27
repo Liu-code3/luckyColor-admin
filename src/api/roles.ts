@@ -10,6 +10,8 @@ export interface RoleRecord {
   id: string;
   name: string;
   code: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
   sort: number;
   status: boolean;
   remark?: string | null;

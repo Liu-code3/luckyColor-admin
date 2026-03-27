@@ -27,9 +27,11 @@ import {
   normalizeDataScopeType
 } from '@/constants/data-scope';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 import { isSuperAdminIdentity } from '@/utils/permission';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface RoleFormState {
   name: string;
@@ -194,6 +196,10 @@ const selectedDataScopeOption = computed(() =>
   DATA_SCOPE_OPTION_LIST.find(item => item.value === dataScopeForm.dataScopeType) || DATA_SCOPE_OPTION_LIST[1]
 );
 const selectedDataScopeDeptCount = computed(() => dataScopeForm.customDeptIds.length);
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '未识别租户'
+);
 
 const dataScopeFormRules: FormRules = {
   customDeptIds: [
@@ -222,6 +228,14 @@ function formatDateTime(value?: string | null) {
 
 function getSummaryCardClass(tone: SummaryCard['tone']) {
   return `summary-card summary-card--${tone}`;
+}
+
+function ensureRoleTenantAccess(role: RoleRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(role))
+    return true;
+
+  message.error(`当前租户上下文无法${actionLabel}角色“${role.name}”`);
+  return false;
 }
 
 function menuToTreeOption(menu: MenuRecord): TreeOption {
@@ -506,10 +520,12 @@ async function fetchRoles(currentPage = page.value) {
       keyword: keyword.value.trim() || undefined
     });
 
+    const scopedRecords = filterRecordsByCurrentTenant(data.records);
+
     page.value = data.current;
     pageSize.value = data.size;
-    total.value = data.total;
-    roleList.value = data.records;
+    total.value = scopedRecords.length === data.records.length ? data.total : scopedRecords.length;
+    roleList.value = scopedRecords;
   }
   finally {
     loading.value = false;
@@ -545,12 +561,18 @@ function openCreateDrawer() {
 }
 
 async function openEditDrawer(role: RoleRecord) {
+  if (!ensureRoleTenantAccess(role, '编辑'))
+    return;
+
   isEditMode.value = true;
   resetRoleForm();
   editingRoleId.value = role.id;
   showRoleDrawer.value = true;
 
   const { data } = await getRoleDetailApi(role.id);
+  if (!ensureRoleTenantAccess(data, '编辑'))
+    return;
+
   roleForm.name = data.name;
   roleForm.code = data.code;
   roleForm.sort = data.sort;
@@ -606,6 +628,8 @@ async function submitRoleForm() {
 async function handleToggleRoleStatus(role: RoleRecord, value: boolean) {
   if (isRoleStatusSwitchDisabled(role))
     return;
+  if (!ensureRoleTenantAccess(role, value ? '启用' : '停用'))
+    return;
 
   const actionText = value ? '启用' : '停用';
   const confirmed = await confirmAction({
@@ -632,6 +656,9 @@ async function handleToggleRoleStatus(role: RoleRecord, value: boolean) {
 }
 
 async function handleDeleteRole(role: RoleRecord) {
+  if (!ensureRoleTenantAccess(role, '删除'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除角色',
     content: `确认删除角色“${role.name}”吗？`
@@ -648,6 +675,9 @@ async function handleDeleteRole(role: RoleRecord) {
 }
 
 async function openAssignMenu(role: RoleRecord) {
+  if (!ensureRoleTenantAccess(role, '分配菜单'))
+    return;
+
   selectedRole.value = role;
   showAssignMenuModal.value = true;
   assignMenuKeyword.value = '';
@@ -665,6 +695,9 @@ async function openAssignMenu(role: RoleRecord) {
 }
 
 async function openAssignButton(role: RoleRecord) {
+  if (!ensureRoleTenantAccess(role, '配置按钮权限'))
+    return;
+
   selectedRole.value = role;
   showAssignButtonModal.value = true;
   assignButtonKeyword.value = '';
@@ -694,6 +727,9 @@ async function openAssignButton(role: RoleRecord) {
 }
 
 async function openAssignDataScope(role: RoleRecord) {
+  if (!ensureRoleTenantAccess(role, '配置数据权限'))
+    return;
+
   selectedRole.value = role;
   showAssignDataScopeModal.value = true;
   resetDataScopeForm();
@@ -863,6 +899,12 @@ watch(
         <small class="summary-card__helper">{{ card.helper }}</small>
       </article>
     </section>
+
+    <div class="tenant-scope-banner">
+      <strong>当前租户：</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>角色列表与授权入口会优先按当前租户上下文做前端兜底过滤。</span>
+    </div>
 
     <div class="toolbar">
       <div class="toolbar-item toolbar-item--wide">
@@ -1370,6 +1412,17 @@ watch(
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .toolbar {
