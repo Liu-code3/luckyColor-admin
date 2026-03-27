@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { useMediaQuery } from '@vueuse/core'
 import { darkTheme, dateEnUS, dateZhCN, enUS, zhCN } from 'naive-ui'
+import AppWatermark from '@/components/AppWatermark.vue'
 import { useI18n } from 'vue-i18n'
 import LayoutRouteView from '@/components/LayoutRouteView.vue'
 import lockScreen from '@/components/lockScreen.vue'
+import { LAYOUT_MOBILE_BREAKPOINT, LayoutMode, normalizeLayoutMode } from '@/constants/layout'
 import { useGlobalStore } from '@/store/modules/global.ts'
+import { useMenuStore } from '@/store/modules/menu.ts'
 import {
   clearLoginSession,
   initializeAuthSession,
@@ -15,15 +19,20 @@ import { message } from '@/utils/message.ts'
 
 const route = useRoute()
 const globalStore = useGlobalStore()
+const menuStore = useMenuStore()
 const { t } = useI18n()
-if (globalStore.layout === 'default') {
-  globalStore.updateLayout('default')
-}
+const isMobileViewport = useMediaQuery(`(max-width: ${LAYOUT_MOBILE_BREAKPOINT}px)`)
+
 const Layout = computed(() => {
   if (!route.matched.length) {
     return null
   }
-  return getLayout(isString(route.meta.layout) || globalStore.layout)
+
+  const routeLayout = normalizeLayoutMode(
+    isString(route.meta.layout),
+    globalStore.layout
+  )
+  return getLayout(routeLayout)
 })
 const shouldShowWatermark = computed(() =>
   globalStore.showWatermark && route.path !== '/login'
@@ -36,7 +45,7 @@ const naiveDateLocale = computed(() =>
 )
 
 const layouts = new Map()
-function getLayout(name: string) {
+function getLayout(name: LayoutMode) {
   if (layouts.get(name)) {
     return layouts.get(name)
   }
@@ -50,6 +59,13 @@ function getLayout(name: string) {
 watchEffect(() => {
   globalStore.setThemeColor(globalStore.primaryColor, globalStore.isDark)
   globalStore.applyAppearanceModes()
+})
+
+watch(isMobileViewport, (isMobile) => {
+  globalStore.updateIsMobile(isMobile)
+  menuStore.applyResponsiveState(isMobile)
+}, {
+  immediate: true
 })
 
 onActivated(() => {})
@@ -119,30 +135,8 @@ onBeforeUnmount(() => {
         <component v-if="Layout" :is="Layout">
           <LayoutRouteView />
         </component>
-
-        <n-watermark
-          v-if="shouldShowWatermark"
-          class="app-watermark-layer"
-          content="LuckyColor Admin"
-          cross
-          fullscreen
-          :font-size="14"
-          :line-height="14"
-          :width="180"
-          :height="120"
-          :x-offset="12"
-          :y-offset="12"
-          :rotate="-18"
-          :font-color="'rgba(15, 23, 42, 0.12)'"
-          :z-index="12"
-        />
+        <AppWatermark :show="shouldShowWatermark" />
       </n-message-provider>
     </n-config-provider>
   </div>
 </template>
-
-<style scoped>
-:deep(.app-watermark-layer.n-watermark) {
-  background-color: transparent !important;
-}
-</style>
