@@ -48,6 +48,7 @@ const knownFeatureLabels: Record<string, string> = {
 
 const loading = ref(false);
 const submitting = ref(false);
+const switchingPackageId = ref('');
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -278,6 +279,34 @@ function closePackageDrawer() {
   packageFormRef.value?.restoreValidation();
 }
 
+async function handleTogglePackageStatus(item: TenantPackageRecord, value: boolean) {
+  if (!canUpdatePackage.value)
+    return;
+
+  const actionText = value ? '启用' : '停用';
+  const confirmed = await confirmAction({
+    title: `${actionText}租户套餐`,
+    content: `确认${actionText}租户套餐“${item.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  switchingPackageId.value = item.id;
+  try {
+    await updateTenantPackageApi(item.id, { status: value });
+    packageList.value = packageList.value.map(packageItem =>
+      packageItem.id === item.id
+        ? { ...packageItem, status: value }
+        : packageItem
+    );
+    message.success(`已${actionText}租户套餐`);
+  }
+  finally {
+    switchingPackageId.value = '';
+  }
+}
+
 async function submitPackageForm() {
   await packageFormRef.value?.validate();
 
@@ -438,10 +467,21 @@ onMounted(() => {
                 </div>
               </td>
               <td>{{ item.code }}</td>
-              <td>
-                <n-tag :type="item.status ? 'success' : 'warning'">
-                  {{ item.status ? '启用' : '停用' }}
-                </n-tag>
+              <td class="status-cell">
+                <n-switch
+                  :value="item.status"
+                  size="small"
+                  :loading="switchingPackageId === item.id"
+                  :disabled="!canUpdatePackage"
+                  @update:value="value => handleTogglePackageStatus(item, value)"
+                >
+                  <template #checked>
+                    启用
+                  </template>
+                  <template #unchecked>
+                    停用
+                  </template>
+                </n-switch>
               </td>
               <td>{{ formatQuota(item) }}</td>
               <td class="feature-flags-cell">
