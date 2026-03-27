@@ -33,7 +33,8 @@ export const BUTTON_PERMISSION_CODES = {
   tenantPackage: {
     create: 'tenant:package:create',
     update: 'tenant:package:update',
-    delete: 'tenant:package:delete'
+    delete: 'tenant:package:delete',
+    bind: 'tenant:package:bind'
   }
 } as const;
 
@@ -58,5 +59,6 @@ export const DEFAULT_ADMIN_BUTTON_CODE_LIST = [
   BUTTON_PERMISSION_CODES.tenantManage.changeStatus,
   BUTTON_PERMISSION_CODES.tenantPackage.create,
   BUTTON_PERMISSION_CODES.tenantPackage.update,
-  BUTTON_PERMISSION_CODES.tenantPackage.delete
+  BUTTON_PERMISSION_CODES.tenantPackage.delete,
+  BUTTON_PERMISSION_CODES.tenantPackage.bind
 ] as const;

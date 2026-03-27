@@ -43,6 +43,10 @@ export interface UpdateTenantPackagePayload {
   remark?: string | null;
 }
 
+export interface TenantPackageMenuAssignment {
+  menuIds: number[];
+}
+
 export function getTenantPackagePageApi(params: TenantPackageQueryParams) {
   return request<TenantPackageQueryParams, PageResult<TenantPackageRecord>>({
     url: '/tenant-packages',
@@ -78,5 +82,20 @@ export function deleteTenantPackageApi(id: string) {
   return request<never, boolean>({
     url: `/tenant-packages/${id}`,
     method: 'delete'
+  });
+}
+
+export function getTenantPackageMenusApi(id: string) {
+  return request<never, TenantPackageMenuAssignment>({
+    url: `/tenant-packages/${id}/menus`,
+    method: 'get'
+  });
+}
+
+export function assignTenantPackageMenusApi(id: string, menuIds: number[]) {
+  return request<{ menuIds: number[] }, TenantPackageMenuAssignment>({
+    url: `/tenant-packages/${id}/menus`,
+    method: 'put',
+    data: { menuIds }
   });
 }

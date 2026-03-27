@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { FormInst, FormRules } from 'naive-ui';
-import type { TenantPackageRecord } from '@/api';
+import type { FormInst, FormRules, TreeOption } from 'naive-ui';
+import type { MenuRecord, TenantPackageRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
+  assignTenantPackageMenusApi,
   createTenantPackageApi,
   deleteTenantPackageApi,
+  getMenuTreeApi,
   getTenantPackageDetailApi,
+  getTenantPackageMenusApi,
   getTenantPackagePageApi,
 
   updateTenantPackageApi
@@ -60,6 +63,13 @@ const packageFormRef = ref<FormInst | null>(null);
 const showPackageDrawer = ref(false);
 const isEditMode = ref(false);
 const editingPackageId = ref('');
+const showAssignMenuModal = ref(false);
+const assigningMenus = ref(false);
+const selectedPackage = ref<TenantPackageRecord | null>(null);
+const assignMenuKeyword = ref('');
+const expandedMenuKeys = ref<Array<string | number>>([]);
+const checkedMenuIds = ref<Array<string | number>>([]);
+const rawPackageMenuTree = ref<MenuRecord[]>([]);
 
 const packageForm = reactive<TenantPackageFormState>({
   code: '',
@@ -110,8 +120,19 @@ const featureFlagsPreview = computed(() => {
 const canCreatePackage = computed(() => hasPermission(packageButtonCodes.create));
 const canUpdatePackage = computed(() => hasPermission(packageButtonCodes.update));
 const canDeletePackage = computed(() => hasPermission(packageButtonCodes.delete));
-const hasPackageActions = computed(() => canUpdatePackage.value || canDeletePackage.value);
+const canBindPackage = computed(() => hasPermission(packageButtonCodes.bind));
+const hasPackageActions = computed(() =>
+  canBindPackage.value || canUpdatePackage.value || canDeletePackage.value
+);
 const packageTableColumnCount = computed(() => hasPackageActions.value ? 7 : 6);
+const packageMenuOptions = computed<TreeOption[]>(() =>
+  filterPackageMenuTreeByKeyword(rawPackageMenuTree.value, assignMenuKeyword.value).map(menuToTreeOption)
+);
+const packageMenuIdSet = computed(() => new Set(collectPackageMenuIds(rawPackageMenuTree.value)));
+const packageMenuTreeStats = computed(() => countPackageMenuStats(rawPackageMenuTree.value));
+const checkedPackageMenuCount = computed(() =>
+  checkedMenuIds.value.filter(item => packageMenuIdSet.value.has(Number(item))).length
+);
 
 const packageFormRules: FormRules = {
   code: [
@@ -191,6 +212,101 @@ function getSummaryCardClass(tone: SummaryCard['tone']) {
   return `summary-card summary-card--${tone}`;
 }
 
+function menuToTreeOption(menu: MenuRecord): TreeOption {
+  return {
+    key: menu.id,
+    label: `${menu.title} (${menu.path})`,
+    children: menu.children?.map(menuToTreeOption)
+  };
+}
+
+function filterAssignablePackageMenus(menus: MenuRecord[]) {
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    if (menu.type === 3)
+      return result;
+
+    result.push({
+      ...menu,
+      children: menu.children ? filterAssignablePackageMenus(menu.children) : []
+    });
+    return result;
+  }, []);
+}
+
+function filterPackageMenuTreeByKeyword(menus: MenuRecord[], keyword: string) {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  if (!normalizedKeyword)
+    return menus;
+
+  return menus.reduce<MenuRecord[]>((result, menu) => {
+    const children = menu.children
+      ? filterPackageMenuTreeByKeyword(menu.children, normalizedKeyword)
+      : [];
+    const matched = [
+      menu.title,
+      menu.name,
+      menu.path,
+      menu.key,
+      menu.menuKey
+    ].some(value => value?.toLowerCase().includes(normalizedKeyword));
+
+    if (matched || children.length) {
+      result.push({
+        ...menu,
+        children
+      });
+    }
+
+    return result;
+  }, []);
+}
+
+function collectPackageMenuIds(menus: MenuRecord[]) {
+  return menus.flatMap(menu => [
+    menu.id,
+    ...(menu.children ? collectPackageMenuIds(menu.children) : [])
+  ]);
+}
+
+function countPackageMenuStats(menus: MenuRecord[]) {
+  return menus.reduce(
+    (stats, menu) => {
+      if (menu.type === 1)
+        stats.directoryCount += 1;
+      else if (menu.type === 2)
+        stats.menuCount += 1;
+
+      if (menu.children?.length) {
+        const childStats = countPackageMenuStats(menu.children);
+        stats.directoryCount += childStats.directoryCount;
+        stats.menuCount += childStats.menuCount;
+      }
+
+      return stats;
+    },
+    { directoryCount: 0, menuCount: 0 }
+  );
+}
+
+function collectExpandedTreeKeys(options: TreeOption[]) {
+  return options.flatMap(option => [
+    option.key!,
+    ...(option.children?.length ? collectExpandedTreeKeys(option.children) : [])
+  ]);
+}
+
+function expandAllMenus() {
+  expandedMenuKeys.value = collectExpandedTreeKeys(packageMenuOptions.value);
+}
+
+function collapseAllMenus() {
+  expandedMenuKeys.value = [];
+}
+
+function clearCheckedMenus() {
+  checkedMenuIds.value = [];
+}
+
 function resetPackageForm() {
   editingPackageId.value = '';
   packageForm.code = '';
@@ -205,6 +321,14 @@ function resetPackageForm() {
     notices: true
   }, null, 2);
   packageForm.remark = '';
+}
+
+async function ensurePackageMenuTreeOptions() {
+  if (rawPackageMenuTree.value.length)
+    return;
+
+  const { data } = await getMenuTreeApi();
+  rawPackageMenuTree.value = filterAssignablePackageMenus(data);
 }
 
 async function fetchPackages(currentPage = page.value) {
@@ -279,6 +403,28 @@ function closePackageDrawer() {
   packageFormRef.value?.restoreValidation();
 }
 
+async function openAssignMenu(item: TenantPackageRecord) {
+  if (!canBindPackage.value)
+    return;
+
+  selectedPackage.value = item;
+  assignMenuKeyword.value = '';
+  showAssignMenuModal.value = true;
+  await ensurePackageMenuTreeOptions();
+
+  const { data } = await getTenantPackageMenusApi(item.id);
+  checkedMenuIds.value = data.menuIds.filter(menuId => packageMenuIdSet.value.has(menuId));
+  expandAllMenus();
+}
+
+function closeAssignMenu() {
+  showAssignMenuModal.value = false;
+  selectedPackage.value = null;
+  assignMenuKeyword.value = '';
+  expandedMenuKeys.value = [];
+  checkedMenuIds.value = [];
+}
+
 async function handleTogglePackageStatus(item: TenantPackageRecord, value: boolean) {
   if (!canUpdatePackage.value)
     return;
@@ -304,6 +450,26 @@ async function handleTogglePackageStatus(item: TenantPackageRecord, value: boole
   }
   finally {
     switchingPackageId.value = '';
+  }
+}
+
+async function submitAssignMenu() {
+  if (!selectedPackage.value)
+    return;
+
+  assigningMenus.value = true;
+  try {
+    await assignTenantPackageMenusApi(
+      selectedPackage.value.id,
+      checkedMenuIds.value
+        .map(item => Number(item))
+        .filter(item => packageMenuIdSet.value.has(item))
+    );
+    message.success('套餐菜单范围已保存');
+    closeAssignMenu();
+  }
+  finally {
+    assigningMenus.value = false;
   }
 }
 
@@ -373,6 +539,13 @@ async function handleDeletePackage(item: TenantPackageRecord) {
 
 onMounted(() => {
   fetchPackages();
+});
+
+watch(packageMenuOptions, (options) => {
+  if (!showAssignMenuModal.value)
+    return;
+
+  expandedMenuKeys.value = collectExpandedTreeKeys(options);
 });
 </script>
 
@@ -501,6 +674,15 @@ onMounted(() => {
               <td v-if="hasPackageActions" class="operation-cell">
                 <div class="operation-actions">
                   <n-button
+                    v-if="canBindPackage"
+                    v-permission="packageButtonCodes.bind"
+                    quaternary
+                    type="info"
+                    @click="openAssignMenu(item)"
+                  >
+                    菜单范围
+                  </n-button>
+                  <n-button
                     v-permission="packageButtonCodes.update"
                     quaternary
                     type="primary"
@@ -625,6 +807,75 @@ onMounted(() => {
       </template>
     </n-drawer-content>
   </n-drawer>
+
+  <n-modal v-model:show="showAssignMenuModal" preset="card" title="套餐菜单范围" style="width: 760px;">
+    <div class="assign-summary">
+      当前套餐：{{ selectedPackage?.name || '-' }}
+    </div>
+
+    <div class="assign-panel">
+      <div class="assign-panel__toolbar">
+        <n-input
+          v-model:value="assignMenuKeyword"
+          clearable
+          placeholder="搜索菜单名称、路由名称或访问路径"
+        >
+          <template #prefix>
+            <Icon icon="simple-line-icons:magnifier" />
+          </template>
+        </n-input>
+        <n-button quaternary type="primary" @click="expandAllMenus">
+          展开全部
+        </n-button>
+        <n-button quaternary @click="collapseAllMenus">
+          收起全部
+        </n-button>
+        <n-button quaternary type="warning" @click="clearCheckedMenus">
+          清空勾选
+        </n-button>
+      </div>
+
+      <div class="assign-panel__stats">
+        <n-tag type="info">
+          目录 {{ packageMenuTreeStats.directoryCount }}
+        </n-tag>
+        <n-tag type="success">
+          菜单 {{ packageMenuTreeStats.menuCount }}
+        </n-tag>
+        <n-tag type="primary">
+          已选 {{ checkedPackageMenuCount }}
+        </n-tag>
+      </div>
+    </div>
+
+    <div class="assign-hint">
+      套餐菜单范围会作为租户侧基础授权边界，建议只保留该套餐需要开放的页面菜单。
+    </div>
+
+    <n-spin :show="assigningMenus">
+      <n-tree
+        v-model:checked-keys="checkedMenuIds"
+        v-model:expanded-keys="expandedMenuKeys"
+        block-line
+        cascade
+        checkable
+        check-on-click
+        expand-on-click
+        :data="packageMenuOptions"
+      />
+    </n-spin>
+
+    <template #footer>
+      <div class="modal-footer">
+        <n-button @click="closeAssignMenu">
+          取消
+        </n-button>
+        <n-button type="primary" :loading="assigningMenus" @click="submitAssignMenu">
+          保存
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
 </template>
 
 <style scoped lang="less">
@@ -684,6 +935,42 @@ onMounted(() => {
   white-space: normal;
 }
 
+.assign-summary {
+  margin-bottom: 16px;
+  color: var(--text-color-2);
+}
+
+.assign-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.assign-panel__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assign-panel__toolbar :deep(.n-input) {
+  flex: 1;
+}
+
+.assign-panel__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assign-hint {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
+  border-radius: 8px;
+}
+
 @import '@/styles/table-operation.less';
 
 .pagination-wrap {
@@ -718,6 +1005,12 @@ onMounted(() => {
   gap: 12px;
 }
 
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 @media (max-width: 1280px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -732,6 +1025,10 @@ onMounted(() => {
   .toolbar-item,
   .toolbar-item--wide {
     width: 100%;
+  }
+
+  .assign-panel__toolbar {
+    flex-wrap: wrap;
   }
 }
 </style>
