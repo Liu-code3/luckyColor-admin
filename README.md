@@ -2,7 +2,7 @@
 
 LuckyColor 的后台管理前端项目，负责登录鉴权、动态菜单、权限路由、系统管理页面以及常用业务组件示例展示。
 
-项目基于 `Vue 3`、`Vite`、`TypeScript`、`Pinia`、`Naive UI` 构建，开发环境通过 Vite 代理将 `/api` 请求转发到同级目录的后端服务 `luckyColor-admin-serve`。
+项目基于 `Vue 3`、`Vite`、`TypeScript`、`Pinia`、`Naive UI` 构建，开发环境支持通过 Vite 在本地 Mock、真实后端代理和混合模式之间切换。
 
 ![luckyColor-admin 标志](./public/logo.svg)
 
@@ -10,7 +10,7 @@ LuckyColor 的后台管理前端项目，负责登录鉴权、动态菜单、权
 
 - 当前仓库为管理后台前端项目，目录位于 `D:\zl\luckyColor-admin`
 - 配套后端项目位于 `D:\zl\luckyColor-admin-serve`
-- `mock/` 目录中的数据仅作为历史迁移参考保留，当前联调以真实后端接口为主
+- `mock/` 目录可作为本地开发接口源，支持登录、菜单、验证码、字典等高频基础数据
 - 开发环境默认端口为 `9900`，后端代理目标默认为 `http://127.0.0.1:3001`
 
 ## 功能模块
@@ -39,7 +39,7 @@ LuckyColor 的后台管理前端项目，负责登录鉴权、动态菜单、权
 ```text
 luckyColor-admin/
 ├─ public/                 静态资源
-├─ mock/                   历史 mock 数据与迁移参考
+├─ mock/                   本地 mock 接口与演示数据
 ├─ src/
 │  ├─ api/                 接口封装
 │  ├─ components/          通用组件
@@ -49,8 +49,11 @@ luckyColor-admin/
 │  ├─ store/               Pinia 状态管理
 │  ├─ utils/               工具函数与请求封装
 │  └─ views/               页面模块
-├─ .env.development        开发环境变量
-├─ .env.production         生产环境变量
+├─ .env                    通用环境变量
+├─ .env.dev                真实接口开发模式
+├─ .env.mock               本地 Mock 模式
+├─ .env.hybrid             Mock + 真实接口混合模式
+├─ .env.prod               生产环境变量
 ├─ package.json
 └─ README.md
 ```
@@ -78,6 +81,13 @@ pnpm dev
 
 ```text
 http://127.0.0.1:9900
+```
+
+可选开发模式：
+
+```bash
+pnpm dev:mock
+pnpm dev:hybrid
 ```
 
 ### 3. 构建与预览
@@ -129,16 +139,43 @@ pnpm --dir ../luckyColor-admin-serve dev
 http://127.0.0.1:3001
 ```
 
-## 联调说明
+## Mock 与接口切换
 
-- 开发环境下，前端会将 `/api` 请求代理到 `VITE_API_PROXY_TARGET`
-- 当前默认代理地址为 `http://127.0.0.1:3001`
-- 已对接并兼容当前页面结构的接口包括：
-  - `POST /api/auth/login`
-  - `POST /api/auth/menu-list`
-  - `GET /api/dict/tree`
-  - `GET /api/dict/page`
-- 当前页面运行不再依赖 `vite-plugin-mock` 提供接口数据
+项目统一使用 `/api` 作为前端请求前缀，通过环境变量组合切换请求来源：
+
+- `VITE_API_MOCK_ENABLED`
+  打开后启用本地 `mock/` 接口
+- `VITE_API_PROXY_ENABLED`
+  打开后启用 Vite 代理，将未命中的 `/api` 请求转发到真实后端
+- `VITE_API_PROXY_TARGET`
+  真实后端地址，默认 `http://127.0.0.1:3001`
+
+推荐使用方式：
+
+- `pnpm dev`
+  真实接口模式，默认关闭 Mock，开启真实后端代理
+- `pnpm dev:mock`
+  本地 Mock 模式，仅使用 `mock/` 中已覆盖接口
+- `pnpm dev:hybrid`
+  混合模式，Mock 优先，未覆盖接口继续走真实后端
+
+当前已覆盖的本地 Mock 接口：
+
+- `POST /api/auth/login`
+- `GET /api/auth/profile`
+- `GET /api/auth/captcha/challenge`
+- `POST /api/auth/captcha/verify`
+- `GET /api/menus/tree`
+- `GET /api/dict/tree`
+- `GET /api/dict/page`
+
+接口地址切换示例：
+
+- 真实接口模式下，请求 `/api/auth/login` 会被代理到 `http://127.0.0.1:3001/auth/login`
+- Mock 模式下，请求 `/api/auth/login` 会直接命中本地 Vite Mock
+- 混合模式下，请求 `/api/dict/tree` 走本地 Mock，而未覆盖接口仍会继续代理到真实后端
+
+更完整的切换矩阵见 [docs/api-switching.md](./docs/api-switching.md)。
 
 ## 默认账号
 
