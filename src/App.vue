@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { darkTheme, dateZhCN, zhCN } from 'naive-ui'
+import { darkTheme, dateZhCN, enUS, zhCN } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 import LayoutRouteView from '@/components/LayoutRouteView.vue'
 import lockScreen from '@/components/lockScreen.vue'
 import { useGlobalStore } from '@/store/modules/global.ts'
@@ -14,6 +15,7 @@ import { message } from '@/utils/message.ts'
 
 const route = useRoute()
 const globalStore = useGlobalStore()
+const { t } = useI18n()
 if (globalStore.layout === 'default') {
   globalStore.updateLayout('default')
 }
@@ -25,6 +27,9 @@ const Layout = computed(() => {
 })
 const shouldShowWatermark = computed(() =>
   globalStore.showWatermark && route.path !== '/login'
+)
+const naiveLocale = computed(() =>
+  globalStore.locale === 'en-US' ? enUS : zhCN
 )
 
 const layouts = new Map()
@@ -55,7 +60,7 @@ function redirectToLoginWithWarning() {
     return
   }
 
-  message.warning('登录状态已失效，请重新登录')
+  message.warning(t('app.sessionExpired'))
   window.location.replace('/login')
 }
 
@@ -93,7 +98,7 @@ onBeforeUnmount(() => {
   <div>
     <n-config-provider
       class="h-full w-full"
-      :locale="zhCN"
+      :locale="naiveLocale"
       :date-locale="dateZhCN"
       :theme="globalStore.isDark ? darkTheme : null"
       :theme-overrides="globalStore.naiveThemeOverrides"
