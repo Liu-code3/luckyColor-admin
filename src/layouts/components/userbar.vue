@@ -13,7 +13,7 @@ import {
   getCurrentUserInfo,
   setCurrentTenantContext
 } from '@/utils/auth';
-import { isSuperAdminIdentity } from '@/utils/permission';
+import { isPlatformAdminUser } from '@/utils/permission';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
@@ -48,8 +48,7 @@ const canSwitchTenant = computed(() => {
     return false;
   }
 
-  const roleCodes = userInfo.roleCodes || [];
-  return roleCodes.includes('super_admin') || isSuperAdminIdentity(userInfo.username);
+  return isPlatformAdminUser(userInfo);
 });
 
 const currentTenantLabel = computed(() => {

@@ -21,7 +21,7 @@ import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
 import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
-import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant, filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 defineOptions({
   name: 'SystemUser'
@@ -318,7 +318,7 @@ async function ensureDepartmentTreeOptions() {
   departmentTreeLoading.value = true;
   try {
     const { data } = await getDepartmentTreeApi();
-    rawDepartmentTree.value = data;
+    rawDepartmentTree.value = filterTreeRecordsByCurrentTenant(data);
   }
   finally {
     departmentTreeLoading.value = false;
@@ -356,7 +356,7 @@ async function loadRoleOptions() {
     page: 1,
     size: 200
   });
-  roleOptions.value = data.records;
+  roleOptions.value = filterRecordsByCurrentTenant(data.records);
 }
 
 function handleSearch() {

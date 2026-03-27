@@ -1,7 +1,9 @@
 import {
   DEFAULT_ADMIN_BUTTON_CODE_LIST,
+  PLATFORM_ADMIN_ROLE_CODE_LIST,
   SUPER_ADMIN_IDENTITY_LIST,
-  SUPER_BUTTON_CODE_LIST
+  SUPER_BUTTON_CODE_LIST,
+  TENANT_ADMIN_ROLE_CODE_LIST
 } from '@/constants/permission';
 import { getCurrentUserInfo } from '@/utils/auth';
 
@@ -19,6 +21,11 @@ export interface PermissionCodeCarrier {
   buttonCodes?: unknown;
   permissions?: unknown;
   permissionCodes?: unknown;
+}
+
+export interface RoleCodeCarrier {
+  username?: unknown;
+  roleCodes?: unknown;
 }
 
 export function getCurrentButtonCodeList() {
@@ -57,6 +64,41 @@ export function isSuperAdminIdentity(value: unknown) {
   }
 
   return SUPER_ADMIN_IDENTITY_LIST.some(item => item === normalizedValue);
+}
+
+export function normalizeRoleCodes(input: unknown) {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return [ ...new Set(
+    input
+      .filter((item): item is string => typeof item === 'string')
+      .map(item => item.trim().toLowerCase())
+      .filter(Boolean)
+  ) ];
+}
+
+export function isPlatformAdminUser(source: RoleCodeCarrier | null | undefined = getCurrentUserInfo()) {
+  if (!source) {
+    return false;
+  }
+
+  if (isSuperAdminIdentity(source.username)) {
+    return true;
+  }
+
+  const roleCodes = normalizeRoleCodes(source.roleCodes);
+  return PLATFORM_ADMIN_ROLE_CODE_LIST.some(code => roleCodes.includes(code));
+}
+
+export function isTenantAdminUser(source: RoleCodeCarrier | null | undefined = getCurrentUserInfo()) {
+  if (!source || isPlatformAdminUser(source)) {
+    return false;
+  }
+
+  const roleCodes = normalizeRoleCodes(source.roleCodes);
+  return TENANT_ADMIN_ROLE_CODE_LIST.some(code => roleCodes.includes(code));
 }
 
 export function hasPermission(

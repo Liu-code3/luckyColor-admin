@@ -31,7 +31,7 @@ import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
 import { isSuperAdminIdentity } from '@/utils/permission';
-import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant, filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface RoleFormState {
   name: string;
@@ -277,7 +277,7 @@ async function ensureMenuTreeOptions() {
     return;
 
   const { data } = await getMenuTreeApi();
-  rawRoleMenuTree.value = filterAssignableRoleMenus(data);
+  rawRoleMenuTree.value = filterAssignableRoleMenus(filterTreeRecordsByCurrentTenant(data, { allowShared: true }));
 }
 
 async function ensureButtonTreeOptions() {
@@ -285,7 +285,7 @@ async function ensureButtonTreeOptions() {
     return;
 
   const { data } = await getMenuTreeApi();
-  rawRoleButtonTree.value = filterAssignableRoleButtons(data);
+  rawRoleButtonTree.value = filterAssignableRoleButtons(filterTreeRecordsByCurrentTenant(data, { allowShared: true }));
 }
 
 async function ensureDepartmentTreeOptions() {
@@ -293,7 +293,7 @@ async function ensureDepartmentTreeOptions() {
     return;
 
   const { data } = await getDepartmentTreeApi();
-  rawDepartmentTree.value = data;
+  rawDepartmentTree.value = filterTreeRecordsByCurrentTenant(data);
 }
 
 function filterAssignableRoleMenus(menus: MenuRecord[]) {

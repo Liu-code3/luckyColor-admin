@@ -1,5 +1,7 @@
 export const SUPER_BUTTON_CODE_LIST = [ '*', '*:*:*' ] as const;
 export const SUPER_ADMIN_IDENTITY_LIST = [ 'admin', 'super_admin' ] as const;
+export const PLATFORM_ADMIN_ROLE_CODE_LIST = [ 'super_admin', 'platform_admin' ] as const;
+export const TENANT_ADMIN_ROLE_CODE_LIST = [ 'tenant_admin' ] as const;
 
 export const BUTTON_PERMISSION_CODES = {
   systemUser: {
