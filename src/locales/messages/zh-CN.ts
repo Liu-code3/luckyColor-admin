@@ -7,8 +7,8 @@ const zhCN = {
     label: '\u8bed\u8a00',
     switch: '\u5207\u6362\u8bed\u8a00',
     options: {
-      'zh-CN': '\u7b80\u4f53\u4e2d\u6587',
-      'en-US': 'English'
+      zhCN: '\u7b80\u4f53\u4e2d\u6587',
+      enUS: 'English'
     }
   },
   common: {
@@ -41,6 +41,7 @@ const zhCN = {
     tenant: {
       current: '\u5f53\u524d\u79df\u6237',
       unidentified: '\u672a\u8bc6\u522b\u79df\u6237',
+      switchAction: '\u5207\u6362\u79df\u6237',
       switchTitle: '\u79df\u6237\u5207\u6362',
       refreshList: '\u5237\u65b0\u5217\u8868',
       searchPlaceholder: '\u641c\u7d22\u79df\u6237\u540d\u79f0\u3001\u7f16\u7801\u6216 ID',

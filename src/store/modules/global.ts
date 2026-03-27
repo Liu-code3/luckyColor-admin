@@ -5,6 +5,7 @@ import { colorBuilder } from '@kviewui/color-builder';
 import tool from '@/utils/tool.ts';
 import sysConfig, { naiveThemeOverrides } from '@/config';
 import VxeUI from '@/config/vxeTable.ts';
+import { DEFAULT_LOCALE, setI18nLanguage, type AppLocale } from '@/locales';
 
 function hexToRgba(hex: string, alpha: number) {
   const normalized = hex.replace('#', '').trim();
@@ -24,6 +25,7 @@ function hexToRgba(hex: string, alpha: number) {
 interface IGlobalState {
   isLocked: boolean;
   layout: string;
+  locale: AppLocale;
   isDark: globalThis.WritableComputedRef<boolean>;
   primaryColor: string;
   naiveThemeOverrides: GlobalThemeOverrides;
@@ -52,6 +54,7 @@ export const useGlobalStore = defineStore('layout', {
   state: (): IGlobalState => ({
     isLocked: tool.session.get(Global.LOCK_SCREEN) ?? false,
     layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
+    locale: DEFAULT_LOCALE,
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
@@ -70,6 +73,10 @@ export const useGlobalStore = defineStore('layout', {
     updateLayout(layout: string) {
       this.layout = layout;
       tool.session.set(Global.LAYOUT, layout);
+    },
+    updateLocale(locale: AppLocale) {
+      this.locale = locale;
+      setI18nLanguage(locale);
     },
     updateShowTabs(showTabs: boolean) {
       this.showTabs = showTabs;

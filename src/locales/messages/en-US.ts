@@ -7,8 +7,8 @@ const enUS = {
     label: 'Language',
     switch: 'Switch language',
     options: {
-      'zh-CN': 'Simplified Chinese',
-      'en-US': 'English'
+      zhCN: 'Simplified Chinese',
+      enUS: 'English'
     }
   },
   common: {
@@ -41,6 +41,7 @@ const enUS = {
     tenant: {
       current: 'Current tenant',
       unidentified: 'Unknown tenant',
+      switchAction: 'Switch tenant',
       switchTitle: 'Switch tenant',
       refreshList: 'Refresh list',
       searchPlaceholder: 'Search tenant name, code, or ID',

@@ -3,8 +3,10 @@ import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useFullscreen } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 import { getTenantPageApi, type TenantRecord } from '@/api/tenants';
 import sysConfig from '@/config';
+import { LOCALE_LABEL_KEYS, LOCALE_OPTIONS, type AppLocale } from '@/locales';
 import Breadcrumb from './breadcrumb.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import {
@@ -29,6 +31,7 @@ const props = withDefaults(defineProps<{
 
 const router = useRouter();
 const message = useMessage();
+const { t } = useI18n();
 const { isFullscreen, toggle } = useFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
@@ -151,7 +154,7 @@ function signOut() {
   tabStore.$reset();
   router.push('/login');
   message.success(
-    '退出登录成功'
+    t('layout.userbar.signOutSuccess')
   );
 }
 
@@ -269,18 +272,29 @@ const onUpdateSettingDrawer = (val: boolean) => {
   settingDrawer.value = val;
 };
 
+const localeOptions = computed(() => LOCALE_OPTIONS.map(item => ({
+  label: t(LOCALE_LABEL_KEYS[item.value]),
+  key: item.value
+})));
+
+const currentLocaleLabel = computed(() => t(LOCALE_LABEL_KEYS[globalStore.locale]));
+
+function handleLocaleSelect(key: string | number) {
+  globalStore.updateLocale(key as AppLocale);
+}
+
 const options = computed(() => {
   const baseOptions = [];
 
   if (canSwitchTenant.value) {
     baseOptions.push({
-      label: '切换租户',
+      label: t('layout.tenant.switchAction'),
       key: 'tenantSwitch'
     });
   }
 
   baseOptions.push({
-    label: '退出登录',
+    label: t('layout.userbar.signOut'),
     key: 'signOut'
   });
 
@@ -301,6 +315,13 @@ const options = computed(() => {
       <Breadcrumb v-if="props.showBreadcrumb" />
     </div>
     <div class="layout-content-right">
+      <n-dropdown :options="localeOptions" @select="handleLocaleSelect">
+        <button class="locale-entry" type="button">
+          <Icon icon="solar:global-linear" />
+          <span>{{ currentLocaleLabel }}</span>
+        </button>
+      </n-dropdown>
+
       <SwitchTheme />
       <Icon
         class="mx-3 cursor-pointer text-5"
@@ -343,7 +364,7 @@ const options = computed(() => {
         <div class="mx-2.5 flex cursor-pointer items-center">
           <n-avatar round size="medium" :src="currentUserInfo?.avatar || 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg'" />
           <div class="ml-1px flex-shrink-0 flex-col items-center">
-            <span class="ml-4px text-14px">{{ currentUserInfo?.displayName || '用户资料' }}</span>
+            <span class="ml-4px text-14px">{{ currentUserInfo?.displayName || t('layout.userbar.userProfile') }}</span>
           </div>
         </div>
       </n-dropdown>
@@ -477,6 +498,30 @@ const options = computed(() => {
   align-items: center;
   gap: 4px;
   flex: none;
+}
+
+.locale-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.locale-entry:hover {
+  border-color: rgba(15, 118, 110, 0.24);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
 }
 
 .tenant-entry {
