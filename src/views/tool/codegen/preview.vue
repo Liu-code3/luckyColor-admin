@@ -91,7 +91,10 @@ async function downloadBundle() {
     </section>
 
     <section v-else class="preview-empty">
-      <n-empty description="暂无可预览的代码结果" />
+      <PlatformState
+        description="请先返回代码生成器选择业务表，再进入预览页查看生成结果。"
+        title="当前还没有可预览的代码结果"
+      />
     </section>
   </div>
 </template>

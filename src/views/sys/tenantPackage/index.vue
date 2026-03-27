@@ -800,7 +800,7 @@ watch(packageMenuOptions, (options) => {
             </tr>
             <tr v-if="!packageList.length">
               <td :colspan="packageTableColumnCount">
-                <n-empty description="暂无租户套餐数据" />
+                <PlatformState compact description="暂无租户套餐数据" />
               </td>
             </tr>
           </tbody>

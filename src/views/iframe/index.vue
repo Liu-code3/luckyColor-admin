@@ -94,30 +94,27 @@ onBeforeUnmount(() => {
     </section>
 
     <section class="menu-iframe-page__card">
-      <n-alert
-        v-if="!iframeUrl"
-        type="warning"
-        :show-icon="false"
-        class="menu-iframe-page__alert"
-      >
-        当前菜单未配置可用的 iframe 地址。
-      </n-alert>
-
-      <n-alert
-        v-else-if="loadError"
-        type="warning"
-        :show-icon="false"
-        class="menu-iframe-page__alert"
-      >
-        页面加载较慢或当前站点禁止 iframe 嵌入，可使用“新窗口打开”继续访问。
-      </n-alert>
-
       <div class="menu-iframe-page__frame-wrap">
-        <n-empty
+        <PlatformState
           v-if="!iframeUrl"
-          description="暂无可展示的 iframe 页面"
+          title="当前菜单还没有配置页面地址"
+          description="请先为这个菜单补充 iframe 链接，或者切换到其他已配置的菜单项。"
           class="menu-iframe-page__empty"
         />
+        <PlatformState
+          v-else-if="loadError"
+          type="error"
+          title="页面暂时无法嵌入"
+          description="目标站点可能禁止 iframe 嵌入，或者当前页面加载超时。你可以尝试重新加载，或直接在新窗口中打开。"
+          class="menu-iframe-page__empty"
+        >
+          <n-button secondary @click="reloadFrame">
+            重新加载
+          </n-button>
+          <n-button type="primary" secondary @click="openInNewTab">
+            新窗口打开
+          </n-button>
+        </PlatformState>
         <n-spin v-else :show="loading">
           <iframe
             :key="frameKey"
@@ -196,10 +193,6 @@ onBeforeUnmount(() => {
 
 .menu-iframe-page__card {
   padding: 16px;
-}
-
-.menu-iframe-page__alert {
-  margin-bottom: 12px;
 }
 
 .menu-iframe-page__frame-wrap {

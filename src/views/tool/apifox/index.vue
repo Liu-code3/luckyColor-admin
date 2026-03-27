@@ -92,12 +92,16 @@ onBeforeUnmount(() => {
         </n-tag>
       </div>
 
-      <n-alert v-if="loadError" type="warning" :show-icon="false" class="api-doc-alert">
-        文档页加载较慢或当前环境禁止 iframe 嵌入，可使用“新窗口打开”直接查看。
-      </n-alert>
-
       <div class="api-doc-frame-wrap">
-        <n-spin :show="loading">
+        <PlatformState
+          v-if="loadError"
+          type="error"
+          title="接口文档暂时无法嵌入"
+          description="当前环境可能限制 iframe 加载，或者文档服务响应较慢。你可以直接在新窗口中打开文档继续查看。"
+          action-text="新窗口打开"
+          @action="openInNewTab"
+        />
+        <n-spin v-else :show="loading">
           <iframe
             ref="iframeRef"
             :src="apiDocUrl"
@@ -196,10 +200,6 @@ onBeforeUnmount(() => {
   margin-top: 6px;
   color: var(--text-color-2);
   font-size: 13px;
-}
-
-.api-doc-alert {
-  margin-bottom: 12px;
 }
 
 .api-doc-frame-wrap {

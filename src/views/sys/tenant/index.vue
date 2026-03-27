@@ -614,7 +614,7 @@ onMounted(async () => {
             </tr>
             <tr v-if="!tenantList.length">
               <td :colspan="tenantTableColumnCount">
-                <n-empty description="暂无租户数据" />
+                <PlatformState compact description="暂无租户数据" />
               </td>
             </tr>
           </tbody>
