@@ -4,6 +4,7 @@ import type { VxeGridInstance, VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
 import { confirmAction } from '@/utils/confirm';
+import { isFullscreenElement, toggleFullscreen } from '@/utils/fullscreen';
 import { message } from '@/utils/message';
 
 defineOptions({
@@ -858,7 +859,7 @@ function handleRefresh() {
 }
 
 function syncFullscreenState() {
-  isFullscreen.value = document.fullscreenElement === tableCardRef.value;
+  isFullscreen.value = isFullscreenElement(tableCardRef.value);
 }
 
 async function handleToggleFullscreen() {
@@ -869,16 +870,7 @@ async function handleToggleFullscreen() {
   }
 
   try {
-    if (document.fullscreenElement === target) {
-      await document.exitFullscreen();
-      return;
-    }
-
-    if (document.fullscreenElement && document.fullscreenElement !== target) {
-      await document.exitFullscreen();
-    }
-
-    await target.requestFullscreen();
+    isFullscreen.value = await toggleFullscreen(target);
   }
   catch {
     message.warning('当前环境暂不支持全屏展示');
