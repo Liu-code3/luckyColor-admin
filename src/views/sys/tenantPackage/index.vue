@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, TreeOption } from 'naive-ui';
-import type { MenuRecord, TenantPackageRecord } from '@/api';
+import type { MenuRecord, TenantPackageRecord, TenantRecord } from '@/api';
 import { Icon } from '@iconify/vue';
 import {
   assignTenantPackageMenusApi,
@@ -10,7 +10,9 @@ import {
   getTenantPackageDetailApi,
   getTenantPackageMenusApi,
   getTenantPackagePageApi,
+  getTenantPageApi,
 
+  updateTenantApi,
   updateTenantPackageApi
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
@@ -70,6 +72,12 @@ const assignMenuKeyword = ref('');
 const expandedMenuKeys = ref<Array<string | number>>([]);
 const checkedMenuIds = ref<Array<string | number>>([]);
 const rawPackageMenuTree = ref<MenuRecord[]>([]);
+const showBindTenantModal = ref(false);
+const bindingTenant = ref(false);
+const tenantOptionsLoading = ref(false);
+const bindingPackage = ref<TenantPackageRecord | null>(null);
+const bindTenantId = ref<string | null>(null);
+const bindableTenants = ref<TenantRecord[]>([]);
 
 const packageForm = reactive<TenantPackageFormState>({
   code: '',
@@ -132,6 +140,16 @@ const packageMenuIdSet = computed(() => new Set(collectPackageMenuIds(rawPackage
 const packageMenuTreeStats = computed(() => countPackageMenuStats(rawPackageMenuTree.value));
 const checkedPackageMenuCount = computed(() =>
   checkedMenuIds.value.filter(item => packageMenuIdSet.value.has(Number(item))).length
+);
+const tenantBindOptions = computed(() =>
+  bindableTenants.value.map(item => ({
+    label: `${item.name}（${item.code}）${item.tenantPackage?.name ? ` · 当前：${item.tenantPackage.name}` : ''}`,
+    value: item.id,
+    disabled: item.tenantPackage?.id === bindingPackage.value?.id
+  }))
+);
+const selectedBindTenant = computed(() =>
+  bindableTenants.value.find(item => item.id === bindTenantId.value) || null
 );
 
 const packageFormRules: FormRules = {
@@ -210,6 +228,14 @@ function formatQuota(item: TenantPackageRecord) {
 
 function getSummaryCardClass(tone: SummaryCard['tone']) {
   return `summary-card summary-card--${tone}`;
+}
+
+function getTenantStatusLabel(status: TenantRecord['status']) {
+  if (status === 'ACTIVE')
+    return '启用';
+  if (status === 'FROZEN')
+    return '冻结';
+  return '停用';
 }
 
 function menuToTreeOption(menu: MenuRecord): TreeOption {
@@ -331,6 +357,23 @@ async function ensurePackageMenuTreeOptions() {
   rawPackageMenuTree.value = filterAssignablePackageMenus(data);
 }
 
+async function ensureTenantOptions(force = false) {
+  if (bindableTenants.value.length && !force)
+    return;
+
+  tenantOptionsLoading.value = true;
+  try {
+    const { data } = await getTenantPageApi({
+      page: 1,
+      size: 200
+    });
+    bindableTenants.value = data.records;
+  }
+  finally {
+    tenantOptionsLoading.value = false;
+  }
+}
+
 async function fetchPackages(currentPage = page.value) {
   loading.value = true;
   try {
@@ -425,6 +468,22 @@ function closeAssignMenu() {
   checkedMenuIds.value = [];
 }
 
+async function openBindTenant(item: TenantPackageRecord) {
+  if (!canBindPackage.value)
+    return;
+
+  bindingPackage.value = item;
+  bindTenantId.value = null;
+  await ensureTenantOptions(true);
+  showBindTenantModal.value = true;
+}
+
+function closeBindTenantModal() {
+  showBindTenantModal.value = false;
+  bindingPackage.value = null;
+  bindTenantId.value = null;
+}
+
 async function handleTogglePackageStatus(item: TenantPackageRecord, value: boolean) {
   if (!canUpdatePackage.value)
     return;
@@ -470,6 +529,35 @@ async function submitAssignMenu() {
   }
   finally {
     assigningMenus.value = false;
+  }
+}
+
+async function submitBindTenant() {
+  if (!bindingPackage.value) {
+    message.warning('请先选择一个套餐');
+    return;
+  }
+
+  if (!bindTenantId.value) {
+    message.warning('请先选择一个租户');
+    return;
+  }
+
+  const tenant = selectedBindTenant.value;
+  if (tenant?.tenantPackage?.id === bindingPackage.value.id) {
+    message.info('当前租户已绑定该套餐');
+    return;
+  }
+
+  bindingTenant.value = true;
+  try {
+    await updateTenantApi(bindTenantId.value, { packageId: bindingPackage.value.id });
+    message.success(`已为租户“${tenant?.name || bindTenantId.value}”绑定套餐`);
+    await ensureTenantOptions(true);
+    closeBindTenantModal();
+  }
+  finally {
+    bindingTenant.value = false;
   }
 }
 
@@ -683,6 +771,15 @@ watch(packageMenuOptions, (options) => {
                     菜单范围
                   </n-button>
                   <n-button
+                    v-if="canBindPackage"
+                    v-permission="packageButtonCodes.bind"
+                    quaternary
+                    type="success"
+                    @click="openBindTenant(item)"
+                  >
+                    绑定租户
+                  </n-button>
+                  <n-button
                     v-permission="packageButtonCodes.update"
                     quaternary
                     type="primary"
@@ -876,6 +973,43 @@ watch(packageMenuOptions, (options) => {
       </div>
     </template>
   </n-modal>
+
+  <n-modal v-model:show="showBindTenantModal" preset="card" title="绑定租户" style="width: 640px;">
+    <div class="assign-summary">
+      当前套餐：{{ bindingPackage?.name || '-' }}
+    </div>
+
+    <div class="bind-panel">
+      <n-form label-placement="top">
+        <n-form-item label="目标租户">
+          <n-select
+            v-model:value="bindTenantId"
+            filterable
+            clearable
+            :loading="tenantOptionsLoading"
+            :options="tenantBindOptions"
+            placeholder="请选择要绑定当前套餐的租户"
+          />
+        </n-form-item>
+      </n-form>
+
+      <div v-if="selectedBindTenant" class="assign-hint">
+        <div>租户状态：{{ getTenantStatusLabel(selectedBindTenant.status) }}</div>
+        <div>当前套餐：{{ selectedBindTenant.tenantPackage?.name || '未绑定套餐' }}</div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="modal-footer">
+        <n-button @click="closeBindTenantModal">
+          取消
+        </n-button>
+        <n-button type="primary" :loading="bindingTenant" @click="submitBindTenant">
+          保存
+        </n-button>
+      </div>
+    </template>
+  </n-modal>
 </template>
 
 <style scoped lang="less">
@@ -969,6 +1103,12 @@ watch(packageMenuOptions, (options) => {
   color: var(--text-color-2);
   background-color: var(--table-color-hover);
   border-radius: 8px;
+}
+
+.bind-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 @import '@/styles/table-operation.less';

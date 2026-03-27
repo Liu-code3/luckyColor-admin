@@ -16,6 +16,15 @@ test('租户管理与租户套餐页面冒烟', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await expect(page.locator('body')).toContainText('套餐总数');
   await expect(page.getByRole('button', { name: '新增套餐' })).toBeVisible();
+  const firstPackageOperationCell = page.locator('.operation-cell').first();
+  await expect(firstPackageOperationCell.getByRole('button', { name: '菜单范围' })).toBeVisible();
+  await expect(firstPackageOperationCell.getByRole('button', { name: '绑定租户' })).toBeVisible();
+  await firstPackageOperationCell.getByRole('button', { name: '菜单范围' }).click();
+  await expect(page.locator('.n-modal')).toContainText('套餐菜单范围');
+  await page.getByRole('button', { name: '取消' }).last().click();
+  await firstPackageOperationCell.getByRole('button', { name: '绑定租户' }).click();
+  await expect(page.locator('.n-modal')).toContainText('绑定租户');
+  await page.getByRole('button', { name: '取消' }).last().click();
   await page.getByRole('button', { name: '新增套餐' }).click();
   await expect(page.locator('.n-drawer')).toContainText('新增租户套餐');
   await expect(page.locator('.n-drawer')).toContainText('能力开关（JSON 对象）');
