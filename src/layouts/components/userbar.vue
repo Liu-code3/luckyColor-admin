@@ -2,10 +2,11 @@
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { useFullscreen } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { getTenantPageApi, type TenantRecord } from '@/api/tenants';
+import { useAppFullscreen } from '@/composables/useAppFullscreen';
 import sysConfig from '@/config';
+import { LayoutMode } from '@/constants/layout';
 import { LOCALE_LABEL_KEYS, LOCALE_OPTIONS, type AppLocale } from '@/locales';
 import Breadcrumb from './breadcrumb.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
@@ -32,7 +33,7 @@ const props = withDefaults(defineProps<{
 const router = useRouter();
 const message = useMessage();
 const { t } = useI18n();
-const { isFullscreen, toggle } = useFullscreen();
+const { isFullscreen, toggle } = useAppFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
 const menuStore = useMenuStore();
@@ -116,6 +117,26 @@ const filteredTenantRecords = computed(() => {
   );
 });
 
+const showMenuToggle = computed(() => {
+  if (!props.showCollapse) {
+    return false;
+  }
+
+  if (globalStore.isMobile) {
+    return globalStore.layout === LayoutMode.MODULAR || menuStore.menuOptions.length > 0;
+  }
+
+  return menuStore.menuOptions.length > 0;
+});
+
+const menuToggleIcon = computed(() => {
+  if (globalStore.isMobile) {
+    return menuStore.mobileDrawerVisible ? 'mdi:close' : 'mdi:menu';
+  }
+
+  return menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left';
+});
+
 watch(currentTenant, (tenant) => {
   selectedTenantId.value = tenant?.tenantId ?? null;
 }, {
@@ -143,9 +164,17 @@ function onSelected(key: string | number) {
 }
 
 const fold_fn = () => {
-  if (menuStore.menuOptions.length === 0) return;
-  menuStore.collapsed = !menuStore.collapsed;
+  menuStore.toggleSidebar();
 };
+
+async function handleFullscreenToggle() {
+  try {
+    await toggle();
+  }
+  catch {
+    message.warning('当前环境暂不支持全屏展示');
+  }
+}
 
 // 退出登录
 function signOut() {
@@ -307,8 +336,8 @@ const options = computed(() => {
     <div class="layout-content-left">
       <slot name="left" />
       <Icon
-        v-if="props.showCollapse"
-        :icon="menuStore.collapsed ? 'line-md:menu-fold-right' : 'line-md:menu-fold-left'"
+        v-if="showMenuToggle"
+        :icon="menuToggleIcon"
         class="mr-10px h-20px w-20px cursor-pointer"
         @click="fold_fn"
       />
@@ -337,7 +366,7 @@ const options = computed(() => {
       <Icon
         class="mx-3 cursor-pointer text-5"
         :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
-        @click="toggle"
+        @click="handleFullscreenToggle"
       />
       <Icon
         class="cursor-pointer text-5"

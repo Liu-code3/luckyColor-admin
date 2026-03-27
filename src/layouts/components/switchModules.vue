@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue';
 import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { useFullscreen } from '@vueuse/core';
+import { useAppFullscreen } from '@/composables/useAppFullscreen';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import { clearLoginSession, getCurrentUserInfo } from '@/utils/auth';
 import { useTabStore } from '@/store/modules/tab.ts';
@@ -11,7 +11,7 @@ import SwitchTheme from '@/layouts/components/switchTheme.vue';
 
 const router = useRouter();
 const message = useMessage();
-const { isFullscreen, toggle } = useFullscreen();
+const { isFullscreen, toggle } = useAppFullscreen();
 const globalStore = useGlobalStore();
 const tabStore = useTabStore();
 const menuStore = useMenuStore();
@@ -40,8 +40,17 @@ function xuanzhong(key: string | number) {
 }
 
 const fold_fn = () => {
-  menuStore.collapsed = !menuStore.collapsed;
+  menuStore.toggleSidebar();
 };
+
+async function handleFullscreenToggle() {
+  try {
+    await toggle();
+  }
+  catch {
+    message.warning('当前环境暂不支持全屏展示');
+  }
+}
 
 // 退出登录
 function signOut() {
@@ -87,7 +96,7 @@ onMounted(() => {
         class="mx-3 cursor-pointer text-5"
         color="#595959"
         :icon="isFullscreen ? 'fluent:full-screen-minimize-16-regular' : 'fluent:full-screen-maximize-16-regular'"
-        @click="toggle"
+        @click="handleFullscreenToggle"
       />
       <Icon
         class="mr-10px cursor-pointer text-5" color="#595959" icon="mdi:circular-arrows"
