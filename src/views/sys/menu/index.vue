@@ -383,7 +383,7 @@ async function fetchMenuTree() {
   loading.value = true;
   try {
     const { data } = await getMenuTreeApi();
-    rawMenuTree.value = filterTreeRecordsByCurrentTenant(data);
+    rawMenuTree.value = filterTreeRecordsByCurrentTenant(data, { allowShared: true });
   }
   finally {
     loading.value = false;

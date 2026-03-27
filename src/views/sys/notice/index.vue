@@ -179,7 +179,7 @@ async function fetchNotices(currentPage = page.value) {
       size: pageSize.value,
       keyword: keyword.value.trim() || undefined
     });
-    const scopedRecords = filterRecordsByCurrentTenant(data.records);
+    const scopedRecords = filterRecordsByCurrentTenant(data.records, { allowShared: true });
 
     page.value = data.current;
     pageSize.value = data.size;

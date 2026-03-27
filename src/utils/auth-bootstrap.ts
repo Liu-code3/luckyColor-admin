@@ -5,6 +5,7 @@ import {
   setCurrentUserInfo
 } from '@/utils/auth';
 import { resolveSessionButtonCodeList } from '@/utils/permission';
+import { filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface MenuStoreLike {
   getCachedMenuTree: () => LayoutT.MenuItem[];
@@ -42,7 +43,7 @@ async function bootstrapAuthState(menuStore: MenuStoreLike) {
   if (!menuStore.getCachedMenuTree().length) {
     tasks.push(
       getMenuTreeApi().then(({ data }) => {
-        menuStore.cacheMenuTree(data);
+        menuStore.cacheMenuTree(filterTreeRecordsByCurrentTenant(data, { allowShared: true }));
       })
     );
   }

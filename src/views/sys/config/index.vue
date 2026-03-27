@@ -262,7 +262,7 @@ async function fetchConfigs(currentPage = page.value) {
       size: pageSize.value,
       keyword: keyword.value.trim() || undefined
     });
-    const scopedRecords = filterRecordsByCurrentTenant(data.records);
+    const scopedRecords = filterRecordsByCurrentTenant(data.records, { allowShared: true });
 
     page.value = data.current;
     pageSize.value = data.size;
@@ -283,7 +283,7 @@ async function fetchConfigGroups() {
       size: 1000
     });
 
-    configGroupSourceList.value = filterRecordsByCurrentTenant(data.records);
+    configGroupSourceList.value = filterRecordsByCurrentTenant(data.records, { allowShared: true });
   }
   finally {
     groupLoading.value = false;

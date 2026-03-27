@@ -518,7 +518,7 @@ async function fetchTreeData() {
   treeLoading.value = true
   try {
     const res = await getDictTreeApi()
-    treeData.value = filterTreeRecordsByCurrentTenant([ ...(res.data as DictRow[]) ])
+    treeData.value = filterTreeRecordsByCurrentTenant([ ...(res.data as DictRow[]) ], { allowShared: true })
     syncSelectedNode()
   }
   catch {
@@ -539,7 +539,7 @@ async function fetchTableData(currentPage = page.value) {
   try {
     const res = await getTableDataApi(buildQueryParams(currentPage))
     const { current, size, total: nextTotal, records } = res.data as DictPageResult
-    const scopedRecords = filterRecordsByCurrentTenant(records)
+    const scopedRecords = filterRecordsByCurrentTenant(records, { allowShared: true })
     page.value = current
     pageSize.value = size
     total.value = scopedRecords.length === records.length ? nextTotal : scopedRecords.length

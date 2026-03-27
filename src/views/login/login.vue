@@ -19,6 +19,7 @@ import {
 } from '@/utils/auth';
 import { Encrypt } from '@/utils/crypto-md5';
 import { message } from '@/utils/message.ts';
+import { filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope';
 import { resolveSessionButtonCodeList } from '@/utils/permission';
 import tool from '@/utils/tool';
 import ArithmeticCaptchaPanel from './components/ArithmeticCaptchaPanel.vue';
@@ -215,7 +216,7 @@ async function performLogin(captchaToken?: string) {
   const menuTreeRes = await getMenuTreeApi();
   const md5Password = Encrypt(formValue.password);
   tool.data.set(AUTH_STORAGE_KEYS.lockScreenPassword, md5Password);
-  menuStore.initializeRoutesWithMenu(menuTreeRes.data);
+  menuStore.initializeRoutesWithMenu(filterTreeRecordsByCurrentTenant(menuTreeRes.data, { allowShared: true }));
   await router.push('/');
 }
 
