@@ -6,6 +6,14 @@ export function isFullscreenElement(target: Element | null | undefined, doc: Doc
   return Boolean(target) && getFullscreenElement(doc) === target;
 }
 
+export function addFullscreenChangeListener(listener: EventListener, doc: Document = document) {
+  doc.addEventListener('fullscreenchange', listener);
+
+  return () => {
+    doc.removeEventListener('fullscreenchange', listener);
+  };
+}
+
 export async function requestFullscreen(target: HTMLElement) {
   if (!target.requestFullscreen) {
     throw new Error('Fullscreen API unavailable');

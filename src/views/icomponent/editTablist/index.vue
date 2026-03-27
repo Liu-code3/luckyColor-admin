@@ -4,7 +4,7 @@ import type { VxeGridInstance, VxeGridProps } from 'vxe-table';
 import { VxeGrid } from 'vxe-table';
 import { Icon } from '@iconify/vue';
 import { confirmAction } from '@/utils/confirm';
-import { isFullscreenElement, toggleFullscreen } from '@/utils/fullscreen';
+import { addFullscreenChangeListener, isFullscreenElement, toggleFullscreen } from '@/utils/fullscreen';
 import { message } from '@/utils/message';
 
 defineOptions({
@@ -858,6 +858,8 @@ function handleRefresh() {
   message.success('表格已刷新');
 }
 
+let cleanupFullscreenListener: null | (() => void) = null;
+
 function syncFullscreenState() {
   isFullscreen.value = isFullscreenElement(tableCardRef.value);
 }
@@ -952,11 +954,12 @@ function handleStatusChange(row: DemoUserRecord, value: boolean) {
 }
 
 onMounted(() => {
-  document.addEventListener('fullscreenchange', syncFullscreenState);
+  cleanupFullscreenListener = addFullscreenChangeListener(syncFullscreenState);
+  syncFullscreenState();
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener('fullscreenchange', syncFullscreenState);
+  cleanupFullscreenListener?.();
 });
 </script>
 
