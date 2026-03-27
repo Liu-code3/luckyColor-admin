@@ -11,8 +11,10 @@ import {
   refreshConfigCacheApi,
   updateConfigApi
 } from '@/api';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface ConfigFormState {
   configKey: string;
@@ -62,6 +64,10 @@ const valueTypeOptions = [
   { label: 'boolean', value: 'boolean' },
   { label: 'json', value: 'json' }
 ];
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '\u672a\u8bc6\u522b\u79df\u6237'
+);
 
 const configGroupList = computed<ConfigGroupRecord[]>(() => {
   const groupMap = new Map<string, ConfigGroupRecord>();
@@ -229,6 +235,14 @@ function resolveValueTypeTagType(valueType: string) {
   return 'default';
 }
 
+function ensureConfigTenantAccess(config: ConfigRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(config))
+    return true;
+
+  message.error(`\u5f53\u524d\u79df\u6237\u4e0a\u4e0b\u6587\u65e0\u6cd5${actionLabel}\u914d\u7f6e\u201c${config.configName}\u201d`);
+  return false;
+}
+
 function resetConfigForm() {
   editingConfigId.value = '';
   configForm.configKey = '';
@@ -248,11 +262,12 @@ async function fetchConfigs(currentPage = page.value) {
       size: pageSize.value,
       keyword: keyword.value.trim() || undefined
     });
+    const scopedRecords = filterRecordsByCurrentTenant(data.records);
 
     page.value = data.current;
     pageSize.value = data.size;
-    total.value = data.total;
-    configList.value = data.records;
+    total.value = scopedRecords.length === data.records.length ? data.total : scopedRecords.length;
+    configList.value = scopedRecords;
   }
   finally {
     loading.value = false;
@@ -268,7 +283,7 @@ async function fetchConfigGroups() {
       size: 1000
     });
 
-    configGroupSourceList.value = data.records;
+    configGroupSourceList.value = filterRecordsByCurrentTenant(data.records);
   }
   finally {
     groupLoading.value = false;
@@ -313,12 +328,19 @@ function openCreateDrawer() {
 }
 
 async function openEditDrawer(config: ConfigRecord) {
+  if (!ensureConfigTenantAccess(config, '\u7f16\u8f91'))
+    return;
+
   isEditMode.value = true;
   resetConfigForm();
   editingConfigId.value = config.id;
   showConfigDrawer.value = true;
 
   const { data } = await getConfigDetailApi(config.id);
+  if (!ensureConfigTenantAccess(data, '\u7f16\u8f91')) {
+    closeConfigDrawer();
+    return;
+  }
   configForm.configKey = data.configKey;
   configForm.configName = data.configName;
   configForm.configValue = data.configValue;
@@ -387,6 +409,9 @@ async function handleRefreshCache() {
 }
 
 async function handleToggleStatus(config: ConfigRecord, status: boolean) {
+  if (!ensureConfigTenantAccess(config, status ? '\u542f\u7528' : '\u505c\u7528'))
+    return;
+
   togglingConfigId.value = config.id;
   try {
     await updateConfigApi(config.id, { status });
@@ -398,6 +423,9 @@ async function handleToggleStatus(config: ConfigRecord, status: boolean) {
 }
 
 async function handleDeleteConfig(config: ConfigRecord) {
+  if (!ensureConfigTenantAccess(config, '\u5220\u9664'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除配置',
     content: `确认删除配置“${config.configName}”吗？`
@@ -423,6 +451,12 @@ onMounted(() => {
 
 <template>
   <div class="crud-page">
+    <div class="tenant-scope-banner">
+      <strong>Tenant Scope:</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>Configuration records and groups are filtered by the current tenant context, and cross-tenant actions are blocked.</span>
+    </div>
+
     <div class="toolbar">
       <div class="toolbar-item">
         <div class="toolbar-label">
@@ -675,6 +709,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .toolbar {

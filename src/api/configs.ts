@@ -8,6 +8,8 @@ export interface ConfigQueryParams extends PageQueryParams, DataScopeQueryParams
 
 export interface ConfigRecord {
   id: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
   configKey: string;
   configName: string;
   configValue: string;
