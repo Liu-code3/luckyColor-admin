@@ -12,7 +12,7 @@ interface Query {
 const dictTreeList = dictTreeData.data as Mockm.IDictTree[];
 
 export default {
-  url: '/api/mock/dict/page',
+  url: '/api/dict/page',
   method: 'get',
   response: (req: Query): Mockm.IDictResponse => {
     const page = req.query.page || 1;

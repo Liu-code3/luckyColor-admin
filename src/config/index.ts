@@ -11,6 +11,9 @@ function readEnvBoolean(value: string | undefined, fallback = false) {
 }
 
 const tenantEnabled = readEnvBoolean(import.meta.env.VITE_TENANT_ENABLED, true);
+const apiBaseUrl = readEnvString(import.meta.env.VITE_API_BASEURL, '/api');
+const apiMockEnabled = readEnvBoolean(import.meta.env.VITE_API_MOCK_ENABLED, false);
+const apiProxyEnabled = readEnvBoolean(import.meta.env.VITE_API_PROXY_ENABLED, false);
 const tenantId = tenantEnabled
   ? readEnvString(import.meta.env.VITE_TENANT_ID)
   : '';
@@ -23,7 +26,13 @@ const loginCaptchaEnabled = readEnvBoolean(import.meta.env.VITE_LOGIN_CAPTCHA_EN
 
 const DEFAULT_CONFIG = {
   DASHBOARD_URL: '/index',
-  API_URL: import.meta.env.VITE_API_BASEURL,
+  API_URL: apiBaseUrl,
+  API_MOCK_ENABLED: apiMockEnabled,
+  API_PROXY_ENABLED: apiProxyEnabled,
+  API_PROXY_TARGET: apiProxyTarget,
+  API_MODE: apiMockEnabled
+    ? (apiProxyEnabled ? 'hybrid' : 'mock')
+    : 'real',
   API_DOC_URL: apiDocUrl,
   TIMEOUT: 60000,
   TOKEN_NAME: 'Authorization',
@@ -57,7 +66,7 @@ const DEFAULT_CONFIG = {
   error: '#f5222f',
   SYS_BASE_CONFIG: {
     LUCK_SYS_LOGO: '/logo.svg',
-    LUCK_SYS_API_URL: import.meta.env.VITE_API_BASEURL,
+    LUCK_SYS_API_URL: apiBaseUrl,
     LUCK_SYS_NAME: 'LuckyColor-admin',
     LUCK_SYS_VERSION: '2.0',
     LUCK_SYS_COPYRIGHT: 'LUCK 漏2022 Created by xiaonuo.vip',

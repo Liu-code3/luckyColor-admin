@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "vite --mode dev",
+    "dev:mock": "vite --mode mock",
+    "dev:hybrid": "vite --mode hybrid",
     "build": "vite build --mode prod",
     "build:dev": "vite build --mode dev",
     "preview": "vite preview --mode prod",
@@ -44,6 +46,7 @@
     "eslint-plugin-format": "^2.0.1",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.4.0",
+    "mockjs": "^1.1.0",
     "naive-ui": "^2.44.1",
     "sass": "^1.98.0",
     "terser": "^5.46.1",
@@ -55,6 +58,7 @@
     "unplugin-vue-components": "^31.0.0",
     "vfonts": "^0.0.3",
     "vite": "^8.0.1",
-    "vite-plugin-lazy-import": "^1.0.7"
+    "vite-plugin-lazy-import": "^1.0.7",
+    "vite-plugin-mock": "^3.0.2"
   }
 }

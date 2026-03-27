@@ -9,6 +9,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import UnoCSS from 'unocss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { lazyImport, VxeResolver } from 'vite-plugin-lazy-import';
+import { viteMockServe } from 'vite-plugin-mock';
 
 export const resolvePath = (...args: string[]) => resolve(__dirname, '.', ...args);
 
@@ -38,6 +39,9 @@ export default defineConfig(({ mode }) => {
   const buildOutDir = readString(envConfig.VITE_BUILD_OUT_DIR, 'dist');
   const shouldUseTerser = shouldDropDebugger || shouldDropConsoleLog;
   const pureFunctions = shouldDropConsoleLog ? ['console.log'] : undefined;
+  const apiMockEnabled = readBoolean(envConfig.VITE_API_MOCK_ENABLED, false);
+  const apiProxyEnabled = readBoolean(envConfig.VITE_API_PROXY_ENABLED, false);
+  const apiProxyTarget = readString(envConfig.VITE_API_PROXY_TARGET, 'http://127.0.0.1:3001');
 
   return {
     base: buildBase,
@@ -91,16 +95,24 @@ export default defineConfig(({ mode }) => {
       Icons({
         autoInstall: true,
         compiler: 'vue3'
+      }),
+      viteMockServe({
+        mockPath: resolvePath('mock'),
+        localEnabled: apiMockEnabled,
+        prodEnabled: false,
+        supportTs: true
       })
     ],
     server: {
       port,
-      proxy: {
-        '/api': {
-          target: envConfig.VITE_API_PROXY_TARGET || 'http://127.0.0.1:3001',
-          changeOrigin: true
-        }
-      }
+      proxy: apiProxyEnabled
+        ? {
+            '/api': {
+              target: apiProxyTarget,
+              changeOrigin: true
+            }
+          }
+        : undefined
     },
     resolve: {
       alias
