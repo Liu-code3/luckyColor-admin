@@ -9,8 +9,10 @@ import {
   updateDictApi
 } from '@/api'
 import { getDictTreeApi, getTableDataApi } from '@/api/dictTree.ts'
+import { getCurrentTenantContext } from '@/utils/auth'
 import { confirmAction } from '@/utils/confirm'
 import { message, notification } from '@/utils/message.ts'
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant, filterTreeRecordsByCurrentTenant } from '@/utils/tenant-scope'
 
 defineOptions({
   name: 'systemDict'
@@ -21,7 +23,7 @@ interface DictRow {
   parentId: string
   weight: number
   name: string
-  tenantId: string
+  tenantId?: string | null
   dictLabel: string
   dictValue: string
   category: string
@@ -192,6 +194,10 @@ const categoryOptions = computed(() => {
 })
 const allRowsSelected = computed(() => !!tableData.value.length && tableData.value.every(row => selectedRowIds.value.includes(row.id)))
 const partiallySelected = computed(() => selectedRowIds.value.length > 0 && !allRowsSelected.value)
+const currentTenant = computed(() => getCurrentTenantContext())
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '\u672a\u8bc6\u522b\u79df\u6237'
+)
 const summaryCards = computed(() => [
   {
     title: '字典分类',
@@ -286,6 +292,19 @@ function getNextNumericValue(parentId: string, field: 'sortCode' | 'weight') {
     .map(item => Number(item[field]) || 0)
 
   return (values.length ? Math.max(...values) : 0) + 10
+}
+
+function ensureDictParentAccess(parentId: string) {
+  if (!parentId || parentId === '0')
+    return true
+
+  const parent = flatTreeData.value.find(item => item.id === parentId)
+  if (!parent) {
+    message.error('\u5f53\u524d\u79df\u6237\u4e0a\u4e0b\u6587\u4e0b\u672a\u627e\u5230\u53ef\u7528\u7684\u4e0a\u7ea7\u5b57\u5178')
+    return false
+  }
+
+  return ensureDictTenantAccess(parent, '\u4f7f\u7528')
 }
 
 function resetDictForm() {
@@ -499,7 +518,7 @@ async function fetchTreeData() {
   treeLoading.value = true
   try {
     const res = await getDictTreeApi()
-    treeData.value = [ ...res.data ]
+    treeData.value = filterTreeRecordsByCurrentTenant([ ...(res.data as DictRow[]) ])
     syncSelectedNode()
   }
   catch {
@@ -520,11 +539,12 @@ async function fetchTableData(currentPage = page.value) {
   try {
     const res = await getTableDataApi(buildQueryParams(currentPage))
     const { current, size, total: nextTotal, records } = res.data as DictPageResult
+    const scopedRecords = filterRecordsByCurrentTenant(records)
     page.value = current
     pageSize.value = size
-    total.value = nextTotal
-    tableData.value = [ ...records ]
-    selectedRowIds.value = selectedRowIds.value.filter(id => records.some(row => row.id === id))
+    total.value = scopedRecords.length === records.length ? nextTotal : scopedRecords.length
+    tableData.value = [ ...scopedRecords ]
+    selectedRowIds.value = selectedRowIds.value.filter(id => scopedRecords.some(row => row.id === id))
   }
   catch {
     tableData.value = []
@@ -633,7 +653,18 @@ function getCategoryLabel(row: DictRow) {
   return row.category || row.name || '--'
 }
 
+function ensureDictTenantAccess(row: DictRow, actionLabel: string) {
+  if (belongsToCurrentTenant(row))
+    return true
+
+  message.error(`\u5f53\u524d\u79df\u6237\u4e0a\u4e0b\u6587\u65e0\u6cd5${actionLabel}\u5b57\u5178\u201c${row.dictLabel}\u201d`)
+  return false
+}
+
 function openPreviewModal(row: DictRow) {
+  if (!ensureDictTenantAccess(row, '\u9884\u89c8'))
+    return
+
   previewDict.value = row
   showPreviewModal.value = true
 }
@@ -670,6 +701,9 @@ function openCreateChildDrawer(parent?: DictRow | null) {
     return
   }
 
+  if (!ensureDictTenantAccess(targetParent, '\u65b0\u589e\u5b50\u9879'))
+    return
+
   isEditMode.value = false
   resetDictForm()
   dictForm.parentId = targetParent.id
@@ -680,12 +714,19 @@ function openCreateChildDrawer(parent?: DictRow | null) {
 }
 
 async function openEditDrawer(row: DictRow) {
+  if (!ensureDictTenantAccess(row, '\u7f16\u8f91'))
+    return
+
   isEditMode.value = true
   resetDictForm()
   editingDictId.value = row.id
   showDrawer.value = true
 
   const { data } = await getDictDetailApi(row.id)
+  if (!ensureDictTenantAccess(data, '\u7f16\u8f91')) {
+    closeDrawer()
+    return
+  }
   dictForm.parentId = data.parentId || '0'
   dictForm.name = data.name || ''
   dictForm.dictLabel = data.dictLabel || ''
@@ -722,6 +763,9 @@ async function submitDictForm() {
     deleteFlag: 'NOT_DELETE'
   }
 
+  if (!ensureDictParentAccess(payload.parentId))
+    return
+
   submitting.value = true
   try {
     if (isEditMode.value) {
@@ -748,6 +792,9 @@ async function submitDictForm() {
 }
 
 async function handleToggleDictStatus(row: DictRow, value: boolean) {
+  if (!ensureDictTenantAccess(row, '\u64cd\u4f5c'))
+    return
+
   const actionText = value ? '启用' : '停用'
   const scopeLabel = row.parentId === '0' ? '字典类型' : '字典项'
   const confirmed = await confirmAction({
@@ -786,6 +833,9 @@ async function handleToggleDictStatus(row: DictRow, value: boolean) {
 }
 
 async function handleDeleteDict(row: DictRow) {
+  if (!ensureDictTenantAccess(row, '\u5220\u9664'))
+    return
+
   const confirmed = await confirmAction({
     title: '删除字典',
     content: row.parentId === '0'
@@ -821,6 +871,12 @@ async function handleBatchDelete() {
   if (!confirmed)
     return
 
+  const blockedRow = tableData.value.find(row => selectedRowIds.value.includes(row.id) && !belongsToCurrentTenant(row))
+  if (blockedRow) {
+    ensureDictTenantAccess(blockedRow, '\u5220\u9664')
+    return
+  }
+
   const deleteCount = selectedRowIds.value.length
   await Promise.all(selectedRowIds.value.map(id => deleteDictApi(id)))
   message.success(`已删除 ${deleteCount} 条字典记录`)
@@ -839,6 +895,9 @@ async function submitImportRows() {
   importing.value = true
   try {
     for (const row of importRows.value) {
+      if (!ensureDictParentAccess(row.parentId || '0'))
+        return
+
       await createDictApi({
         parentId: row.parentId || '0',
         name: row.name.trim(),
@@ -933,6 +992,12 @@ onMounted(async () => {
         </n-button>
       </div>
     </section>
+
+    <div class="tenant-scope-banner">
+      <strong>Tenant Scope:</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>Dictionary tree and records are filtered by the current tenant context, and cross-tenant actions are blocked.</span>
+    </div>
 
     <section class="summary-grid">
       <article v-for="card in summaryCards" :key="card.title" class="summary-card">
@@ -1317,6 +1382,18 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  color: #475569;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(240, 253, 250, 0.95));
+  border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .dict-hero,
