@@ -46,12 +46,28 @@ const TARGET_VXE_TABLE_TITLE = 'VxeTable'
 const TARGET_VXE_TABLE_KEY = 'main_feature_demo_vxe_table'
 const TARGET_VXE_TABLE_ICON = 'carbon:data-table'
 const TARGET_VXE_TABLE_SORT = 1
+const APIFOX_ROOT_PATH = '/apifox'
+const TARGET_CODEGEN_PATH = '/tool/codegen'
+const TARGET_CODEGEN_COMPONENT = 'tool/codegen/index'
+const TARGET_CODEGEN_NAME = 'toolCodegen'
+const TARGET_CODEGEN_TITLE = '代码生成器'
+const TARGET_CODEGEN_KEY = 'main_apifox_codegen'
+const TARGET_CODEGEN_ICON = 'carbon:code'
+const TARGET_CODEGEN_SORT = 2
 
 function cloneNode<T extends MenuNodeLike<T>>(node: T): T {
   return {
     ...node,
     children: node.children?.map(child => cloneNode(child))
   } as T
+}
+
+function getMaxMenuId<T extends MenuNodeLike<T>>(items: T[]): number {
+  return items.reduce((maxId, item) => {
+    const currentId = Number(item.id) || 0
+    const childMaxId = item.children?.length ? getMaxMenuId(item.children) : 0
+    return Math.max(maxId, currentId, childMaxId)
+  }, 0)
 }
 
 function sortMenus<T extends MenuNodeLike<T>>(items: T[]) {
@@ -96,12 +112,27 @@ function isFeatureDemoRoot<T extends MenuNodeLike<T>>(node: T) {
     || node.name === TARGET_FEATURE_DEMO_NAME
 }
 
+function isApifoxRoot<T extends MenuNodeLike<T>>(node: T) {
+  return node.path === APIFOX_ROOT_PATH
+    || node.key === 'main_apifox'
+    || node.menuKey === 'main_apifox'
+    || node.name === 'apifox'
+}
+
 function isFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T) {
   return node.path === TARGET_VXE_TABLE_PATH
     || node.key === TARGET_VXE_TABLE_KEY
     || node.menuKey === TARGET_VXE_TABLE_KEY
     || node.name === TARGET_VXE_TABLE_NAME
     || isLegacyVxeTableMenu(node)
+}
+
+function isApifoxCodegen<T extends MenuNodeLike<T>>(node: T) {
+  return node.path === TARGET_CODEGEN_PATH
+    || node.component === TARGET_CODEGEN_COMPONENT
+    || node.key === TARGET_CODEGEN_KEY
+    || node.menuKey === TARGET_CODEGEN_KEY
+    || node.name === TARGET_CODEGEN_NAME
 }
 
 function toSystemDictMenu<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
@@ -152,6 +183,33 @@ function createFeatureDemoRoot<T extends MenuNodeLike<T>>(templateNode: T | unde
   } as T
 }
 
+function createApifoxCodegenMenu<T extends MenuNodeLike<T>>(templateNode: T | undefined, nextId: number, parentId: number): T {
+  return {
+    ...(templateNode || {}),
+    pid: parentId,
+    parentId,
+    id: nextId,
+    title: TARGET_CODEGEN_TITLE,
+    name: TARGET_CODEGEN_NAME,
+    type: 2,
+    path: TARGET_CODEGEN_PATH,
+    key: TARGET_CODEGEN_KEY,
+    menuKey: TARGET_CODEGEN_KEY,
+    icon: templateNode?.icon || TARGET_CODEGEN_ICON,
+    layout: templateNode?.layout || '',
+    isVisible: templateNode?.isVisible ?? true,
+    component: TARGET_CODEGEN_COMPONENT,
+    redirect: null,
+    sort: TARGET_CODEGEN_SORT,
+    meta: {
+      ...(templateNode?.meta || {}),
+      title: TARGET_CODEGEN_TITLE,
+      keepAlive: true
+    },
+    children: []
+  } as T
+}
+
 function toFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
   return {
     ...node,
@@ -174,20 +232,45 @@ function toFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T, parentId?: nu
   } as T
 }
 
+function toApifoxCodegen<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
+  return {
+    ...node,
+    pid: parentId ?? node.pid,
+    parentId: parentId ?? node.parentId,
+    title: TARGET_CODEGEN_TITLE,
+    name: TARGET_CODEGEN_NAME,
+    path: TARGET_CODEGEN_PATH,
+    key: TARGET_CODEGEN_KEY,
+    menuKey: TARGET_CODEGEN_KEY,
+    icon: node.icon || TARGET_CODEGEN_ICON,
+    component: TARGET_CODEGEN_COMPONENT,
+    isVisible: node.isVisible ?? true,
+    sort: TARGET_CODEGEN_SORT,
+    meta: {
+      ...(node.meta || {}),
+      title: TARGET_CODEGEN_TITLE,
+      keepAlive: true
+    }
+  } as T
+}
+
 export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null | undefined): T[] {
   if (!menus?.length) {
     return []
   }
 
   const normalizedTree = menus.map(menu => cloneNode(menu))
+  const nextMenuId = () => getMaxMenuId(normalizedTree) + 1
   const systemRoot = normalizedTree.find(menu => menu.path === SYSTEM_ROOT_PATH)
   const componentRoot = normalizedTree.find(menu => menu.path === COMPONENT_ROOT_PATH)
   let featureDemoRoot = normalizedTree.find(menu => isFeatureDemoRoot(menu))
+  const apifoxRoot = normalizedTree.find(menu => isApifoxRoot(menu))
 
   const legacyDict = componentRoot?.children?.find(child => isLegacyDictMenu(child))
   const systemDict = systemRoot?.children?.find(child => isSystemDictMenu(child))
   const legacyVxeTable = componentRoot?.children?.find(child => isLegacyVxeTableMenu(child))
   const featureDemoVxeTable = featureDemoRoot?.children?.find(child => isFeatureDemoVxeTable(child))
+  const apifoxCodegen = apifoxRoot?.children?.find(child => isApifoxCodegen(child))
 
   if (systemRoot) {
     const nextSystemChildren = systemRoot.children ? [ ...systemRoot.children ] : []
@@ -204,7 +287,7 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
   }
 
   if (!featureDemoRoot && legacyVxeTable) {
-    const nextId = normalizedTree.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1
+    const nextId = nextMenuId()
     featureDemoRoot = createFeatureDemoRoot(componentRoot as T | undefined, nextId)
     normalizedTree.push(featureDemoRoot)
   }
@@ -234,6 +317,20 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
       title: TARGET_FEATURE_DEMO_TITLE
     }
     featureDemoRoot.children = sortMenus(nextFeatureDemoChildren)
+  }
+
+  if (apifoxRoot) {
+    const nextApifoxChildren = apifoxRoot.children ? [ ...apifoxRoot.children ] : []
+
+    if (apifoxCodegen) {
+      const index = nextApifoxChildren.findIndex(child => child.id === apifoxCodegen.id)
+      nextApifoxChildren[index] = toApifoxCodegen(apifoxCodegen, apifoxRoot.id)
+    }
+    else {
+      nextApifoxChildren.push(createApifoxCodegenMenu(nextApifoxChildren[0], nextMenuId(), apifoxRoot.id))
+    }
+
+    apifoxRoot.children = sortMenus(nextApifoxChildren)
   }
 
   if (componentRoot?.children?.length) {

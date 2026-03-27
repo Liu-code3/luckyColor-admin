@@ -243,6 +243,22 @@ const flatMenuRecords: FlatMenuRecord[] = [
     }
   },
   {
+    pid: 13,
+    id: 17,
+    title: '代码生成器',
+    name: 'toolCodegen',
+    type: 2,
+    path: '/tool/codegen',
+    key: 'main_apifox_codegen',
+    icon: 'carbon:code',
+    isVisible: true,
+    component: 'tool/codegen/index',
+    sort: 2,
+    meta: {
+      keepAlive: true
+    }
+  },
+  {
     pid: 0,
     id: 15,
     title: '功能演示',

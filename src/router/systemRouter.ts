@@ -1,4 +1,5 @@
 import sysConfig from '@/config';
+import { LayoutMode } from '@/constants/layout';
 
 const routes = [
   {
@@ -14,7 +15,7 @@ const routes = [
       whiteList: true,
       guestOnly: true,
       title: '登录页',
-      layout: 'empty'
+      layout: LayoutMode.EMPTY
     }
   },
   {
@@ -28,13 +29,22 @@ const routes = [
     redirect: '/featureDemo/vxeTable'
   },
   {
+    path: '/tool/codegen/preview',
+    name: 'toolCodegenPreview',
+    component: () => import('@/views/tool/codegen/preview.vue'),
+    meta: {
+      title: '代码预览',
+      hidden: true
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     component: () => import('@/views/errorPage/404.vue'),
     meta: {
       whiteList: true,
       title: '404',
       notFound: true,
-      layout: 'empty'
+      layout: LayoutMode.EMPTY
     }
   }
 ];

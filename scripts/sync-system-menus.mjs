@@ -248,6 +248,37 @@ async function syncMenus() {
 
   ensuredMenuIds.push(apifoxDocMenuId);
 
+  const apifoxCodegenMenuId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: apifoxMenuId,
+      title: '代码生成器',
+      name: 'toolCodegen',
+      type: 2,
+      path: '/tool/codegen',
+      menuKey: 'main_apifox_codegen',
+      icon: 'carbon:code',
+      layout: '',
+      isVisible: true,
+      component: 'tool/codegen/index',
+      redirect: null,
+      meta: {
+        title: '代码生成器',
+        keepAlive: true
+      },
+      sort: 2
+    },
+    matchers: [
+      menu => menu.path === '/tool/codegen',
+      menu => menu.name === 'toolCodegen',
+      menu => menu.key === 'main_apifox_codegen',
+      menu => menu.menuKey === 'main_apifox_codegen'
+    ]
+  });
+
+  ensuredMenuIds.push(apifoxCodegenMenuId);
+
   const vxeTableMenuId = await ensureMenu({
     existingMenus: menuPage.records,
     token,
