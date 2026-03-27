@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { darkTheme, dateZhCN, enUS, zhCN } from 'naive-ui'
+import { darkTheme, dateEnUS, dateZhCN, enUS, zhCN } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import LayoutRouteView from '@/components/LayoutRouteView.vue'
 import lockScreen from '@/components/lockScreen.vue'
@@ -30,6 +30,9 @@ const shouldShowWatermark = computed(() =>
 )
 const naiveLocale = computed(() =>
   globalStore.locale === 'en-US' ? enUS : zhCN
+)
+const naiveDateLocale = computed(() =>
+  globalStore.locale === 'en-US' ? dateEnUS : dateZhCN
 )
 
 const layouts = new Map()
@@ -99,7 +102,7 @@ onBeforeUnmount(() => {
     <n-config-provider
       class="h-full w-full"
       :locale="naiveLocale"
-      :date-locale="dateZhCN"
+      :date-locale="naiveDateLocale"
       :theme="globalStore.isDark ? darkTheme : null"
       :theme-overrides="globalStore.naiveThemeOverrides"
     >
