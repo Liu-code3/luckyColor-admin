@@ -18,8 +18,10 @@ import {
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 defineOptions({
   name: 'SystemUser'
@@ -153,6 +155,10 @@ const departmentTreeOptions = computed<TreeOption[]>(() =>
 );
 const departmentLabelMap = computed(() => collectDepartmentLabelMap(rawDepartmentTree.value));
 const availableDepartmentIdSet = computed(() => new Set(collectDepartmentIds(rawDepartmentTree.value)));
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '未识别租户'
+);
 
 const userFormRules = computed<FormRules>(() => ({
   username: [
@@ -278,6 +284,14 @@ function getDepartmentName(user: UserRecord) {
   return '未设置';
 }
 
+function ensureUserTenantAccess(user: UserRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(user))
+    return true;
+
+  message.error(`当前租户上下文无法${actionLabel}用户“${user.username}”`);
+  return false;
+}
+
 function resetUserForm() {
   editingUserId.value = '';
   userForm.username = '';
@@ -321,11 +335,13 @@ async function fetchUsers(currentPage = page.value) {
       keyword: keyword.value.trim() || undefined
     });
 
+    const scopedRecords = filterRecordsByCurrentTenant(data.records);
+
     page.value = data.current;
     pageSize.value = data.size;
-    total.value = data.total;
-    userList.value = data.records;
-    selectedUserIds.value = selectedUserIds.value.filter(id => data.records.some(item => item.id === id));
+    total.value = scopedRecords.length === data.records.length ? data.total : scopedRecords.length;
+    userList.value = scopedRecords;
+    selectedUserIds.value = selectedUserIds.value.filter(id => scopedRecords.some(item => item.id === id));
   }
   finally {
     loading.value = false;
@@ -391,6 +407,9 @@ async function openCreateDrawer() {
 }
 
 async function openEditDrawer(user: UserRecord) {
+  if (!ensureUserTenantAccess(user, '编辑'))
+    return;
+
   isEditMode.value = true;
   resetUserForm();
   editingUserId.value = user.id;
@@ -398,6 +417,9 @@ async function openEditDrawer(user: UserRecord) {
   showUserDrawer.value = true;
 
   const { data } = await getUserDetailApi(user.id);
+  if (!ensureUserTenantAccess(data, '编辑'))
+    return;
+
   userForm.username = data.username;
   userForm.nickname = data.nickname || '';
   userForm.status = data.status ?? isUserEnabled(user);
@@ -452,6 +474,8 @@ async function submitUserForm() {
 async function handleToggleUserStatus(user: UserRecord, value: boolean) {
   if (!canUpdateUser.value)
     return;
+  if (!ensureUserTenantAccess(user, value ? '启用' : '停用'))
+    return;
 
   const actionText = value ? '启用' : '停用';
   const confirmed = await confirmAction({
@@ -478,6 +502,9 @@ async function handleToggleUserStatus(user: UserRecord, value: boolean) {
 }
 
 async function handleDeleteUser(user: UserRecord) {
+  if (!ensureUserTenantAccess(user, '删除'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除用户',
     content: `确认删除用户“${user.username}”吗？`
@@ -518,6 +545,9 @@ async function handleBatchDelete() {
 }
 
 async function openAssignRole(user: UserRecord) {
+  if (!ensureUserTenantAccess(user, '分配角色'))
+    return;
+
   selectedUser.value = user;
   showAssignRoleModal.value = true;
   await loadRoleOptions();
@@ -547,6 +577,9 @@ async function submitAssignRole() {
 }
 
 function openResetPasswordModal(user: UserRecord) {
+  if (!ensureUserTenantAccess(user, '重置密码'))
+    return;
+
   resetPasswordUser.value = user;
   resetPasswordForm.password = '';
   resetPasswordForm.confirmPassword = '';
@@ -839,6 +872,12 @@ onMounted(() => {
         <small class="summary-card__helper">{{ card.helper }}</small>
       </article>
     </section>
+
+    <div class="tenant-scope-banner">
+      <strong>当前租户：</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>用户列表会优先按当前租户上下文做前端兜底过滤。</span>
+    </div>
 
     <div class="toolbar">
       <div class="toolbar-item toolbar-item--wide">
@@ -1281,6 +1320,17 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .toolbar {

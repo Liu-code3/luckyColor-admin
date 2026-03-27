@@ -10,6 +10,8 @@ export interface UserRecord {
   id: string;
   username: string;
   nickname?: string | null;
+  tenantId?: string | null;
+  tenantName?: string | null;
   status?: boolean | null;
   departmentId?: number | null;
   departmentName?: string | null;
