@@ -8,6 +8,8 @@ export interface NoticeQueryParams extends PageQueryParams, DataScopeQueryParams
 
 export interface NoticeRecord {
   id: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
   title: string;
   content: string;
   type: string;

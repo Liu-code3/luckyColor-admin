@@ -12,7 +12,10 @@ import {
   revokeNoticeApi,
   updateNoticeApi
 } from '@/api';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
+import { message } from '@/utils/message';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface NoticeFormState {
   title: string;
@@ -37,6 +40,10 @@ const pageSize = ref(10);
 const total = ref(0);
 const keyword = ref('');
 const noticeList = ref<NoticeRecord[]>([]);
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '\u672a\u8bc6\u522b\u79df\u6237'
+);
 
 const noticeFormRef = ref<FormInst | null>(null);
 const showNoticeDrawer = ref(false);
@@ -145,6 +152,14 @@ function getNoticeTypeLabel(type: string) {
   return match?.label || type;
 }
 
+function ensureNoticeTenantAccess(notice: NoticeRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(notice))
+    return true;
+
+  message.error(`\u5f53\u524d\u79df\u6237\u4e0a\u4e0b\u6587\u65e0\u6cd5${actionLabel}\u516c\u544a\u201c${notice.title}\u201d`);
+  return false;
+}
+
 function resetNoticeForm() {
   editingNoticeId.value = '';
   noticeForm.title = '';
@@ -164,11 +179,12 @@ async function fetchNotices(currentPage = page.value) {
       size: pageSize.value,
       keyword: keyword.value.trim() || undefined
     });
+    const scopedRecords = filterRecordsByCurrentTenant(data.records);
 
     page.value = data.current;
     pageSize.value = data.size;
-    total.value = data.total;
-    noticeList.value = data.records;
+    total.value = scopedRecords.length === data.records.length ? data.total : scopedRecords.length;
+    noticeList.value = scopedRecords;
   }
   finally {
     loading.value = false;
@@ -204,12 +220,19 @@ function openCreateDrawer() {
 }
 
 async function openEditDrawer(notice: NoticeRecord) {
+  if (!ensureNoticeTenantAccess(notice, '\u7f16\u8f91'))
+    return;
+
   isEditMode.value = true;
   resetNoticeForm();
   editingNoticeId.value = notice.id;
   showNoticeDrawer.value = true;
 
   const { data } = await getNoticeDetailApi(notice.id);
+  if (!ensureNoticeTenantAccess(data, '\u7f16\u8f91')) {
+    closeNoticeDrawer();
+    return;
+  }
   noticeForm.title = data.title;
   noticeForm.content = data.content;
   noticeForm.type = data.type;
@@ -225,6 +248,9 @@ function closeNoticeDrawer() {
 }
 
 function openPreviewModal(notice: NoticeRecord) {
+  if (!ensureNoticeTenantAccess(notice, '\u9884\u89c8'))
+    return;
+
   previewNotice.value = notice;
   showPreviewModal.value = true;
 }
@@ -274,6 +300,9 @@ async function submitNoticeForm() {
 }
 
 async function handleDeleteNotice(notice: NoticeRecord) {
+  if (!ensureNoticeTenantAccess(notice, '\u5220\u9664'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除公告',
     content: `确认删除公告“${notice.title}”吗？`
@@ -289,6 +318,9 @@ async function handleDeleteNotice(notice: NoticeRecord) {
 }
 
 async function handlePublishNotice(notice: NoticeRecord) {
+  if (!ensureNoticeTenantAccess(notice, '\u53d1\u5e03'))
+    return;
+
   const confirmed = await confirmAction({
     title: '发布公告',
     content: `确认发布公告“${notice.title}”吗？`
@@ -305,6 +337,9 @@ async function handlePublishNotice(notice: NoticeRecord) {
 }
 
 async function handleRevokeNotice(notice: NoticeRecord) {
+  if (!ensureNoticeTenantAccess(notice, '\u4e0b\u7ebf'))
+    return;
+
   const confirmed = await confirmAction({
     title: '下线公告',
     content: `确认下线公告“${notice.title}”吗？`
@@ -318,6 +353,9 @@ async function handleRevokeNotice(notice: NoticeRecord) {
 }
 
 async function handlePinNotice(notice: NoticeRecord, pinned: boolean) {
+  if (!ensureNoticeTenantAccess(notice, pinned ? '\u7f6e\u9876' : '\u53d6\u6d88\u7f6e\u9876'))
+    return;
+
   const confirmed = await confirmAction({
     title: pinned ? '置顶公告' : '取消置顶',
     content: pinned
@@ -350,6 +388,12 @@ onMounted(() => {
         <small class="summary-card__helper">{{ card.helper }}</small>
       </article>
     </section>
+
+    <div class="tenant-scope-banner">
+      <strong>Tenant Scope:</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>Notice records are filtered by the current tenant context, and cross-tenant actions are blocked.</span>
+    </div>
 
     <div class="toolbar">
       <div class="toolbar-item toolbar-item--wide">
@@ -601,6 +645,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .summary-grid {
