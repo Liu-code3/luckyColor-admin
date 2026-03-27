@@ -13,8 +13,10 @@ import {
 } from '@/api';
 import { usePermission } from '@/composables/use-permission';
 import { BUTTON_PERMISSION_CODES } from '@/constants/permission';
+import { getCurrentTenantContext } from '@/utils/auth';
 import { confirmAction } from '@/utils/confirm';
 import { message } from '@/utils/message';
+import { belongsToCurrentTenant, filterRecordsByCurrentTenant } from '@/utils/tenant-scope';
 
 interface DepartmentFormState {
   id: number | null;
@@ -122,6 +124,10 @@ const hasDepartmentActions = computed(() =>
   canCreateDepartment.value || canUpdateDepartment.value || canDeleteDepartment.value
 );
 const departmentTableColumnCount = computed(() => hasDepartmentActions.value ? 8 : 7);
+const currentTenant = computed(() => getCurrentTenantContext());
+const currentTenantLabel = computed(() =>
+  currentTenant.value?.tenantName || currentTenant.value?.tenantId || '未识别租户'
+);
 
 const parentNameMap = computed(() => {
   const map = new Map<number, string>();
@@ -155,6 +161,14 @@ function formatDateTime(value?: string | null) {
   });
 }
 
+function ensureDepartmentTenantAccess(department: DepartmentRecord, actionLabel: string) {
+  if (belongsToCurrentTenant(department))
+    return true;
+
+  message.error(`当前租户上下文无法${actionLabel}部门“${department.name}”`);
+  return false;
+}
+
 function resetDepartmentForm() {
   editingDepartmentId.value = null;
   departmentForm.id = null;
@@ -173,7 +187,7 @@ async function fetchDepartmentTree() {
   treeLoading.value = true;
   try {
     const { data } = await getDepartmentTreeApi();
-    departmentTree.value = data;
+    departmentTree.value = filterRecordsByCurrentTenant(data);
   }
   finally {
     treeLoading.value = false;
@@ -190,10 +204,12 @@ async function fetchDepartments(currentPage = page.value) {
       keyword: keyword.value.trim() || undefined
     });
 
+    const scopedRecords = filterRecordsByCurrentTenant(data.records);
+
     page.value = data.current;
     pageSize.value = data.size;
-    total.value = data.total;
-    departmentList.value = data.records;
+    total.value = scopedRecords.length === data.records.length ? data.total : scopedRecords.length;
+    departmentList.value = scopedRecords;
   }
   finally {
     loading.value = false;
@@ -230,12 +246,18 @@ function openCreateDrawer(parentId = 0) {
 }
 
 async function openEditDrawer(department: DepartmentRecord) {
+  if (!ensureDepartmentTenantAccess(department, '编辑'))
+    return;
+
   isEditMode.value = true;
   resetDepartmentForm();
   editingDepartmentId.value = department.id;
   showDepartmentDrawer.value = true;
 
   const { data } = await getDepartmentDetailApi(department.id);
+  if (!ensureDepartmentTenantAccess(data, '编辑'))
+    return;
+
   departmentForm.id = data.id;
   departmentForm.parentId = data.pid;
   departmentForm.name = data.name;
@@ -327,6 +349,8 @@ async function submitDepartmentForm() {
 async function handleToggleDepartmentStatus(department: DepartmentRecord, value: boolean) {
   if (!canUpdateDepartment.value)
     return;
+  if (!ensureDepartmentTenantAccess(department, value ? '启用' : '停用'))
+    return;
 
   const actionText = value ? '启用' : '停用';
   const confirmed = await confirmAction({
@@ -354,6 +378,9 @@ async function handleToggleDepartmentStatus(department: DepartmentRecord, value:
 }
 
 async function handleDeleteDepartment(department: DepartmentRecord) {
+  if (!ensureDepartmentTenantAccess(department, '删除'))
+    return;
+
   const confirmed = await confirmAction({
     title: '删除部门',
     content: `确认删除部门“${department.name}”吗？`
@@ -380,6 +407,12 @@ onMounted(() => {
 
 <template>
   <div class="department-page">
+    <div class="tenant-scope-banner">
+      <strong>当前租户：</strong>
+      <span>{{ currentTenantLabel }}</span>
+      <span>部门列表与部门树会优先按当前租户上下文做前端兜底过滤。</span>
+    </div>
+
     <div class="toolbar">
       <div class="toolbar-item">
         <div class="toolbar-label">
@@ -629,6 +662,17 @@ onMounted(() => {
 .toolbar-label {
   width: 72px;
   flex-shrink: 0;
+}
+
+.tenant-scope-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-color-2);
+  background-color: var(--table-color-hover);
 }
 
 .content-grid {

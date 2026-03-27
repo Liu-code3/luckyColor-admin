@@ -11,6 +11,8 @@ export interface DepartmentRecord {
   id: number;
   name: string;
   code: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
   leader?: string | null;
   phone?: string | null;
   email?: string | null;
