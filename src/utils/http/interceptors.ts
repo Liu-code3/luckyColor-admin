@@ -27,6 +27,18 @@ function isLoginRequest(config: Pick<InternalAxiosRequestConfig, 'url'>) {
   return config.url?.includes('/auth/login')
 }
 
+function resolveRequestMessage(messageConfig: boolean | string | undefined, fallback = '') {
+  if (messageConfig === false) {
+    return ''
+  }
+
+  if (typeof messageConfig === 'string') {
+    return messageConfig
+  }
+
+  return fallback
+}
+
 const redirectToLogin = () => {
   loginBack.value = true
   clearLoginSession('expired')
@@ -81,15 +93,24 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
     }
 
     if (code !== 200) {
-      const customErrorMessage = response.config.data?.msg
+      const customErrorMessage = resolveRequestMessage(
+        response.config.showErrorMessage,
+        data.msg || '请求失败'
+      )
       if (!silentRequest)
-        message.error(customErrorMessage || data.msg)
+        message.error(customErrorMessage)
       return Promise.reject(response)
     }
 
     if (!silentRequest && method && method !== 'get') {
-      const msg = data.msg || '请求成功'
-      message.success(msg)
+      const msg = resolveRequestMessage(
+        response.config.showSuccessMessage,
+        data.msg || '请求成功'
+      )
+
+      if (msg) {
+        message.success(msg)
+      }
     }
 
     return Promise.resolve(data)
@@ -105,8 +126,16 @@ export function setupInterceptors(axiosInstance: AxiosInstance) {
     }
 
     if (error) {
-      if (!silentRequest)
-        handlerError(error)
+      if (!silentRequest) {
+        const customErrorMessage = resolveRequestMessage(error.config?.showErrorMessage)
+
+        if (customErrorMessage) {
+          message.error(customErrorMessage)
+        }
+        else {
+          handlerError(error)
+        }
+      }
       return Promise.reject(error)
     }
   }
