@@ -108,3 +108,10 @@ export function updateTenantApi(id: string, data: UpdateTenantPayload) {
     data
   });
 }
+
+export function deleteTenantApi(id: string) {
+  return request<never, boolean>({
+    url: `/tenants/${id}`,
+    method: 'delete'
+  });
+}

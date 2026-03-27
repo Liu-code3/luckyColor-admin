@@ -4,6 +4,7 @@ import type { TenantInitResult, TenantPackageRecord, TenantRecord, TenantStatus 
 import { Icon } from '@iconify/vue';
 import {
   createTenantApi,
+  deleteTenantApi,
   getTenantDetailApi,
   getTenantPackagePageApi,
   getTenantPageApi,
@@ -100,7 +101,10 @@ const selectedPackage = computed(() =>
 const canCreateTenant = computed(() => hasPermission(tenantButtonCodes.create));
 const canUpdateTenant = computed(() => hasPermission(tenantButtonCodes.update));
 const canChangeTenantStatus = computed(() => hasPermission(tenantButtonCodes.changeStatus));
-const hasTenantActions = computed(() => canUpdateTenant.value || canChangeTenantStatus.value);
+const canDeleteTenant = computed(() => hasPermission(tenantButtonCodes.delete));
+const hasTenantActions = computed(() =>
+  canUpdateTenant.value || canChangeTenantStatus.value || canDeleteTenant.value
+);
 const tenantTableColumnCount = computed(() => hasTenantActions.value ? 8 : 7);
 
 const summaryCards = computed<SummaryCard[]>(() => {
@@ -384,6 +388,25 @@ async function handleToggleTenantStatus(tenant: TenantRecord) {
   }
 }
 
+async function handleDeleteTenant(tenant: TenantRecord) {
+  if (!canDeleteTenant.value)
+    return;
+
+  const confirmed = await confirmAction({
+    title: '删除租户',
+    content: `确认删除租户“${tenant.name}”吗？`
+  });
+
+  if (!confirmed)
+    return;
+
+  await deleteTenantApi(tenant.id);
+  message.success('租户已删除');
+  const nextPage = tenantList.value.length === 1 && page.value > 1 ? page.value - 1 : page.value;
+  page.value = nextPage;
+  await fetchTenants(nextPage);
+}
+
 async function submitTenantForm() {
   await tenantFormRef.value?.validate();
 
@@ -577,6 +600,14 @@ onMounted(async () => {
                     @click="handleToggleTenantStatus(item)"
                   >
                     {{ getTenantStatusActionLabel(item.status) }}
+                  </n-button>
+                  <n-button
+                    v-permission="tenantButtonCodes.delete"
+                    quaternary
+                    type="error"
+                    @click="handleDeleteTenant(item)"
+                  >
+                    删除
                   </n-button>
                 </div>
               </td>
