@@ -53,11 +53,27 @@ function isNotFoundFallbackRoute(matchedRoutes: RouteLocationMatched[]) {
   return matchedRoutes.some(route => Boolean(route.meta?.notFound));
 }
 
+function isDashboardFallbackRoute(path: string, matchedRoutes: RouteLocationMatched[]) {
+  return path === sysConfig.DASHBOARD_URL && isNotFoundFallbackRoute(matchedRoutes);
+}
+
 function buildRetryNavigationTarget(fullPath: string) {
   return {
     path: fullPath,
     replace: true
   };
+}
+
+function shouldRestoreLastVisitedPath(
+  to: Parameters<NonNullable<typeof router.beforeEach>>[0],
+  lastPath: string
+) {
+  return Boolean(
+    lastPath
+    && lastPath !== sysConfig.DASHBOARD_URL
+    && to.path === sysConfig.DASHBOARD_URL
+    && to.redirectedFrom?.path === '/'
+  );
 }
 
 router.beforeEach(async (to) => {
@@ -67,8 +83,9 @@ router.beforeEach(async (to) => {
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
   const whiteListed = isWhiteListRoute(to.path, to.matched);
   const notFoundFallback = isNotFoundFallbackRoute(to.matched);
+  const dashboardFallback = isDashboardFallbackRoute(to.path, to.matched);
 
-  if (whiteListed && (!token || !notFoundFallback)) {
+  if (whiteListed && !notFoundFallback) {
     if (token && shouldRedirectAuthenticatedWhiteListRoute(to.path, to.matched)) {
       const targetPath = lastPath || '/';
       return { path: targetPath, replace: true };
@@ -77,6 +94,14 @@ router.beforeEach(async (to) => {
   }
 
   if (!token) {
+    if (dashboardFallback) {
+      return { path: '/login', replace: true };
+    }
+
+    if (whiteListed && notFoundFallback) {
+      return true;
+    }
+
     return { path: '/login', replace: true };
   }
 
@@ -95,11 +120,7 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (to.path === sysConfig.DASHBOARD_URL && lastPath) {
-    if (sysConfig.DASHBOARD_URL === lastPath) {
-      return true;
-    }
-
+  if (shouldRestoreLastVisitedPath(to, lastPath)) {
     return { path: lastPath, replace: true };
   }
 });
