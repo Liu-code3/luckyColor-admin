@@ -8,6 +8,7 @@ import {
 test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
   const diagnostics = createDiagnostics();
   attachDiagnostics(page, diagnostics);
+  const accessToken = 'mock-access-token';
 
   await page.route('**/api/dashboard/track-visit', async (route) => {
     await route.fulfill({
@@ -21,16 +22,25 @@ test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
     });
   });
 
+  await page.route('**/api/auth/refresh', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: {
+          accessToken,
+          tokenType: 'Bearer'
+        },
+        msg: 'ok'
+      })
+    });
+  });
+
   await page.addInitScript(() => {
     if (!window.location.href.startsWith('http')) {
       return;
     }
-
-    const encode = (value: unknown) =>
-      btoa(JSON.stringify(value)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-    const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
-      exp: Math.floor(Date.now() / 1000) + 60 * 60
-    })}.signature`;
 
     const menuTree = [
       {
@@ -86,7 +96,6 @@ test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
       }
     ];
 
-    localStorage.setItem('AUTH_ACCESS_TOKEN', token);
     localStorage.setItem('AUTH_USER_INFO', JSON.stringify({
       username: 'admin',
       displayName: '管理员',

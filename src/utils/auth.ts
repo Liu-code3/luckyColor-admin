@@ -8,26 +8,50 @@ import sysConfig from '@/config';
 import tool from '@/utils/tool';
 
 const AUTH_SESSION_CLEARED_EVENT = 'auth:session-cleared';
-const TOKEN_EXPIRY_GUARD_MS = 5000;
+const AUTH_SESSION_SYNC_KEY = 'AUTH_SESSION_SIGNAL';
 
-let accessTokenExpiryTimer: number | null = null;
+type SessionClearReason = 'manual' | 'expired' | 'invalid';
+type SessionClearSource = 'local' | 'remote';
 
-interface JwtPayloadLike {
-  exp?: number;
+let accessTokenState: string | null = null;
+
+function clearCachedSessionState() {
+  accessTokenState = null;
+  removeCurrentUserInfo();
+  tool.data.remove(AUTH_STORAGE_KEYS.menuTree);
+  tool.data.remove(AUTH_STORAGE_KEYS.lastViewPath);
+  tool.data.remove(AUTH_STORAGE_KEYS.lockScreenPassword);
+  tool.data.remove(AUTH_STORAGE_KEYS.tabs);
+}
+
+function broadcastSessionCleared(reason: SessionClearReason) {
+  window.dispatchEvent(
+    new CustomEvent(AUTH_SESSION_CLEARED_EVENT, {
+      detail: {
+        reason
+      }
+    })
+  );
+
+  window.localStorage.setItem(
+    AUTH_SESSION_SYNC_KEY,
+    JSON.stringify({
+      reason,
+      at: Date.now()
+    })
+  );
 }
 
 export function setAccessToken(token: LoginSessionPayload['accessToken']) {
-  tool.data.set(AUTH_STORAGE_KEYS.accessToken, token);
-  scheduleAccessTokenExpiry(token);
+  accessTokenState = token;
 }
 
 export function getAccessToken() {
-  return tool.data.get<string>(AUTH_STORAGE_KEYS.accessToken);
+  return accessTokenState;
 }
 
 export function removeAccessToken() {
-  clearAccessTokenExpiryTimer();
-  tool.data.remove(AUTH_STORAGE_KEYS.accessToken);
+  accessTokenState = null;
 }
 
 export function setCurrentUserInfo(userInfo: CurrentUserInfo) {
@@ -43,7 +67,9 @@ export function setCurrentTenantContext(tenant: TenantContextInfo) {
 }
 
 export function getCurrentTenantContext() {
-  const cachedTenant = tool.data.get<TenantContextInfo>(AUTH_STORAGE_KEYS.currentTenant);
+  const cachedTenant = tool.data.get<TenantContextInfo>(
+    AUTH_STORAGE_KEYS.currentTenant
+  );
 
   if (cachedTenant?.tenantId) {
     return cachedTenant;
@@ -83,170 +109,68 @@ export function removeCurrentUserInfo() {
 }
 
 export function clearLoginSession(
-  reason: 'manual' | 'expired' | 'invalid' = 'manual'
+  reason: SessionClearReason = 'manual'
 ) {
-  clearAccessTokenExpiryTimer();
-  removeAccessToken();
-  removeCurrentUserInfo();
-  tool.data.remove(AUTH_STORAGE_KEYS.menuTree);
-  tool.data.remove(AUTH_STORAGE_KEYS.lastViewPath);
-  tool.data.remove(AUTH_STORAGE_KEYS.lockScreenPassword);
-  tool.data.remove(AUTH_STORAGE_KEYS.tabs);
-  window.dispatchEvent(
-    new CustomEvent(AUTH_SESSION_CLEARED_EVENT, {
-      detail: {
-        reason
-      }
-    })
-  );
-}
-
-export function getAccessTokenExpiresAt(token = getAccessToken()) {
-  const payload = parseJwtPayload(token);
-
-  if (!payload?.exp) {
-    return null;
-  }
-
-  return payload.exp * 1000;
-}
-
-export function isAccessTokenExpired(bufferMs = 0, token = getAccessToken()) {
-  const expiresAt = getAccessTokenExpiresAt(token);
-
-  if (!expiresAt) {
-    return false;
-  }
-
-  return Date.now() + bufferMs >= expiresAt;
+  clearCachedSessionState();
+  broadcastSessionCleared(reason);
 }
 
 export function initializeAuthSession() {
-  const token = getAccessToken();
-
-  if (!token) {
-    clearAccessTokenExpiryTimer();
-    return false;
-  }
-
-  const expiresAt = getAccessTokenExpiresAt(token);
-
-  if (!expiresAt) {
-    clearLoginSession('invalid');
-    return false;
-  }
-
-  if (isAccessTokenExpired(TOKEN_EXPIRY_GUARD_MS, token)) {
-    clearLoginSession('expired');
-    return false;
-  }
-
-  scheduleAccessTokenExpiry(token);
-  return true;
+  return Boolean(accessTokenState);
 }
 
 export function getUsableAccessToken() {
-  const token = getAccessToken();
-
-  if (!token) {
-    return null;
-  }
-
-  const expiresAt = getAccessTokenExpiresAt(token);
-
-  if (!expiresAt) {
-    clearLoginSession('invalid');
-    return null;
-  }
-
-  if (isAccessTokenExpired(TOKEN_EXPIRY_GUARD_MS, token)) {
-    clearLoginSession('expired');
-    return null;
-  }
-
-  scheduleAccessTokenExpiry(token);
-  return token;
+  return accessTokenState;
 }
 
-export function onAccessTokenRemoved(listener: () => void) {
-  const handleStorage = (event: StorageEvent) => {
-    if (event.storageArea !== localStorage) {
-      return;
-    }
+export function onAuthSessionCleared(
+  listener: (payload: {
+    reason: SessionClearReason;
+    source: SessionClearSource;
+  }) => void
+) {
+  const handleLocalEvent = (event: Event) => {
+    const { detail } = event as CustomEvent<{ reason?: SessionClearReason }>;
 
+    listener({
+      reason: detail?.reason || 'manual',
+      source: 'local'
+    });
+  };
+
+  const handleStorage = (event: StorageEvent) => {
     if (
-      event.key !== AUTH_STORAGE_KEYS.accessToken ||
-      event.newValue !== null
+      event.storageArea !== localStorage ||
+      event.key !== AUTH_SESSION_SYNC_KEY ||
+      !event.newValue
     ) {
       return;
     }
 
-    listener();
+    clearCachedSessionState();
+
+    try {
+      const payload = JSON.parse(event.newValue) as {
+        reason?: SessionClearReason;
+      };
+
+      listener({
+        reason: payload.reason || 'manual',
+        source: 'remote'
+      });
+    } catch {
+      listener({
+        reason: 'manual',
+        source: 'remote'
+      });
+    }
   };
 
+  window.addEventListener(AUTH_SESSION_CLEARED_EVENT, handleLocalEvent);
   window.addEventListener('storage', handleStorage);
 
   return () => {
+    window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, handleLocalEvent);
     window.removeEventListener('storage', handleStorage);
   };
-}
-
-function scheduleAccessTokenExpiry(token: string) {
-  const expiresAt = getAccessTokenExpiresAt(token);
-
-  clearAccessTokenExpiryTimer();
-
-  if (!expiresAt) {
-    return;
-  }
-
-  const delay = Math.max(expiresAt - Date.now(), 0);
-
-  if (delay === 0) {
-    clearLoginSession('expired');
-    return;
-  }
-
-  accessTokenExpiryTimer = window.setTimeout(() => {
-    clearLoginSession('expired');
-  }, delay);
-}
-
-function clearAccessTokenExpiryTimer() {
-  if (accessTokenExpiryTimer !== null) {
-    window.clearTimeout(accessTokenExpiryTimer);
-    accessTokenExpiryTimer = null;
-  }
-}
-
-function parseJwtPayload(token: string | null | undefined) {
-  if (!token) {
-    return null;
-  }
-
-  const [, payloadSegment] = token.split('.');
-
-  if (!payloadSegment) {
-    return null;
-  }
-
-  try {
-    const normalizedPayload = normalizeBase64Url(payloadSegment);
-    const binary = window.atob(normalizedPayload);
-    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-    return JSON.parse(new TextDecoder().decode(bytes)) as JwtPayloadLike;
-  } catch {
-    return null;
-  }
-}
-
-function normalizeBase64Url(value: string) {
-  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
-  const remainder = normalized.length % 4;
-
-  if (remainder === 0) {
-    return normalized;
-  }
-
-  return normalized.padEnd(normalized.length + (4 - remainder), '=');
 }

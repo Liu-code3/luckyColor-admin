@@ -25,10 +25,18 @@ export default defineConfig({
       }
     }
   ],
-  webServer: {
-    command: 'pnpm dev --host 127.0.0.1 --port 9900',
-    url: 'http://127.0.0.1:9900/login',
-    reuseExistingServer: true,
-    timeout: 120000
-  }
+  webServer: [
+    {
+      command: 'pnpm --dir ../luckyColor-admin-serve dev',
+      url: 'http://127.0.0.1:3001/docs',
+      reuseExistingServer: true,
+      timeout: 120000
+    },
+    {
+      command: 'pnpm dev --host 127.0.0.1 --port 9900',
+      url: 'http://127.0.0.1:9900/login',
+      reuseExistingServer: true,
+      timeout: 120000
+    }
+  ]
 });

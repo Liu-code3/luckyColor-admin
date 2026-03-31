@@ -11,11 +11,11 @@ import { LOCALE_LABEL_KEYS, LOCALE_OPTIONS, type AppLocale } from '@/locales';
 import Breadcrumb from './breadcrumb.vue';
 import { useGlobalStore } from '@/store/modules/global.ts';
 import {
-  clearLoginSession,
   getCurrentTenantContext,
   getCurrentUserInfo,
   setCurrentTenantContext
 } from '@/utils/auth';
+import { logoutSession } from '@/utils/http/session.ts';
 import { isPlatformAdminUser } from '@/utils/permission';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
@@ -177,8 +177,8 @@ async function handleFullscreenToggle() {
 }
 
 // 退出登录
-function signOut() {
-  clearLoginSession();
+async function signOut() {
+  await logoutSession();
   menuStore.clearMenuState();
   tabStore.$reset();
   router.push('/login');
@@ -268,7 +268,7 @@ function buildTenantSwitchMessage(record: TenantRecord) {
   return '';
 }
 
-function confirmTenantSwitch() {
+async function confirmTenantSwitch() {
   const selectedTenant = selectedTenantRecord.value;
 
   if (!selectedTenant) {
@@ -288,7 +288,7 @@ function confirmTenantSwitch() {
     tenantCode: selectedTenant.code,
     source: 'switch'
   });
-  clearLoginSession();
+  await logoutSession();
   globalStore.updateIsLock(false);
   menuStore.clearMenuState();
   tabStore.$reset();

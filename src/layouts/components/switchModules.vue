@@ -4,10 +4,11 @@ import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useAppFullscreen } from '@/composables/useAppFullscreen';
 import { useGlobalStore } from '@/store/modules/global.ts';
-import { clearLoginSession, getCurrentUserInfo } from '@/utils/auth';
+import { getCurrentUserInfo } from '@/utils/auth';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import SwitchTheme from '@/layouts/components/switchTheme.vue';
+import { logoutSession } from '@/utils/http/session.ts';
 
 const router = useRouter();
 const message = useMessage();
@@ -53,8 +54,8 @@ async function handleFullscreenToggle() {
 }
 
 // 退出登录
-function signOut() {
-  clearLoginSession();
+async function signOut() {
+  await logoutSession();
   menuStore.clearMenuState();
   tabStore.$reset();
   router.push('/login');

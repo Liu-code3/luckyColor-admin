@@ -1,7 +1,6 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import { trackDashboardVisitApi } from '@/api'
-import { AUTH_STORAGE_KEYS } from '@/constants/auth'
-import { getUsableAccessToken } from '@/utils/auth'
+import { getUsableAccessToken, onAuthSessionCleared } from '@/utils/auth'
 import tool from '@/utils/tool'
 
 const VISITOR_KEY = 'DASHBOARD_VISITOR_ID'
@@ -71,16 +70,8 @@ function bindAuthSessionListeners() {
   if (authListenersBound)
     return
 
-  window.addEventListener('auth:session-cleared', () => {
+  onAuthSessionCleared(() => {
     stopDashboardVisitTracking()
-  })
-
-  window.addEventListener('storage', (event) => {
-    if (event.storageArea !== localStorage)
-      return
-
-    if (event.key === AUTH_STORAGE_KEYS.accessToken && event.newValue === null)
-      stopDashboardVisitTracking()
   })
 
   authListenersBound = true

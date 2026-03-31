@@ -10,7 +10,6 @@ export interface LoginRequestPayload {
 export interface LoginResponsePayload {
   accessToken: string;
   tokenType: string;
-  expiresIn: string;
   buttonCodeList?: string[] | null;
   buttonCodes?: string[] | null;
   permissions?: string[] | null;

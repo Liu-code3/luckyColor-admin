@@ -10,9 +10,8 @@ import { LAYOUT_MOBILE_BREAKPOINT, LayoutMode, normalizeLayoutMode } from '@/con
 import { useGlobalStore } from '@/store/modules/global.ts'
 import { useMenuStore } from '@/store/modules/menu.ts'
 import {
-  clearLoginSession,
   initializeAuthSession,
-  onAccessTokenRemoved
+  onAuthSessionCleared
 } from '@/utils/auth'
 import { isString } from '@/utils/is.ts'
 import { message } from '@/utils/message.ts'
@@ -71,7 +70,6 @@ watch(isMobileViewport, (isMobile) => {
 onActivated(() => {})
 onDeactivated(() => {})
 
-let cleanupAccessTokenListener: null | (() => void) = null
 let cleanupSessionClearedListener: null | (() => void) = null
 
 function redirectToLoginWithWarning() {
@@ -86,29 +84,23 @@ function redirectToLoginWithWarning() {
 onMounted(() => {
   initializeAuthSession()
 
-  cleanupAccessTokenListener = onAccessTokenRemoved(() => {
-    clearLoginSession()
-    redirectToLoginWithWarning()
-  })
+  cleanupSessionClearedListener = onAuthSessionCleared(({ reason, source }) => {
+    if (source !== 'remote') {
+      return
+    }
 
-  const handleSessionCleared = (event: Event) => {
-    const { detail } = event as CustomEvent<{ reason?: string }>
-
-    if (detail?.reason === 'manual') {
+    if (reason === 'manual') {
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login')
+      }
       return
     }
 
     redirectToLoginWithWarning()
-  }
-
-  window.addEventListener('auth:session-cleared', handleSessionCleared)
-  cleanupSessionClearedListener = () => {
-    window.removeEventListener('auth:session-cleared', handleSessionCleared)
-  }
+  })
 })
 
 onBeforeUnmount(() => {
-  cleanupAccessTokenListener?.()
   cleanupSessionClearedListener?.()
 })
 </script>

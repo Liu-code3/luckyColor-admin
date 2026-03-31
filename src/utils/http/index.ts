@@ -5,7 +5,8 @@ import { setupInterceptors } from '@/utils/http/interceptors.ts';
 export function createAxios(options = {}) {
   const defaultOptions = {
     baseURL: sysConfig.API_URL,
-    timeout: sysConfig.TIMEOUT
+    timeout: sysConfig.TIMEOUT,
+    withCredentials: true
   };
 
   const service = axios.create({

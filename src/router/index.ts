@@ -11,6 +11,7 @@ import { notification } from '@/utils/message';
 import { useMenuStore } from '@/store/modules/menu.ts';
 import { useTabStore } from '@/store/modules/tab.ts';
 import { ensureAuthState } from '@/utils/auth-bootstrap';
+import { ensureAccessToken } from '@/utils/http/session.ts';
 
 const { start, done } = useLoading();
 const ROUTE_WHITE_LIST = [ '/login' ];
@@ -79,7 +80,7 @@ function shouldRestoreLastVisitedPath(
 router.beforeEach(async (to) => {
   start();
   initializeAuthSession();
-  const token = getAccessToken();
+  let token = getAccessToken();
   const lastPath: string = tool.data.get(AUTH_STORAGE_KEYS.lastViewPath) as string;
   const whiteListed = isWhiteListRoute(to.path, to.matched);
   const notFoundFallback = isNotFoundFallbackRoute(to.matched);
@@ -91,6 +92,10 @@ router.beforeEach(async (to) => {
       return { path: targetPath, replace: true };
     }
     return true;
+  }
+
+  if (!token) {
+    token = await ensureAccessToken();
   }
 
   if (!token) {
