@@ -1,3 +1,5 @@
+import { DEFAULT_LAYOUT_MODE } from '@/constants/layout';
+
 function readEnvString(value: string | undefined, fallback = '') {
   const normalized = value?.trim();
   return normalized?.length ? normalized : fallback;
@@ -12,14 +14,11 @@ function readEnvBoolean(value: string | undefined, fallback = false) {
 
 const tenantEnabled = readEnvBoolean(import.meta.env.VITE_TENANT_ENABLED, true);
 const apiBaseUrl = readEnvString(import.meta.env.VITE_API_BASEURL, '/api');
-const apiMockEnabled = readEnvBoolean(import.meta.env.VITE_API_MOCK_ENABLED, false);
-const apiProxyEnabled = readEnvBoolean(import.meta.env.VITE_API_PROXY_ENABLED, false);
 const tenantId = tenantEnabled
   ? readEnvString(import.meta.env.VITE_TENANT_ID)
   : '';
-const apiProxyTarget = readEnvString(import.meta.env.VITE_API_PROXY_TARGET);
 const apiDocUrl = readEnvString(import.meta.env.VITE_API_DOC_URL)
-  || (apiProxyTarget ? `${apiProxyTarget.replace(/\/$/, '')}/docs` : '/docs');
+  || '/docs';
 const defaultUsername = readEnvString(import.meta.env.VITE_APP_DEFAULT_USERNAME, 'admin');
 const defaultPassword = readEnvString(import.meta.env.VITE_APP_DEFAULT_PASSWORD, '123456');
 const loginCaptchaEnabled = readEnvBoolean(import.meta.env.VITE_LOGIN_CAPTCHA_ENABLED, false);
@@ -27,12 +26,6 @@ const loginCaptchaEnabled = readEnvBoolean(import.meta.env.VITE_LOGIN_CAPTCHA_EN
 const DEFAULT_CONFIG = {
   DASHBOARD_URL: '/index',
   API_URL: apiBaseUrl,
-  API_MOCK_ENABLED: apiMockEnabled,
-  API_PROXY_ENABLED: apiProxyEnabled,
-  API_PROXY_TARGET: apiProxyTarget,
-  API_MODE: apiMockEnabled
-    ? (apiProxyEnabled ? 'hybrid' : 'mock')
-    : 'real',
   API_DOC_URL: apiDocUrl,
   TIMEOUT: 60000,
   TOKEN_NAME: 'Authorization',
@@ -45,7 +38,7 @@ const DEFAULT_CONFIG = {
       }
     : {},
   REQUEST_CACHE: true,
-  LUCK_LAYOUT: 'modular',
+  LUCK_LAYOUT: DEFAULT_LAYOUT_MODE,
   LUCK_MENU_COLLAPSE: false,
   LUCK_MODULE_UNFOLD_OPEN: true,
   LUCK_LAYOUT_TAGS_OPEN: true,
