@@ -24,7 +24,7 @@ function readString(value: string | undefined, fallback: string) {
   return normalized?.length ? normalized : fallback;
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const envConfig = loadEnv(mode, './');
   const alias = {
     '~': `${resolvePath('./')}`,
@@ -99,7 +99,7 @@ export default defineConfig(({ mode }) => {
       // allowedHosts: [
       //   'lxm.natapp1.cc'
       // ],
-      proxy: mode === 'dev'
+      proxy: command === 'serve'
         ? {
             '/api': {
               target: apiProxyTarget,
