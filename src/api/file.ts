@@ -3,6 +3,7 @@ import { request } from '@/utils/http';
 interface FileInfo {
   name: string;
   url: string;
+  relativePath: string;
 }
 
 class FileAPI {
