@@ -86,8 +86,8 @@ interface TenantScopedTreeRecordLike extends TenantScopedRecordLike {
   children?: TenantScopedTreeRecordLike[] | null;
 }
 
-function hasExplicitTenantIdInTree(records: TenantScopedTreeRecordLike[]) {
-  return records.some((record) => {
+function hasExplicitTenantIdInTree(records: TenantScopedTreeRecordLike[]): boolean {
+  return records.some((record): boolean => {
     if (record.tenantId?.trim())
       return true;
 

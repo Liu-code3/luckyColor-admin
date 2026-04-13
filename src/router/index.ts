@@ -1,4 +1,4 @@
-import type { RouteLocationMatched, RouteRecordRaw } from 'vue-router';
+import type { RouteLocationMatched, RouteLocationNormalized, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import systemRouter from './systemRouter';
 import sysConfig from '@/config';
@@ -66,7 +66,7 @@ function buildRetryNavigationTarget(fullPath: string) {
 }
 
 function shouldRestoreLastVisitedPath(
-  to: Parameters<NonNullable<typeof router.beforeEach>>[0],
+  to: RouteLocationNormalized,
   lastPath: string
 ) {
   return Boolean(

@@ -32,7 +32,11 @@ export function buildDataScopeQueryParams(source: DataScopeCarrier | null | unde
 
   if (
     dataScopeUserId
-    && [ DATA_SCOPE_TYPES.DEPT, DATA_SCOPE_TYPES.DEPT_AND_CHILD, DATA_SCOPE_TYPES.SELF ].includes(dataScopeType)
+    && (
+      dataScopeType === DATA_SCOPE_TYPES.DEPT
+      || dataScopeType === DATA_SCOPE_TYPES.DEPT_AND_CHILD
+      || dataScopeType === DATA_SCOPE_TYPES.SELF
+    )
   ) {
     params.dataScopeUserId = dataScopeUserId;
   }
@@ -40,10 +44,10 @@ export function buildDataScopeQueryParams(source: DataScopeCarrier | null | unde
   return params;
 }
 
-export function mergeDataScopeQueryParams<T extends Record<string, unknown> | undefined>(params?: T) {
+export function mergeDataScopeQueryParams<T extends object>(params?: T): T & DataScopeQueryParams {
   const scopedParams = buildDataScopeQueryParams();
   return {
-    ...(params || {}),
+    ...((params || {}) as T),
     ...scopedParams
   };
 }

@@ -1,3 +1,4 @@
+import type { ConfigEnv, UserConfig } from 'vite';
 import { resolve } from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import VueJSX from '@vitejs/plugin-vue-jsx';
@@ -9,6 +10,13 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { lazyImport, VxeResolver } from 'vite-plugin-lazy-import';
+
+const AUTO_IMPORT_INCLUDE_PATTERNS = [
+  /\.[tj]sx?$/,
+  /\.vue$/,
+  /\.vue\?vue/,
+  /\.md$/
+] as const;
 
 export const resolvePath = (...args: string[]) => resolve(__dirname, '.', ...args);
 
@@ -24,7 +32,7 @@ function readString(value: string | undefined, fallback: string) {
   return normalized?.length ? normalized : fallback;
 }
 
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode, command }: ConfigEnv) => {
   const envConfig = loadEnv(mode, './');
   const alias = {
     '~': `${resolvePath('./')}`,
@@ -37,6 +45,7 @@ export default defineConfig(({ mode, command }) => {
   const buildBase = readString(envConfig.VITE_BUILD_PUBLIC_PATH, '/');
   const buildOutDir = readString(envConfig.VITE_BUILD_OUT_DIR, 'dist');
   const shouldUseTerser = shouldDropDebugger || shouldDropConsoleLog;
+  const minify: NonNullable<UserConfig['build']>['minify'] = shouldUseTerser ? 'terser' : 'oxc';
   const pureFunctions = shouldDropConsoleLog ? [ 'console.log' ] : undefined;
   const apiProxyTarget = readString(envConfig.VITE_API_PROXY_TARGET, 'http://127.0.0.1:3001');
 
@@ -57,12 +66,7 @@ export default defineConfig(({ mode, command }) => {
         ]
       }),
       AutoImport({
-        include: [
-          /\.[tj]sx?$/,
-          /\.vue$/,
-          /\.vue\?vue/,
-          /\.md$/
-        ],
+        include: AUTO_IMPORT_INCLUDE_PATTERNS,
         imports: [
           'vue',
           'pinia',
@@ -112,7 +116,7 @@ export default defineConfig(({ mode, command }) => {
       alias
     },
     build: {
-      minify: shouldUseTerser ? 'terser' : 'oxc',
+      minify,
       sourcemap: enableSourceMap,
       outDir: buildOutDir,
       terserOptions: shouldUseTerser

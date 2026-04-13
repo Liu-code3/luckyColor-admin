@@ -12,6 +12,7 @@
     "build:springboot": "vite build --mode springboot",
     "build:nestjs": "vite build --mode nestjs",
     "preview": "vite preview --mode prod",
+    "typecheck": "pnpm exec tsc --noEmit && pnpm exec tsc -p tsconfig.node.json --noEmit",
     "sync:menus": "node ./scripts/sync-system-menus.mjs",
     "test:smoke": "pnpm sync:menus && playwright test",
     "test:smoke:headed": "pnpm sync:menus && playwright test --headed"

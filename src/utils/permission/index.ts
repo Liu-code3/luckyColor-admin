@@ -8,12 +8,12 @@ import {
 import { getCurrentUserInfo } from '@/utils/auth';
 
 export type PermissionMode = 'and' | 'or';
-export type PermissionValue = string | string[];
+export type PermissionValue = string | readonly string[];
 export type PermissionCodeList = string[];
 
 export interface PermissionCheckOptions {
   mode?: PermissionMode;
-  superCodes?: string[];
+  superCodes?: readonly string[];
 }
 
 export interface PermissionCodeCarrier {

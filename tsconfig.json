@@ -10,7 +10,7 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     /* vscode中使用 @ 引入文件 更好的提示 */
     "baseUrl": ".",
     "paths": {
@@ -20,7 +20,8 @@
     },
     "resolveJsonModule": true,
     "types": [
-      "vite/client"
+      "vite/client",
+      "node"
     ],
     "allowImportingTsExtensions": true,
 
@@ -39,6 +40,7 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
+    "vite.config.ts",
     "shims-vue.d.ts",
     "./auto-imports.d.ts"
   ]

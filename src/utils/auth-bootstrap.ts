@@ -43,7 +43,7 @@ async function bootstrapAuthState(menuStore: MenuStoreLike) {
   if (!menuStore.getCachedMenuTree().length) {
     tasks.push(
       getMenuTreeApi().then(({ data }) => {
-        menuStore.cacheMenuTree(filterTreeRecordsByCurrentTenant(data, { allowShared: true }));
+        menuStore.cacheMenuTree(filterTreeRecordsByCurrentTenant(data, { allowShared: true }) as unknown as LayoutT.MenuItem[]);
       })
     );
   }

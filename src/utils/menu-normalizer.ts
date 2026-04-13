@@ -1,4 +1,4 @@
-type MenuNodeLike<T> = T & {
+type MenuNodeLike = {
   pid?: number
   parentId?: number | null
   id: number
@@ -15,7 +15,7 @@ type MenuNodeLike<T> = T & {
   redirect?: string | null
   meta?: Record<string, unknown> | null
   sort?: number
-  children?: T[]
+  children?: MenuNodeLike[]
 }
 
 const SYSTEM_ROOT_PATH = '/systemManagement'
@@ -55,22 +55,22 @@ const TARGET_CODEGEN_KEY = 'main_apifox_codegen'
 const TARGET_CODEGEN_ICON = 'carbon:code'
 const TARGET_CODEGEN_SORT = 2
 
-function cloneNode<T extends MenuNodeLike<T>>(node: T): T {
+function cloneNode<T extends MenuNodeLike>(node: T): T {
   return {
     ...node,
-    children: node.children?.map(child => cloneNode(child))
-  } as T
+    children: (node.children as T[] | undefined)?.map(child => cloneNode(child))
+  } as unknown as T
 }
 
-function getMaxMenuId<T extends MenuNodeLike<T>>(items: T[]): number {
+function getMaxMenuId<T extends MenuNodeLike>(items: T[]): number {
   return items.reduce((maxId, item) => {
     const currentId = Number(item.id) || 0
-    const childMaxId = item.children?.length ? getMaxMenuId(item.children) : 0
+    const childMaxId = item.children?.length ? getMaxMenuId(item.children as T[]) : 0
     return Math.max(maxId, currentId, childMaxId)
   }, 0)
 }
 
-function sortMenus<T extends MenuNodeLike<T>>(items: T[]) {
+function sortMenus<T extends MenuNodeLike>(items: T[]) {
   return [ ...items ].sort((left, right) => {
     const sortDiff = Number(left.sort ?? 0) - Number(right.sort ?? 0)
     if (sortDiff !== 0) {
@@ -81,7 +81,7 @@ function sortMenus<T extends MenuNodeLike<T>>(items: T[]) {
   })
 }
 
-function isLegacyDictMenu<T extends MenuNodeLike<T>>(node: T) {
+function isLegacyDictMenu<T extends MenuNodeLike>(node: T) {
   return node.path === LEGACY_DICT_PATH
     || node.component === LEGACY_DICT_COMPONENT
     || node.key === 'icomponent_dict'
@@ -89,7 +89,7 @@ function isLegacyDictMenu<T extends MenuNodeLike<T>>(node: T) {
     || node.name === 'dict'
 }
 
-function isSystemDictMenu<T extends MenuNodeLike<T>>(node: T) {
+function isSystemDictMenu<T extends MenuNodeLike>(node: T) {
   return node.path === TARGET_DICT_PATH
     || node.component === TARGET_DICT_COMPONENT
     || node.key === TARGET_DICT_KEY
@@ -97,7 +97,7 @@ function isSystemDictMenu<T extends MenuNodeLike<T>>(node: T) {
     || node.name === TARGET_DICT_NAME
 }
 
-function isLegacyVxeTableMenu<T extends MenuNodeLike<T>>(node: T) {
+function isLegacyVxeTableMenu<T extends MenuNodeLike>(node: T) {
   return node.path === LEGACY_VXE_TABLE_PATH
     || node.component === LEGACY_VXE_TABLE_COMPONENT
     || node.key === LEGACY_VXE_TABLE_KEY
@@ -105,21 +105,21 @@ function isLegacyVxeTableMenu<T extends MenuNodeLike<T>>(node: T) {
     || node.name === 'editTablist'
 }
 
-function isFeatureDemoRoot<T extends MenuNodeLike<T>>(node: T) {
+function isFeatureDemoRoot<T extends MenuNodeLike>(node: T) {
   return node.path === FEATURE_DEMO_ROOT_PATH
     || node.key === TARGET_FEATURE_DEMO_KEY
     || node.menuKey === TARGET_FEATURE_DEMO_KEY
     || node.name === TARGET_FEATURE_DEMO_NAME
 }
 
-function isApifoxRoot<T extends MenuNodeLike<T>>(node: T) {
+function isApifoxRoot<T extends MenuNodeLike>(node: T) {
   return node.path === APIFOX_ROOT_PATH
     || node.key === 'main_apifox'
     || node.menuKey === 'main_apifox'
     || node.name === 'apifox'
 }
 
-function isFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T) {
+function isFeatureDemoVxeTable<T extends MenuNodeLike>(node: T) {
   return node.path === TARGET_VXE_TABLE_PATH
     || node.key === TARGET_VXE_TABLE_KEY
     || node.menuKey === TARGET_VXE_TABLE_KEY
@@ -127,7 +127,7 @@ function isFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T) {
     || isLegacyVxeTableMenu(node)
 }
 
-function isApifoxCodegen<T extends MenuNodeLike<T>>(node: T) {
+function isApifoxCodegen<T extends MenuNodeLike>(node: T) {
   return node.path === TARGET_CODEGEN_PATH
     || node.component === TARGET_CODEGEN_COMPONENT
     || node.key === TARGET_CODEGEN_KEY
@@ -135,7 +135,7 @@ function isApifoxCodegen<T extends MenuNodeLike<T>>(node: T) {
     || node.name === TARGET_CODEGEN_NAME
 }
 
-function toSystemDictMenu<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
+function toSystemDictMenu<T extends MenuNodeLike>(node: T, parentId?: number): T {
   return {
     ...node,
     pid: parentId ?? node.pid,
@@ -154,10 +154,10 @@ function toSystemDictMenu<T extends MenuNodeLike<T>>(node: T, parentId?: number)
       title: TARGET_DICT_TITLE,
       keepAlive: true
     }
-  } as T
+  } as unknown as T
 }
 
-function createFeatureDemoRoot<T extends MenuNodeLike<T>>(templateNode: T | undefined, nextId: number): T {
+function createFeatureDemoRoot<T extends MenuNodeLike>(templateNode: T | undefined, nextId: number): T {
   return {
     ...(templateNode || {}),
     pid: 0,
@@ -179,11 +179,11 @@ function createFeatureDemoRoot<T extends MenuNodeLike<T>>(templateNode: T | unde
       ...(templateNode?.meta || {}),
       title: TARGET_FEATURE_DEMO_TITLE
     },
-    children: []
-  } as T
+    children: [] as T[]
+  } as unknown as T
 }
 
-function createApifoxCodegenMenu<T extends MenuNodeLike<T>>(templateNode: T | undefined, nextId: number, parentId: number): T {
+function createApifoxCodegenMenu<T extends MenuNodeLike>(templateNode: T | undefined, nextId: number, parentId: number): T {
   return {
     ...(templateNode || {}),
     pid: parentId,
@@ -206,11 +206,11 @@ function createApifoxCodegenMenu<T extends MenuNodeLike<T>>(templateNode: T | un
       title: TARGET_CODEGEN_TITLE,
       keepAlive: true
     },
-    children: []
-  } as T
+    children: [] as T[]
+  } as unknown as T
 }
 
-function toFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
+function toFeatureDemoVxeTable<T extends MenuNodeLike>(node: T, parentId?: number): T {
   return {
     ...node,
     pid: parentId ?? node.pid,
@@ -232,7 +232,7 @@ function toFeatureDemoVxeTable<T extends MenuNodeLike<T>>(node: T, parentId?: nu
   } as T
 }
 
-function toApifoxCodegen<T extends MenuNodeLike<T>>(node: T, parentId?: number): T {
+function toApifoxCodegen<T extends MenuNodeLike>(node: T, parentId?: number): T {
   return {
     ...node,
     pid: parentId ?? node.pid,
@@ -254,7 +254,7 @@ function toApifoxCodegen<T extends MenuNodeLike<T>>(node: T, parentId?: number):
   } as T
 }
 
-export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null | undefined): T[] {
+export function normalizeMenuTree<T extends MenuNodeLike>(menus: T[] | null | undefined): T[] {
   if (!menus?.length) {
     return []
   }
@@ -266,14 +266,14 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
   let featureDemoRoot = normalizedTree.find(menu => isFeatureDemoRoot(menu))
   const apifoxRoot = normalizedTree.find(menu => isApifoxRoot(menu))
 
-  const legacyDict = componentRoot?.children?.find(child => isLegacyDictMenu(child))
-  const systemDict = systemRoot?.children?.find(child => isSystemDictMenu(child))
-  const legacyVxeTable = componentRoot?.children?.find(child => isLegacyVxeTableMenu(child))
-  const featureDemoVxeTable = featureDemoRoot?.children?.find(child => isFeatureDemoVxeTable(child))
-  const apifoxCodegen = apifoxRoot?.children?.find(child => isApifoxCodegen(child))
+  const legacyDict = (componentRoot?.children as T[] | undefined)?.find(child => isLegacyDictMenu(child))
+  const systemDict = (systemRoot?.children as T[] | undefined)?.find(child => isSystemDictMenu(child))
+  const legacyVxeTable = (componentRoot?.children as T[] | undefined)?.find(child => isLegacyVxeTableMenu(child))
+  const featureDemoVxeTable = (featureDemoRoot?.children as T[] | undefined)?.find(child => isFeatureDemoVxeTable(child))
+  const apifoxCodegen = (apifoxRoot?.children as T[] | undefined)?.find(child => isApifoxCodegen(child))
 
   if (systemRoot) {
-    const nextSystemChildren = systemRoot.children ? [ ...systemRoot.children ] : []
+    const nextSystemChildren = systemRoot.children ? [ ...(systemRoot.children as T[]) ] : []
 
     if (systemDict) {
       const index = nextSystemChildren.findIndex(child => child.id === systemDict.id)
@@ -293,7 +293,7 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
   }
 
   if (featureDemoRoot) {
-    const nextFeatureDemoChildren = featureDemoRoot.children ? [ ...featureDemoRoot.children ] : []
+    const nextFeatureDemoChildren = featureDemoRoot.children ? [ ...(featureDemoRoot.children as T[]) ] : []
 
     if (featureDemoVxeTable) {
       const index = nextFeatureDemoChildren.findIndex(child => child.id === featureDemoVxeTable.id)
@@ -320,7 +320,7 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
   }
 
   if (apifoxRoot) {
-    const nextApifoxChildren = apifoxRoot.children ? [ ...apifoxRoot.children ] : []
+    const nextApifoxChildren = apifoxRoot.children ? [ ...(apifoxRoot.children as T[]) ] : []
 
     if (apifoxCodegen) {
       const index = nextApifoxChildren.findIndex(child => child.id === apifoxCodegen.id)
@@ -335,7 +335,7 @@ export function normalizeMenuTree<T extends MenuNodeLike<T>>(menus: T[] | null |
 
   if (componentRoot?.children?.length) {
     componentRoot.children = sortMenus(
-      componentRoot.children.filter(child => !isLegacyDictMenu(child) && !isLegacyVxeTableMenu(child))
+      (componentRoot.children as T[]).filter(child => !isLegacyDictMenu(child) && !isLegacyVxeTableMenu(child))
     )
   }
 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { defineAsyncComponent, markRaw } from 'vue';
+import { defineAsyncComponent, markRaw, type Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { AUTH_STORAGE_KEYS } from '@/constants/auth';
 import { useIconRender } from '@/hooks/iconRender.ts';
@@ -18,10 +18,10 @@ interface IMenuState {
   mobileDrawerVisible: boolean;
 }
 
-const modules = import.meta.glob('/src/views/**/*.vue');
+const modules = import.meta.glob<{ default: Component }>('/src/views/**/*.vue');
 const NOT_FOUND_COMPONENT = 'errorPage/404';
 const iconRender = useIconRender();
-const cachedViewComponents = new Map<string, ReturnType<typeof defineAsyncComponent>>();
+const cachedViewComponents = new Map<string, Component>();
 
 function resolveViewModulePath(component: string) {
   return component.includes('/')
@@ -42,8 +42,8 @@ export const useMenuStore = defineStore('menu', {
     isMenuVisible(item: LayoutT.MenuItem) {
       return item.isVisible !== false && item.meta?.hidden !== true;
     },
-    getDisplayMenuTree(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
-      return this.filterVisibleMenus(menuData);
+    getDisplayMenuTree(menuData?: LayoutT.MenuItem[]) {
+      return this.filterVisibleMenus(menuData ?? this.getCachedMenuTree());
     },
     filterVisibleMenus(menuData: LayoutT.MenuItem[]) {
       return menuData
@@ -122,8 +122,8 @@ export const useMenuStore = defineStore('menu', {
     hasDynamicRoutes() {
       return this.dynamicRouteNames.length > 0 || this.accessedRouters.length > 0;
     },
-    addRoutesWithMenu(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
-      const apiMenu = normalizeMenuTree(menuData || []);
+    addRoutesWithMenu(menuData?: LayoutT.MenuItem[]) {
+      const apiMenu = normalizeMenuTree(menuData ?? this.getCachedMenuTree());
       const menuRouter = this.filterAsyncRouter(apiMenu);
       const nextDynamicRouteNames = this.collectRouteNames(menuRouter);
 
@@ -139,7 +139,7 @@ export const useMenuStore = defineStore('menu', {
       this.accessedRouters = [ ...menuRouter ];
       return menuRouter;
     },
-    replaceRoutesWithMenu(menuData: LayoutT.MenuItem[] = this.getCachedMenuTree()) {
+    replaceRoutesWithMenu(menuData?: LayoutT.MenuItem[]) {
       this.resetDynamicRoutes();
       return this.addRoutesWithMenu(menuData);
     },

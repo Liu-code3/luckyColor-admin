@@ -135,9 +135,11 @@ export const useGlobalStore = defineStore('layout', {
       app.classList.toggle('app-gray-mode', this.grayMode);
       app.classList.toggle('colorWeak', this.colorWeakMode);
     },
-    applySidebarTheme(sidebarTheme = this.sidebarTheme, primaryColor = this.primaryColor) {
+    applySidebarTheme(sidebarTheme?: IGlobalState['sidebarTheme'], primaryColor?: string) {
+      const resolvedSidebarTheme = sidebarTheme ?? this.sidebarTheme;
+      const resolvedPrimaryColor = primaryColor ?? this.primaryColor;
       const rootStyle = document.documentElement.style;
-      const themeColorList = colorBuilder.generate(primaryColor, {
+      const themeColorList = colorBuilder.generate(resolvedPrimaryColor, {
         dark: this.isDark,
         list: true,
         format: 'hex'
@@ -153,7 +155,7 @@ export const useGlobalStore = defineStore('layout', {
           hoverText: '#ffffff',
           hoverBorder: hexToRgba(themeColorList[3], 0.26),
           border: 'rgba(148, 163, 184, 0.12)',
-          accent: primaryColor,
+          accent: resolvedPrimaryColor,
           selectedBg: hexToRgba(themeColorList[5], 0.3),
           selectedText: '#ffffff',
           selectedBorder: hexToRgba(themeColorList[3], 0.28)
@@ -167,7 +169,7 @@ export const useGlobalStore = defineStore('layout', {
           hoverText: '#0f172a',
           hoverBorder: hexToRgba(themeColorList[4], 0.16),
           border: 'rgba(148, 163, 184, 0.16)',
-          accent: primaryColor,
+          accent: resolvedPrimaryColor,
           selectedBg: hexToRgba(themeColorList[5], 0.12),
           selectedText: themeColorList[6],
           selectedBorder: hexToRgba(themeColorList[4], 0.18)
@@ -201,7 +203,7 @@ export const useGlobalStore = defineStore('layout', {
         selectedBorder: string;
       }>;
 
-      const activeTheme = themeMap[sidebarTheme];
+      const activeTheme = themeMap[resolvedSidebarTheme];
       rootStyle.setProperty('--layout-sider-bg', activeTheme.background);
       rootStyle.setProperty('--layout-sider-text', activeTheme.text);
       rootStyle.setProperty('--layout-sider-text-active', activeTheme.textActive);
@@ -215,9 +217,9 @@ export const useGlobalStore = defineStore('layout', {
       rootStyle.setProperty('--layout-sider-selected-text', activeTheme.selectedText);
       rootStyle.setProperty('--layout-sider-selected-border', activeTheme.selectedBorder);
     },
-    setThemeColor(color: string, isDark: boolean) {
+    setThemeColor(color: string, isDark?: boolean) {
       const primaryColor = color || this.primaryColor;
-      const isDarkMode = isDark || this.isDark;
+      const isDarkMode = isDark ?? this.isDark;
 
       // 生成暗黑模式下的色阶集合
       const colorList = colorBuilder.generate(primaryColor, {
