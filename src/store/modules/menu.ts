@@ -15,6 +15,7 @@ interface IMenuState {
   accessedRouters: RouteRecordRaw[];
   dynamicRouteNames: string[];
   collapsed: boolean;
+  mobileDrawerVisible: boolean;
 }
 
 const modules = import.meta.glob('/src/views/**/*.vue');
@@ -34,7 +35,8 @@ export const useMenuStore = defineStore('menu', {
     switchModulesList: [],
     accessedRouters: [],
     dynamicRouteNames: [],
-    collapsed: false
+    collapsed: false,
+    mobileDrawerVisible: false
   }),
   actions: {
     isMenuVisible(item: LayoutT.MenuItem) {
@@ -84,6 +86,24 @@ export const useMenuStore = defineStore('menu', {
       if ([ 'modular', 'top' ].includes(globalStore.layout))
         return;
       this.menuOptions = this.transformMenuData(menuData);
+    },
+    applyResponsiveState(isMobile: boolean) {
+      if (!isMobile) {
+        this.mobileDrawerVisible = false;
+        return;
+      }
+
+      this.collapsed = false;
+    },
+    toggleSidebar() {
+      const globalStore = useGlobalStore();
+
+      if (globalStore.isMobile) {
+        this.mobileDrawerVisible = !this.mobileDrawerVisible;
+        return;
+      }
+
+      this.collapsed = !this.collapsed;
     },
     getCachedMenuTree() {
       const cachedMenuTree = normalizeMenuTree(
@@ -148,6 +168,7 @@ export const useMenuStore = defineStore('menu', {
       this.menuOptions = [];
       this.switchModulesList = [];
       this.collapsed = false;
+      this.mobileDrawerVisible = false;
     },
     filterAsyncRouter(routerMap: LayoutT.MenuItem[]): RouteRecordRaw[] {
       const accessedRouters: RouteRecordRaw[] = [];

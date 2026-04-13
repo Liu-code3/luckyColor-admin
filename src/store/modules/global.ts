@@ -31,6 +31,7 @@ interface IGlobalState {
   isLocked: boolean;
   layout: string;
   locale: AppLocale;
+  isMobile: boolean;
   isDark: globalThis.WritableComputedRef<boolean>;
   primaryColor: string;
   naiveThemeOverrides: GlobalThemeOverrides;
@@ -60,6 +61,7 @@ export const useGlobalStore = defineStore('layout', {
     isLocked: tool.session.get(Global.LOCK_SCREEN) ?? false,
     layout: tool.session.get(Global.LAYOUT) ?? sysConfig.LUCK_LAYOUT,
     locale: getStoredLocale(),
+    isMobile: false,
     isDark: useDark(),
     primaryColor: tool.session.get(Global.PRIMARY_COLOR) ?? sysConfig.COLOR,
     naiveThemeOverrides: tool.session.get(Global.NaiveThemeOverrides) ?? naiveThemeOverrides,
@@ -83,6 +85,9 @@ export const useGlobalStore = defineStore('layout', {
       this.locale = locale;
       tool.data.set(LOCALE_STORAGE_KEY, locale);
       setI18nLanguage(locale);
+    },
+    updateIsMobile(isMobile: boolean) {
+      this.isMobile = isMobile;
     },
     updateShowTabs(showTabs: boolean) {
       this.showTabs = showTabs;
