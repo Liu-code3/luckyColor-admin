@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm dev:springboot",
-    "dev:springboot": "vite --mode springboot",
+    "dev:springboot": "node ./scripts/dev-springboot.mjs",
     "dev:nestjs": "vite --mode nestjs",
     "build": "vite build --mode prod",
     "build:dev": "pnpm build:springboot",
