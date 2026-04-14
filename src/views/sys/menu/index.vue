@@ -41,6 +41,7 @@ interface MenuFormState {
 const message = useMessage();
 const menuButtonCodes = BUTTON_PERMISSION_CODES.systemMenu;
 const { hasPermission } = usePermission();
+const MENU_SEARCH_STORAGE_KEY = 'AUTH_MENU_SEARCH_TITLE';
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -397,6 +398,7 @@ function handleSearch() {
 
 function handleReset() {
   searchTitle.value = '';
+  window.sessionStorage.removeItem(MENU_SEARCH_STORAGE_KEY);
 }
 
 function openCreateDrawer(parentId = 0, parentMenu?: MenuRecord) {
@@ -588,7 +590,20 @@ async function handleDeleteMenu(menu: MenuRecord) {
 }
 
 onMounted(() => {
+  const cachedSearchTitle = window.sessionStorage.getItem(MENU_SEARCH_STORAGE_KEY);
+  if (cachedSearchTitle) {
+    searchTitle.value = cachedSearchTitle;
+  }
   fetchMenuTree();
+});
+
+watch(searchTitle, (value) => {
+  if (!value) {
+    window.sessionStorage.removeItem(MENU_SEARCH_STORAGE_KEY);
+    return;
+  }
+
+  window.sessionStorage.setItem(MENU_SEARCH_STORAGE_KEY, value);
 });
 </script>
 

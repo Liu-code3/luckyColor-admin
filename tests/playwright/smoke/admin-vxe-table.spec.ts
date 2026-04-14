@@ -11,8 +11,7 @@ test('VxeTable 功能演示页面冒烟', async ({ page }) => {
   attachDiagnostics(page, diagnostics);
 
   await loginAsAdmin(page);
-  await page.locator('.modular_box').getByText('功能演示', { exact: true }).click();
-  await page.getByRole('menuitem', { name: 'VxeTable' }).click();
+  await page.goto('/featureDemo/vxeTable');
   await page.waitForLoadState('networkidle');
 
   await expect(page.locator('body')).toContainText('新增用户');

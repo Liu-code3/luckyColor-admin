@@ -17,6 +17,6 @@ test('登录页不再出现 Icon 组件解析 warning', async ({ page }) => {
 
   await page.goto(`${FRONTEND_URL}/login`);
   await page.waitForLoadState('networkidle');
-  await expect(page.getByRole('button', { name: '登录' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /进入工作台|Enter workspace/ })).toBeVisible();
   expect(iconWarnings).toEqual([]);
 });

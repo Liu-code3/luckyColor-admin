@@ -15,7 +15,7 @@
 ```text
 system:user:create
 system:user:update
-tenant:manage:create
+tenant:create
 tenant:package:delete
 ```
 
@@ -49,8 +49,8 @@ tenant:package:delete
 - `dict`
 - `config`
 - `notice`
-- `manage`
 - `package`
+- `tenant`
 
 约束：
 
@@ -70,9 +70,8 @@ tenant:package:delete
 - `import`
 - `change-status`
 - `reset-password`
-- `assign`
-- `bind`
-- `grant`
+- `assign-role`
+- `authorize`
 
 约束：
 
@@ -92,10 +91,9 @@ system:user:create
 system:user:update
 system:user:delete
 system:user:reset-password
-system:user:assign
+system:user:assign-role
 system:user:import
 system:user:export
-system:user:change-status
 ```
 
 ### 3.2 角色管理
@@ -105,8 +103,7 @@ system:role:query
 system:role:create
 system:role:update
 system:role:delete
-system:role:grant
-system:role:change-status
+system:role:authorize
 ```
 
 ### 3.3 菜单管理
@@ -116,7 +113,6 @@ system:menu:query
 system:menu:create
 system:menu:update
 system:menu:delete
-system:menu:change-status
 ```
 
 ### 3.4 部门管理
@@ -126,18 +122,15 @@ system:department:query
 system:department:create
 system:department:update
 system:department:delete
-system:department:change-status
 ```
 
 ### 3.5 租户管理
 
 ```text
-tenant:manage:query
-tenant:manage:create
-tenant:manage:update
-tenant:manage:delete
-tenant:manage:change-status
-tenant:manage:bind
+tenant:query
+tenant:create
+tenant:update
+tenant:delete
 ```
 
 ### 3.6 租户套餐
@@ -147,7 +140,6 @@ tenant:package:query
 tenant:package:create
 tenant:package:update
 tenant:package:delete
-tenant:package:bind
 ```
 
 ## 4. 与菜单字段的关系
@@ -174,6 +166,7 @@ tenant:package:bind
 - 页面里不要散落硬编码权限字符串
 - 优先从 `src/constants/permission.ts` 引用权限码
 - 同一页面的权限码应集中声明后复用
+- 当前前端常量值已经按 Spring Boot 真实权限码对齐，业务分组名允许保留 `tenantManage`、`grant`、`bind` 这类前端语义化命名
 
 ## 6. 超级管理员约定
 

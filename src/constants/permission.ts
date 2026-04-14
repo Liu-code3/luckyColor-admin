@@ -8,13 +8,13 @@ export const BUTTON_PERMISSION_CODES = {
     create: 'system:user:create',
     update: 'system:user:update',
     delete: 'system:user:delete',
-    assign: 'system:user:assign'
+    assign: 'system:user:assign-role'
   },
   systemRole: {
     create: 'system:role:create',
     update: 'system:role:update',
     delete: 'system:role:delete',
-    grant: 'system:role:grant'
+    grant: 'system:role:authorize'
   },
   systemMenu: {
     create: 'system:menu:create',
@@ -27,16 +27,16 @@ export const BUTTON_PERMISSION_CODES = {
     delete: 'system:department:delete'
   },
   tenantManage: {
-    create: 'tenant:manage:create',
-    update: 'tenant:manage:update',
-    delete: 'tenant:manage:delete',
-    changeStatus: 'tenant:manage:change-status'
+    create: 'tenant:create',
+    update: 'tenant:update',
+    delete: 'tenant:delete',
+    changeStatus: 'tenant:update'
   },
   tenantPackage: {
     create: 'tenant:package:create',
     update: 'tenant:package:update',
     delete: 'tenant:package:delete',
-    bind: 'tenant:package:bind'
+    bind: 'tenant:package:update'
   }
 } as const;
 

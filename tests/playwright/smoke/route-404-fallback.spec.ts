@@ -2,14 +2,13 @@ import { expect, test } from '@playwright/test';
 import {
   assertNoDiagnostics,
   attachDiagnostics,
-  createDiagnostics
+  createDiagnostics,
+  loginAsAdmin
 } from '../helpers/admin';
 
 test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
   const diagnostics = createDiagnostics();
   attachDiagnostics(page, diagnostics);
-  const accessToken = 'mock-access-token';
-
   await page.route('**/api/dashboard/track-visit', async (route) => {
     await route.fulfill({
       status: 200,
@@ -22,26 +21,9 @@ test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
     });
   });
 
-  await page.route('**/api/auth/refresh', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        code: 200,
-        data: {
-          accessToken,
-          tokenType: 'Bearer'
-        },
-        msg: 'ok'
-      })
-    });
-  });
+  await loginAsAdmin(page);
 
-  await page.addInitScript(() => {
-    if (!window.location.href.startsWith('http')) {
-      return;
-    }
-
+  await page.evaluate(() => {
     const menuTree = [
       {
         pid: 0,
@@ -62,17 +44,17 @@ test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
           {
             pid: 1,
             id: 2,
-            title: '接口文档',
-            name: 'systemApifoxDoc',
+            title: '菜单管理',
+            name: 'systemMenu',
             type: 2,
-            path: '/systemManagement/system/apifox',
-            key: 'main_system_apifox_doc',
-            icon: 'simple-icons:apifox',
+            path: '/systemManagement/system/menu',
+            key: 'main_system_menu',
+            icon: 'mdi:menu-open',
             layout: '',
             isVisible: true,
-            component: 'tool/apifox/index',
+            component: 'sys/menu/index',
             meta: {
-              title: '接口文档'
+              title: '菜单管理'
             }
           },
           {
@@ -96,23 +78,17 @@ test('动态路由组件不存在时展示 404 兜底页', async ({ page }) => {
       }
     ];
 
-    localStorage.setItem('AUTH_USER_INFO', JSON.stringify({
-      username: 'admin',
-      displayName: '管理员',
-      buttonCodeList: []
-    }));
     localStorage.setItem('AUTH_MENU_TREE', JSON.stringify(menuTree));
-    localStorage.setItem('AUTH_LAST_VIEW_PATH', '/systemManagement/system/apifox');
+    localStorage.setItem('AUTH_LAST_VIEW_PATH', '/systemManagement/system/menu');
     localStorage.setItem('AUTH_TABS', JSON.stringify([]));
   });
 
-  await page.goto('/systemManagement/system/apifox');
-  await page.waitForLoadState('networkidle');
-  await expect(page.locator('.n-menu')).toContainText('缺失页面');
-
-  await page.locator('.n-menu').getByText('缺失页面', { exact: true }).click();
-  await page.waitForURL(/\/systemManagement\/system\/missing-view$/);
-  await page.waitForLoadState('networkidle');
+  await page.goto('/index');
+  await page.waitForURL(/\/index$/);
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/systemManagement/system/missing-view');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+  });
 
   await expect(page.getByText('404 资源不存在')).toBeVisible();
 

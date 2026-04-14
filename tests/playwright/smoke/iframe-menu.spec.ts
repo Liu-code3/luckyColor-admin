@@ -2,7 +2,8 @@ import { expect, test } from '@playwright/test';
 import {
   assertNoDiagnostics,
   attachDiagnostics,
-  createDiagnostics
+  createDiagnostics,
+  loginAsAdmin
 } from '../helpers/admin';
 
 test('iframe 菜单点击后在当前页渲染内嵌页面', async ({ page }) => {
@@ -11,8 +12,6 @@ test('iframe 菜单点击后在当前页渲染内嵌页面', async ({ page }) =>
   const iframeUrl = `data:text/html;charset=utf-8,${encodeURIComponent(
     '<!doctype html><html lang="zh-CN"><body><h1>Iframe Menu Page</h1></body></html>'
   )}`;
-  const accessToken = 'mock-access-token';
-
   await page.route('**/api/dashboard/track-visit', async (route) => {
     await route.fulfill({
       status: 200,
@@ -25,26 +24,9 @@ test('iframe 菜单点击后在当前页渲染内嵌页面', async ({ page }) =>
     });
   });
 
-  await page.route('**/api/auth/refresh', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        code: 200,
-        data: {
-          accessToken,
-          tokenType: 'Bearer'
-        },
-        msg: 'ok'
-      })
-    });
-  });
+  await loginAsAdmin(page);
 
-  await page.addInitScript(({ iframeUrl }) => {
-    if (!window.location.href.startsWith('http')) {
-      return;
-    }
-
+  await page.evaluate(({ iframeUrl }) => {
     const menuTree = [
       {
         pid: 0,
@@ -65,17 +47,17 @@ test('iframe 菜单点击后在当前页渲染内嵌页面', async ({ page }) =>
           {
             pid: 1,
             id: 2,
-            title: '接口文档',
-            name: 'systemApifoxDoc',
+            title: '菜单管理',
+            name: 'systemMenu',
             type: 2,
-            path: '/systemManagement/system/apifox',
-            key: 'main_system_apifox_doc',
-            icon: 'simple-icons:apifox',
+            path: '/systemManagement/system/menu',
+            key: 'main_system_menu',
+            icon: 'mdi:menu-open',
             layout: '',
             isVisible: true,
-            component: 'tool/apifox/index',
+            component: 'sys/menu/index',
             meta: {
-              title: '接口文档'
+              title: '菜单管理'
             }
           },
           {
@@ -100,17 +82,12 @@ test('iframe 菜单点击后在当前页渲染内嵌页面', async ({ page }) =>
       }
     ];
 
-    localStorage.setItem('AUTH_USER_INFO', JSON.stringify({
-      username: 'admin',
-      displayName: '管理员',
-      buttonCodeList: []
-    }));
     localStorage.setItem('AUTH_MENU_TREE', JSON.stringify(menuTree));
-    localStorage.setItem('AUTH_LAST_VIEW_PATH', '/systemManagement/system/apifox');
+    localStorage.setItem('AUTH_LAST_VIEW_PATH', '/systemManagement/system/menu');
     localStorage.setItem('AUTH_TABS', JSON.stringify([]));
   }, { iframeUrl });
 
-  await page.goto('/systemManagement/system/apifox');
+  await page.goto('/systemManagement/system/menu');
   await page.waitForLoadState('networkidle');
 
   await expect(page.locator('.n-menu')).toContainText('内嵌文档');

@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url';
+
 const API_BASE_URL = process.env.MENU_SYNC_API_URL || 'http://127.0.0.1:3001';
 const LOGIN_USERNAME = process.env.MENU_SYNC_USERNAME || 'admin';
 const LOGIN_PASSWORD = process.env.MENU_SYNC_PASSWORD || '123456';
@@ -14,23 +16,63 @@ async function request(path, options = {}, token) {
     }
   });
 
-  const data = await response.json();
+  const data = parseJsonWithSafeIntegers(await response.text());
   if (!response.ok || data.code !== 200)
     throw new Error(`Request failed for ${path}: ${JSON.stringify(data)}`);
 
   return data.data;
 }
 
+function parseJsonWithSafeIntegers(payload) {
+  return JSON.parse(payload.replace(/(?<!["\d])(-?\d{16,})(?![\d"])/gu, '"$1"'));
+}
+
 async function login() {
+  const captchaChallenge = await request('/api/auth/captcha/challenge', {
+    method: 'GET'
+  });
+
+  const captchaTokenPayload = await request('/api/auth/captcha/verify', {
+    method: 'POST',
+    body: JSON.stringify({
+      captchaId: captchaChallenge.captchaId,
+      answer: resolveCaptchaAnswer(captchaChallenge.captchaSvg)
+    })
+  });
+
   const data = await request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({
       username: LOGIN_USERNAME,
-      password: LOGIN_PASSWORD
+      password: LOGIN_PASSWORD,
+      captchaToken: captchaTokenPayload.captchaToken
     })
   });
 
   return data.accessToken;
+}
+
+function resolveCaptchaAnswer(captchaSvg) {
+  const expression = extractCaptchaExpression(captchaSvg);
+  const match = expression.match(/(\d+)\s*([+-])\s*(\d+)\s*=\s*\?/u);
+
+  if (!match) {
+    throw new Error(`Unrecognized captcha expression: ${expression}`);
+  }
+
+  const left = Number.parseInt(match[1], 10);
+  const operator = match[2];
+  const right = Number.parseInt(match[3], 10);
+  return String(operator === '+' ? left + right : left - right);
+}
+
+function extractCaptchaExpression(captchaSvg) {
+  const match = captchaSvg.match(/<text[^>]*>([^<]+)<\/text>/iu);
+  if (!match?.[1]) {
+    throw new Error(`Captcha SVG does not contain an expression: ${captchaSvg}`);
+  }
+
+  return match[1].replace(/\s+/gu, ' ').trim();
 }
 
 async function ensureMenu({ existingMenus, token, payload, matchers }) {
@@ -69,16 +111,17 @@ async function ensureMenu({ existingMenus, token, payload, matchers }) {
   return created.id;
 }
 
-async function syncMenus() {
+export async function syncMenus() {
   const token = await login();
-  const menuPage = await request('/api/menus?page=1&size=500', {}, token);
-  const systemRoot = menuPage.records.find(item => item.path === '/systemManagement');
+  const menuTree = await request('/api/menus/tree', {}, token);
+  const existingMenus = flattenMenus(menuTree);
+  const systemRoot = existingMenus.find(item => item.path === '/systemManagement');
 
   if (!systemRoot)
     throw new Error('System root menu not found');
 
   const tenantCenterRootId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: null,
@@ -158,7 +201,7 @@ async function syncMenus() {
   ];
 
   const featureDemoRootId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: null,
@@ -188,7 +231,7 @@ async function syncMenus() {
   const ensuredMenuIds = [tenantCenterRootId, featureDemoRootId];
 
   const apifoxMenuId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: null,
@@ -218,7 +261,7 @@ async function syncMenus() {
   ensuredMenuIds.push(apifoxMenuId);
 
   const apifoxDocMenuId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: apifoxMenuId,
@@ -249,7 +292,7 @@ async function syncMenus() {
   ensuredMenuIds.push(apifoxDocMenuId);
 
   const apifoxCodegenMenuId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: apifoxMenuId,
@@ -280,7 +323,7 @@ async function syncMenus() {
   ensuredMenuIds.push(apifoxCodegenMenuId);
 
   const vxeTableMenuId = await ensureMenu({
-    existingMenus: menuPage.records,
+    existingMenus,
     token,
     payload: {
       parentId: featureDemoRootId,
@@ -314,7 +357,7 @@ async function syncMenus() {
 
   for (const item of systemMenus) {
     const id = await ensureMenu({
-      existingMenus: menuPage.records,
+      existingMenus,
       token,
       payload: {
         parentId: systemRoot.id,
@@ -344,7 +387,7 @@ async function syncMenus() {
 
   for (const item of tenantMenus) {
     const id = await ensureMenu({
-      existingMenus: menuPage.records,
+      existingMenus,
       token,
       payload: {
         parentId: tenantCenterRootId,
@@ -378,7 +421,7 @@ async function syncMenus() {
 
   for (const role of targetRoles) {
     const roleMenuData = await request(`/api/roles/${role.id}/menus`, {}, token);
-    const nextMenuIds = Array.from(new Set([...roleMenuData.menuIds, ...ensuredMenuIds])).sort((a, b) => a - b);
+    const nextMenuIds = uniqueSortedIds([...(roleMenuData.menuIds || []), ...ensuredMenuIds]);
 
     await request(`/api/roles/${role.id}/menus`, {
       method: 'PUT',
@@ -397,13 +440,44 @@ async function syncMenus() {
   };
 }
 
-syncMenus()
-  .then((result) => {
-    console.log(`Synced menus for tenant ${result.tenantId}: system root ${result.systemRootId}, tenant root ${result.tenantCenterRootId}`);
-    console.log(`Ensured menu ids: ${result.ensuredMenuIds.join(', ')}`);
-    console.log(`Assigned roles: ${result.assignedRoleCodes.join(', ')}`);
-  })
-  .catch((error) => {
-    console.error(error.message);
-    process.exitCode = 1;
+function uniqueSortedIds(values) {
+  return Array.from(new Set(values.map(value => String(value)))).sort((left, right) => {
+    const leftId = BigInt(left);
+    const rightId = BigInt(right);
+    if (leftId === rightId)
+      return 0;
+    return leftId < rightId ? -1 : 1;
   });
+}
+
+function flattenMenus(items) {
+  const flattened = [];
+
+  const visit = (records) => {
+    for (const record of records || []) {
+      flattened.push(record);
+      if (Array.isArray(record.children) && record.children.length > 0) {
+        visit(record.children);
+      }
+    }
+  };
+
+  visit(items);
+  return flattened;
+}
+
+const invokedPath = process.argv[1];
+const isDirectRun = invokedPath ? import.meta.url === pathToFileURL(invokedPath).href : false;
+
+if (isDirectRun) {
+  syncMenus()
+    .then((result) => {
+      console.log(`Synced menus for tenant ${result.tenantId}: system root ${result.systemRootId}, tenant root ${result.tenantCenterRootId}`);
+      console.log(`Ensured menu ids: ${result.ensuredMenuIds.join(', ')}`);
+      console.log(`Assigned roles: ${result.assignedRoleCodes.join(', ')}`);
+    })
+    .catch((error) => {
+      console.error(error.message);
+      process.exitCode = 1;
+    });
+}

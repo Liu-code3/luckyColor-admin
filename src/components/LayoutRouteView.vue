@@ -3,7 +3,6 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import { RouterView, useRoute } from 'vue-router'
 
 const route = useRoute()
-const keepAliveRouteNames = ref<string[]>([])
 
 function shouldKeepAliveRoute(currentRoute: RouteLocationNormalizedLoaded) {
   return Boolean(currentRoute.meta?.keepAlive && currentRoute.name)
@@ -16,27 +15,12 @@ function resolveRouteRenderKey(currentRoute: RouteLocationNormalizedLoaded) {
 
   return currentRoute.fullPath
 }
-
-watch(
-  () => [route.name, route.fullPath, route.meta?.keepAlive],
-  () => {
-    if (!shouldKeepAliveRoute(route) || !route.name) {
-      return
-    }
-
-    const routeName = String(route.name)
-    if (!keepAliveRouteNames.value.includes(routeName)) {
-      keepAliveRouteNames.value = [ ...keepAliveRouteNames.value, routeName ]
-    }
-  },
-  { immediate: true }
-)
 </script>
 
 <template>
   <RouterView v-slot="{ Component, route: currentRoute }">
     <transition name="layout-route-fade" mode="out-in">
-      <KeepAlive :include="keepAliveRouteNames">
+      <KeepAlive>
         <component
           v-if="Component && shouldKeepAliveRoute(currentRoute)"
           :is="Component"

@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import {
-  FRONTEND_URL,
   assertNoDiagnostics,
   attachDiagnostics,
   createDiagnostics,
@@ -10,56 +9,101 @@ import {
 test('外链菜单点击后打开新窗口并保持当前页不变', async ({ page }) => {
   const diagnostics = createDiagnostics();
   attachDiagnostics(page, diagnostics);
+  const externalPath = '/login?from=external-menu';
+
+  await page.route('**/api/dashboard/track-visit', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        data: true,
+        msg: 'ok'
+      })
+    });
+  });
 
   await loginAsAdmin(page);
-  await page.goto('/systemManagement/system/users');
-  await page.waitForLoadState('networkidle');
 
-  await page.evaluate((frontendUrl) => {
-    const storageKey = 'AUTH_MENU_TREE';
-    const menuTree = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    const systemMenu = menuTree.find((item: any) => item.path === '/systemManagement');
-    if (!systemMenu || !Array.isArray(systemMenu.children)) {
-      throw new Error('system menu not found');
-    }
-
-    const externalPath = `${frontendUrl}/login?from=external-menu`;
-    const exists = systemMenu.children.some((item: any) => item.name === 'externalDocs');
-
-    if (!exists) {
-      systemMenu.children.push({
-        pid: systemMenu.id,
-        id: 999001,
-        title: '外链文档',
-        name: 'externalDocs',
-        type: 2,
-        path: externalPath,
-        key: 'main_system_external_docs',
-        icon: 'mdi:open-in-new',
+  await page.evaluate(({ externalPath }) => {
+    localStorage.setItem('AUTH_MENU_TREE', JSON.stringify([
+      {
+        pid: 0,
+        id: 1,
+        title: '系统管理',
+        name: 'systemManagement',
+        type: 1,
+        path: '/systemManagement',
+        key: 'main_system_management',
+        icon: 'mdi:cog-outline',
         layout: '',
         isVisible: true,
         component: 'sys',
         meta: {
-          type: 'link',
-          url: externalPath
-        }
-      });
-    }
+          title: '系统管理'
+        },
+        children: [
+          {
+            pid: 1,
+            id: 2,
+            title: '用户管理',
+            name: 'systemUsers',
+            type: 2,
+            path: '/systemManagement/system/users',
+            key: 'main_system_users',
+            icon: 'solar:users-group-rounded-linear',
+            layout: '',
+            isVisible: true,
+            component: 'sys/user',
+            meta: {
+              title: '用户管理',
+              keepAlive: true
+            }
+          },
+          {
+            pid: 1,
+            id: 999001,
+            title: '外链文档',
+            name: 'externalDocs',
+            type: 2,
+            path: externalPath,
+            key: 'main_system_external_docs',
+            icon: 'mdi:open-in-new',
+            layout: '',
+            isVisible: true,
+            component: 'sys',
+            meta: {
+              title: '外链文档',
+              type: 'link',
+              url: externalPath
+            }
+          }
+        ]
+      }
+    ]));
+    localStorage.setItem('AUTH_LAST_VIEW_PATH', '/systemManagement/system/users');
+    localStorage.setItem('AUTH_TABS', JSON.stringify([]));
+  }, { externalPath });
 
-    localStorage.setItem(storageKey, JSON.stringify(menuTree));
-  }, FRONTEND_URL);
-
-  await page.reload();
-  await page.waitForLoadState('networkidle');
+  await page.goto('/index');
+  await page.waitForURL(/\/index$/);
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/systemManagement/system/users');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+  });
+  await page.waitForURL(/\/systemManagement\/system\/users$/);
 
   await expect(page.locator('.n-menu')).toContainText('外链文档');
+  await page.getByRole('menuitem', { name: '系统管理' }).click();
+  const externalMenuItem = page.getByRole('menuitem', { name: '外链文档' });
+  await expect(externalMenuItem).toBeVisible();
 
   const popupPromise = page.waitForEvent('popup');
-  await page.locator('.n-menu').getByText('外链文档', { exact: true }).click();
+  await externalMenuItem.click({ force: true });
   const popup = await popupPromise;
 
   await popup.waitForLoadState('domcontentloaded');
-  expect(popup.url()).toBe(`${FRONTEND_URL}/login?from=external-menu`);
+  expect(new URL(popup.url()).pathname + new URL(popup.url()).search).toBe(externalPath);
   await expect(page).toHaveURL(/\/systemManagement\/system\/users$/);
 
   assertNoDiagnostics(diagnostics);

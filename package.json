@@ -14,8 +14,8 @@
     "preview": "vite preview --mode prod",
     "typecheck": "pnpm exec tsc --noEmit && pnpm exec tsc -p tsconfig.node.json --noEmit",
     "sync:menus": "node ./scripts/sync-system-menus.mjs",
-    "test:smoke": "pnpm sync:menus && playwright test",
-    "test:smoke:headed": "pnpm sync:menus && playwright test --headed"
+    "test:smoke": "node ./scripts/run-smoke-tests.mjs",
+    "test:smoke:headed": "node ./scripts/run-smoke-tests.mjs --headed"
   },
   "dependencies": {
     "@kviewui/color-builder": "^1.0.5",

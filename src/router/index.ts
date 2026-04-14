@@ -73,7 +73,7 @@ function shouldRestoreLastVisitedPath(
     lastPath
     && lastPath !== sysConfig.DASHBOARD_URL
     && to.path === sysConfig.DASHBOARD_URL
-    && to.redirectedFrom?.path === '/'
+    && (!to.redirectedFrom || to.redirectedFrom.path === '/')
   );
 }
 
@@ -121,6 +121,9 @@ router.beforeEach(async (to) => {
   if (!menuStore.hasDynamicRoutes()) {
     const restored = menuStore.restoreRoutesFromCache();
     if (restored) {
+      if (shouldRestoreLastVisitedPath(to, lastPath)) {
+        return { path: lastPath, replace: true };
+      }
       return buildRetryNavigationTarget(to.fullPath);
     }
   }

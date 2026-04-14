@@ -11,7 +11,7 @@ test('隐藏菜单不会出现在导航中但路由仍可访问', async ({ page 
   attachDiagnostics(page, diagnostics);
 
   await loginAsAdmin(page);
-  await page.locator('.modular_box').getByText('系统管理', { exact: true }).click();
+  await page.getByRole('menuitem', { name: '系统管理' }).click();
   await expect(page.locator('.n-menu')).toContainText('字典管理');
 
   await page.evaluate(() => {
@@ -34,15 +34,16 @@ test('隐藏菜单不会出现在导航中但路由仍可访问', async ({ page 
     localStorage.setItem(storageKey, JSON.stringify(menuTree));
   });
 
-  await page.goto('/systemManagement/system/users');
+  await page.goto('/index');
   await page.waitForLoadState('networkidle');
-  await page.reload();
-  await page.waitForLoadState('networkidle');
+  await page.getByRole('menuitem', { name: '系统管理' }).click();
 
   await expect(page.locator('.n-menu')).not.toContainText('字典管理');
 
-  await page.goto('/systemManagement/system/dict');
-  await page.waitForLoadState('networkidle');
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/systemManagement/system/dict');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
+  });
   await expect(page.locator('.n-tree')).toBeVisible();
   await expect(page.locator('.dict-table-card')).toBeVisible();
 
