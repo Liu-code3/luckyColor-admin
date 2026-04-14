@@ -9,7 +9,7 @@ export const LOGIN_USERNAME = process.env.PLAYWRIGHT_LOGIN_USERNAME || 'admin';
 export const LOGIN_PASSWORD = process.env.PLAYWRIGHT_LOGIN_PASSWORD || '123456';
 export const LOGIN_TENANT_ID = process.env.PLAYWRIGHT_TENANT_ID || 'tenant_001';
 
-const SESSION_CACHE_PATH = path.join(os.tmpdir(), 'luckycolor-playwright-admin-session-v2.json');
+const SESSION_CACHE_PATH = path.join(os.tmpdir(), 'luckycolor-playwright-admin-session-v3.json');
 const SESSION_LOCK_PATH = `${SESSION_CACHE_PATH}.lock`;
 const SESSION_TTL_MS = 10 * 60 * 1000;
 
@@ -35,6 +35,8 @@ interface AdminSessionCache {
   };
   menuTree: unknown[];
 }
+
+export interface AdminSessionSnapshot extends AdminSessionCache {}
 
 export interface PageDiagnostics {
   consoleErrors: string[];
@@ -125,6 +127,10 @@ export async function loginAsAdmin(page: Page) {
       return false;
     }
   });
+}
+
+export async function getAdminSessionSnapshot(page: Page): Promise<AdminSessionSnapshot> {
+  return getAdminSession(page);
 }
 
 export function assertNoDiagnostics(diagnostics: PageDiagnostics) {
