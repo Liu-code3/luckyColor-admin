@@ -1,0 +1,257 @@
+:root {
+  --layout-sider-bg: #0f172a;
+  --layout-sider-text: rgba(226, 232, 240, 0.86);
+  --layout-sider-text-active: #ffffff;
+  --layout-sider-sub-text: #dbe4f0;
+  --layout-sider-hover: rgba(148, 163, 184, 0.16);
+  --layout-sider-hover-text: #ffffff;
+  --layout-sider-hover-border: rgba(148, 163, 184, 0.22);
+  --layout-sider-border: rgba(148, 163, 184, 0.12);
+  --layout-sider-accent: #1890ff;
+  --layout-sider-selected-bg: rgba(15, 118, 110, 0.34);
+  --layout-sider-selected-text: #ffffff;
+  --layout-sider-selected-border: rgba(45, 212, 191, 0.22);
+
+  --lc-page-bg:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 26%),
+    linear-gradient(180deg, #f4fbfb 0%, #f8fafc 42%, #eef6ff 100%);
+  --lc-surface: rgba(255, 255, 255, 0.82);
+  --lc-surface-strong: rgba(255, 255, 255, 0.94);
+  --lc-surface-muted: rgba(248, 250, 252, 0.88);
+  --lc-border: rgba(15, 23, 42, 0.08);
+  --lc-border-strong: rgba(15, 23, 42, 0.14);
+  --lc-shadow-sm: 0 10px 24px rgba(15, 23, 42, 0.05);
+  --lc-shadow-md: 0 18px 44px rgba(15, 23, 42, 0.07);
+  --lc-shadow-lg: 0 24px 64px rgba(15, 23, 42, 0.1);
+  --lc-text-strong: #0f172a;
+  --lc-text-soft: #516074;
+  --lc-text-muted: #7b8a9d;
+  --lc-accent: #0f766e;
+  --lc-accent-hover: #129082;
+  --lc-accent-pressed: #0b5f5a;
+  --lc-accent-soft: rgba(15, 118, 110, 0.12);
+  --lc-accent-soft-strong: rgba(15, 118, 110, 0.18);
+  --lc-accent-faint: rgba(15, 118, 110, 0.06);
+  --lc-accent-border: rgba(15, 118, 110, 0.18);
+  --lc-accent-shadow: rgba(15, 118, 110, 0.18);
+  --lc-grid-line: rgba(148, 163, 184, 0.16);
+  --lc-backdrop: blur(18px);
+
+  --lc-login-page-bg:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(140deg, #06131d 0%, #0b2230 38%, #103f52 100%);
+  --lc-login-grid-line: rgba(255, 255, 255, 0.08);
+  --lc-login-grid-opacity: 0.16;
+  --lc-login-switcher-bg: rgba(6, 19, 29, 0.42);
+  --lc-login-switcher-border: rgba(255, 255, 255, 0.12);
+  --lc-login-switcher-text: rgba(255, 255, 255, 0.86);
+  --lc-login-switcher-chip-bg: rgba(255, 255, 255, 0.08);
+  --lc-login-card-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 252, 0.95) 58%, rgba(239, 245, 247, 0.93)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0));
+  --lc-login-card-border: rgba(255, 255, 255, 0.72);
+  --lc-login-card-shadow:
+    0 30px 78px rgba(2, 12, 27, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -1px 0 rgba(148, 163, 184, 0.1);
+  --lc-login-card-outline: linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(15, 118, 110, 0.18), rgba(249, 115, 22, 0.12));
+  --lc-login-card-glow-top: radial-gradient(circle, rgba(15, 118, 110, 0.22) 0%, rgba(15, 118, 110, 0.04) 60%, transparent 76%);
+  --lc-login-card-glow-bottom: radial-gradient(circle, rgba(249, 115, 22, 0.14) 0%, rgba(249, 115, 22, 0.03) 60%, transparent 76%);
+  --lc-login-divider: rgba(148, 163, 184, 0.16);
+  --lc-login-eyebrow-bg: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(15, 118, 110, 0.06));
+  --lc-login-eyebrow-text: #0f172a;
+  --lc-login-badge-bg: rgba(255, 255, 255, 0.76);
+  --lc-login-badge-border: rgba(15, 118, 110, 0.12);
+  --lc-login-badge-text: #0f766e;
+  --lc-login-demo-bg:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(249, 115, 22, 0.12) 82%),
+    rgba(255, 255, 255, 0.92);
+  --lc-login-demo-border: rgba(255, 255, 255, 0.92);
+  --lc-login-demo-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 10px 24px rgba(15, 23, 42, 0.05);
+  --lc-login-form-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+  --lc-login-form-border: rgba(226, 232, 240, 0.9);
+  --lc-login-form-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 14px 28px rgba(15, 23, 42, 0.04);
+  --lc-login-refresh-bg: rgba(255, 255, 255, 0.86);
+  --lc-login-refresh-border: rgba(148, 163, 184, 0.22);
+  --lc-login-refresh-text: #0f766e;
+  --lc-login-refresh-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  --lc-login-input-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  --lc-login-input-border: rgba(148, 163, 184, 0.16);
+  --lc-login-input-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.16),
+    0 10px 22px rgba(15, 23, 42, 0.05);
+  --lc-login-input-focus-border: rgba(15, 118, 110, 0.26);
+  --lc-login-input-focus-ring: rgba(15, 118, 110, 0.08);
+  --lc-login-input-focus-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+  --lc-login-input-highlight: rgba(255, 255, 255, 0.04);
+  --lc-login-button-highlight: rgba(255, 255, 255, 0.22);
+  --lc-login-input-icon: #0f766e;
+  --lc-login-field-text: #2a2117;
+  --lc-login-brand-panel-bg: rgba(255, 255, 255, 0.08);
+  --lc-login-brand-panel-border: rgba(255, 255, 255, 0.08);
+  --lc-login-brand-text: #f8fafc;
+  --lc-login-brand-muted: rgba(241, 245, 249, 0.76);
+  --lc-login-brand-badge-bg: rgba(255, 255, 255, 0.08);
+  --lc-login-brand-badge-border: rgba(255, 255, 255, 0.12);
+  --lc-login-brand-card-bg: rgba(255, 255, 255, 0.05);
+  --lc-login-brand-card-border: rgba(255, 255, 255, 0.08);
+  --lc-login-orb-secondary: radial-gradient(circle, rgba(249, 115, 22, 0.16) 0%, transparent 72%);
+
+  --lc-dashboard-card-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 252, 0.98)),
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.12), transparent 36%);
+  --lc-dashboard-card-border: rgba(14, 116, 144, 0.08);
+  --lc-dashboard-card-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  --lc-dashboard-hero-bg:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 30%),
+    linear-gradient(135deg, #fff 0%, #f6fbff 55%, #effaf7 100%);
+  --lc-dashboard-hero-avatar-bg: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --lc-dashboard-hero-avatar-text: #ffffff;
+  --lc-dashboard-hero-avatar-shadow: 0 14px 30px rgba(15, 118, 110, 0.22);
+  --lc-dashboard-kicker: #0f766e;
+  --lc-dashboard-icon-bg: color-mix(in srgb, var(--accent, #2563eb) 14%, white);
+  --lc-dashboard-tag-bg: rgba(15, 118, 110, 0.1);
+  --lc-dashboard-tag-text: #0f766e;
+  --lc-dashboard-chart-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.88));
+  --lc-dashboard-chart-grid: rgba(148, 163, 184, 0.24);
+  --lc-dashboard-chart-axis: #64748b;
+  --lc-dashboard-chart-focus: rgba(37, 99, 235, 0.18);
+  --lc-dashboard-chart-dot-stroke: #ffffff;
+  --lc-dashboard-chart-tooltip-bg: rgba(255, 255, 255, 0.98);
+  --lc-dashboard-chart-tooltip-border: rgba(148, 163, 184, 0.26);
+  --lc-dashboard-chart-tooltip-title: #0f172a;
+  --lc-dashboard-chart-tooltip-text: #475569;
+  --lc-dashboard-chart-active-shadow: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.2));
+  --lc-dashboard-muted-surface: rgba(248, 250, 252, 0.88);
+  --lc-dashboard-item-bg: rgba(255, 255, 255, 0.82);
+  --lc-dashboard-item-border: rgba(148, 163, 184, 0.14);
+  --lc-dashboard-item-hover-border: rgba(14, 165, 233, 0.22);
+  --lc-dashboard-item-hover-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+html.dark {
+  --lc-page-bg:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 24%),
+    linear-gradient(180deg, #09111f 0%, #0b1220 44%, #0f172a 100%);
+  --lc-surface: rgba(15, 23, 42, 0.78);
+  --lc-surface-strong: rgba(15, 23, 42, 0.92);
+  --lc-surface-muted: rgba(30, 41, 59, 0.88);
+  --lc-border: rgba(148, 163, 184, 0.18);
+  --lc-border-strong: rgba(148, 163, 184, 0.24);
+  --lc-shadow-sm: 0 12px 24px rgba(2, 6, 23, 0.24);
+  --lc-shadow-md: 0 18px 44px rgba(2, 6, 23, 0.3);
+  --lc-shadow-lg: 0 28px 72px rgba(2, 6, 23, 0.4);
+  --lc-text-strong: #e2e8f0;
+  --lc-text-soft: #cbd5e1;
+  --lc-text-muted: #94a3b8;
+  --lc-accent-soft: rgba(45, 212, 191, 0.16);
+  --lc-accent-soft-strong: rgba(45, 212, 191, 0.24);
+  --lc-accent-faint: rgba(45, 212, 191, 0.12);
+  --lc-accent-border: rgba(45, 212, 191, 0.24);
+  --lc-accent-shadow: rgba(45, 212, 191, 0.24);
+  --lc-grid-line: rgba(148, 163, 184, 0.18);
+
+  --lc-login-page-bg:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 28%),
+    linear-gradient(145deg, #030712 0%, #08111f 36%, #0f172a 100%);
+  --lc-login-grid-line: rgba(148, 163, 184, 0.12);
+  --lc-login-grid-opacity: 0.2;
+  --lc-login-switcher-bg: rgba(9, 14, 27, 0.66);
+  --lc-login-switcher-border: rgba(148, 163, 184, 0.18);
+  --lc-login-switcher-text: rgba(226, 232, 240, 0.92);
+  --lc-login-switcher-chip-bg: rgba(30, 41, 59, 0.78);
+  --lc-login-card-bg:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.88) 58%, rgba(17, 24, 39, 0.84)),
+    linear-gradient(135deg, rgba(148, 163, 184, 0.08), rgba(255, 255, 255, 0));
+  --lc-login-card-border: rgba(148, 163, 184, 0.22);
+  --lc-login-card-shadow:
+    0 34px 82px rgba(2, 6, 23, 0.52),
+    inset 0 1px 0 rgba(148, 163, 184, 0.08),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.26);
+  --lc-login-card-outline: linear-gradient(145deg, rgba(148, 163, 184, 0.24), rgba(45, 212, 191, 0.24), rgba(59, 130, 246, 0.18));
+  --lc-login-card-glow-top: radial-gradient(circle, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0.02) 62%, transparent 78%);
+  --lc-login-card-glow-bottom: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.03) 60%, transparent 76%);
+  --lc-login-divider: rgba(148, 163, 184, 0.18);
+  --lc-login-eyebrow-bg: linear-gradient(135deg, rgba(45, 212, 191, 0.18), rgba(59, 130, 246, 0.16));
+  --lc-login-eyebrow-text: #e2e8f0;
+  --lc-login-badge-bg: rgba(15, 23, 42, 0.66);
+  --lc-login-badge-border: rgba(45, 212, 191, 0.14);
+  --lc-login-badge-text: #7dd3fc;
+  --lc-login-demo-bg:
+    linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(59, 130, 246, 0.14) 82%),
+    rgba(15, 23, 42, 0.72);
+  --lc-login-demo-border: rgba(148, 163, 184, 0.18);
+  --lc-login-demo-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.08),
+    0 12px 28px rgba(2, 6, 23, 0.28);
+  --lc-login-form-bg: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(17, 24, 39, 0.9));
+  --lc-login-form-border: rgba(148, 163, 184, 0.18);
+  --lc-login-form-shadow:
+    inset 0 1px 0 rgba(148, 163, 184, 0.06),
+    0 18px 32px rgba(2, 6, 23, 0.24);
+  --lc-login-refresh-bg: rgba(15, 23, 42, 0.76);
+  --lc-login-refresh-border: rgba(148, 163, 184, 0.2);
+  --lc-login-refresh-text: #7dd3fc;
+  --lc-login-refresh-shadow: 0 12px 24px rgba(2, 6, 23, 0.32);
+  --lc-login-input-bg: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(17, 24, 39, 0.92));
+  --lc-login-input-border: rgba(148, 163, 184, 0.18);
+  --lc-login-input-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+    0 12px 22px rgba(2, 6, 23, 0.22);
+  --lc-login-input-focus-border: rgba(45, 212, 191, 0.32);
+  --lc-login-input-focus-ring: rgba(45, 212, 191, 0.12);
+  --lc-login-input-focus-shadow: 0 18px 30px rgba(2, 6, 23, 0.28);
+  --lc-login-input-highlight: rgba(148, 163, 184, 0.08);
+  --lc-login-button-highlight: rgba(148, 163, 184, 0.12);
+  --lc-login-input-icon: #5eead4;
+  --lc-login-field-text: #e2e8f0;
+  --lc-login-brand-panel-bg: rgba(15, 23, 42, 0.42);
+  --lc-login-brand-panel-border: rgba(148, 163, 184, 0.16);
+  --lc-login-brand-text: #e2e8f0;
+  --lc-login-brand-muted: rgba(203, 213, 225, 0.76);
+  --lc-login-brand-badge-bg: rgba(15, 23, 42, 0.44);
+  --lc-login-brand-badge-border: rgba(148, 163, 184, 0.18);
+  --lc-login-brand-card-bg: rgba(15, 23, 42, 0.32);
+  --lc-login-brand-card-border: rgba(148, 163, 184, 0.12);
+  --lc-login-orb-secondary: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 72%);
+
+  --lc-dashboard-card-bg:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 0.94)),
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 40%);
+  --lc-dashboard-card-border: rgba(148, 163, 184, 0.16);
+  --lc-dashboard-card-shadow: 0 20px 44px rgba(2, 6, 23, 0.32);
+  --lc-dashboard-hero-bg:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.1), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.94) 56%, rgba(15, 23, 42, 0.92) 100%);
+  --lc-dashboard-hero-avatar-bg: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  --lc-dashboard-hero-avatar-text: #f8fafc;
+  --lc-dashboard-hero-avatar-shadow: 0 14px 30px rgba(20, 184, 166, 0.18);
+  --lc-dashboard-kicker: #5eead4;
+  --lc-dashboard-icon-bg: color-mix(in srgb, var(--accent, #2563eb) 22%, rgba(15, 23, 42, 0.94));
+  --lc-dashboard-tag-bg: rgba(45, 212, 191, 0.12);
+  --lc-dashboard-tag-text: #99f6e4;
+  --lc-dashboard-chart-bg: linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(17, 24, 39, 0.9));
+  --lc-dashboard-chart-grid: rgba(148, 163, 184, 0.2);
+  --lc-dashboard-chart-axis: #94a3b8;
+  --lc-dashboard-chart-focus: rgba(96, 165, 250, 0.24);
+  --lc-dashboard-chart-dot-stroke: #0f172a;
+  --lc-dashboard-chart-tooltip-bg: rgba(15, 23, 42, 0.98);
+  --lc-dashboard-chart-tooltip-border: rgba(148, 163, 184, 0.18);
+  --lc-dashboard-chart-tooltip-title: #e2e8f0;
+  --lc-dashboard-chart-tooltip-text: #cbd5e1;
+  --lc-dashboard-chart-active-shadow: drop-shadow(0 6px 12px rgba(2, 6, 23, 0.36));
+  --lc-dashboard-muted-surface: rgba(30, 41, 59, 0.82);
+  --lc-dashboard-item-bg: rgba(15, 23, 42, 0.72);
+  --lc-dashboard-item-border: rgba(148, 163, 184, 0.14);
+  --lc-dashboard-item-hover-border: rgba(45, 212, 191, 0.22);
+  --lc-dashboard-item-hover-shadow: 0 16px 30px rgba(2, 6, 23, 0.28);
+}
