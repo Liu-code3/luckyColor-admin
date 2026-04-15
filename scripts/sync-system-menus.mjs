@@ -174,6 +174,64 @@ export async function syncMenus() {
       icon: 'mdi:bullhorn-outline',
       component: 'sys/notice/index',
       sort: 10
+    },
+    {
+      title: '操作日志',
+      name: 'systemOperationLog',
+      path: '/systemManagement/system/log',
+      menuKey: 'main_system_log',
+      icon: 'solar:history-linear',
+      component: 'system/log/index',
+      sort: 11
+    }
+  ];
+
+  const infrastructureRootId = await ensureMenu({
+    existingMenus: menuPage.records,
+    token,
+    payload: {
+      parentId: null,
+      title: '基础设施',
+      name: 'infrastructure',
+      type: 1,
+      path: '/infrastructure',
+      menuKey: 'main_infrastructure',
+      icon: 'solar:widget-5-linear',
+      layout: '',
+      isVisible: true,
+      component: 'sys',
+      redirect: null,
+      meta: {
+        title: '基础设施'
+      },
+      sort: 6
+    },
+    matchers: [
+      menu => menu.path === '/infrastructure',
+      menu => menu.name === 'infrastructure',
+      menu => menu.key === 'main_infrastructure',
+      menu => menu.menuKey === 'main_infrastructure'
+    ]
+  });
+
+  const infrastructureMenus = [
+    {
+      title: '国际化资源',
+      name: 'infrastructureI18n',
+      path: '/infrastructure/i18n',
+      menuKey: 'main_infrastructure_i18n',
+      icon: 'solar:translation-linear',
+      component: 'platform/i18n/index',
+      sort: 1
+    },
+    {
+      title: '水印设置',
+      name: 'infrastructureWatermark',
+      path: '/infrastructure/watermark',
+      menuKey: 'main_infrastructure_watermark',
+      icon: 'solar:text-field-focus-linear',
+      component: 'platform/watermark/index',
+      sort: 2
     }
   ];
 
@@ -228,7 +286,7 @@ export async function syncMenus() {
     ]
   });
 
-  const ensuredMenuIds = [tenantCenterRootId, featureDemoRootId];
+  const ensuredMenuIds = [tenantCenterRootId, infrastructureRootId, featureDemoRootId];
 
   const apifoxMenuId = await ensureMenu({
     existingMenus,
@@ -411,6 +469,38 @@ export async function syncMenus() {
         menu => menu.path === item.path,
         menu => item.legacyPaths.includes(menu.path),
         menu => menu.name === item.name
+      ]
+    });
+    ensuredMenuIds.push(id);
+  }
+
+  for (const item of infrastructureMenus) {
+    const id = await ensureMenu({
+      existingMenus: menuPage.records,
+      token,
+      payload: {
+        parentId: infrastructureRootId,
+        title: item.title,
+        name: item.name,
+        type: 2,
+        path: item.path,
+        menuKey: item.menuKey,
+        icon: item.icon,
+        layout: '',
+        isVisible: true,
+        component: item.component,
+        redirect: null,
+        meta: {
+          title: item.title,
+          keepAlive: true
+        },
+        sort: item.sort
+      },
+      matchers: [
+        menu => menu.path === item.path,
+        menu => menu.name === item.name,
+        menu => menu.key === item.menuKey,
+        menu => menu.menuKey === item.menuKey
       ]
     });
     ensuredMenuIds.push(id);
