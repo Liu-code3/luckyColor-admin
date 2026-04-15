@@ -1,3 +1,5 @@
+@use './styles/theme-tokens.scss';
+
 /* 切换主题的动画效果 */
 ::view-transition-old(root) {
   animation: none;
@@ -36,70 +38,6 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-}
-
-:root {
-  --layout-sider-bg: #0f172a;
-  --layout-sider-text: rgba(226, 232, 240, 0.86);
-  --layout-sider-text-active: #ffffff;
-  --layout-sider-sub-text: #dbe4f0;
-  --layout-sider-hover: rgba(148, 163, 184, 0.16);
-  --layout-sider-hover-text: #ffffff;
-  --layout-sider-hover-border: rgba(148, 163, 184, 0.22);
-  --layout-sider-border: rgba(148, 163, 184, 0.12);
-  --layout-sider-accent: #1890ff;
-  --layout-sider-selected-bg: rgba(15, 118, 110, 0.34);
-  --layout-sider-selected-text: #ffffff;
-  --layout-sider-selected-border: rgba(45, 212, 191, 0.22);
-  --lc-page-bg:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24%),
-    radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 26%),
-    linear-gradient(180deg, #f4fbfb 0%, #f8fafc 42%, #eef6ff 100%);
-  --lc-surface: rgba(255, 255, 255, 0.82);
-  --lc-surface-strong: rgba(255, 255, 255, 0.94);
-  --lc-surface-muted: rgba(248, 250, 252, 0.88);
-  --lc-border: rgba(15, 23, 42, 0.08);
-  --lc-border-strong: rgba(15, 23, 42, 0.14);
-  --lc-shadow-sm: 0 10px 24px rgba(15, 23, 42, 0.05);
-  --lc-shadow-md: 0 18px 44px rgba(15, 23, 42, 0.07);
-  --lc-shadow-lg: 0 24px 64px rgba(15, 23, 42, 0.1);
-  --lc-text-strong: #0f172a;
-  --lc-text-soft: #516074;
-  --lc-text-muted: #7b8a9d;
-  --lc-accent: #0f766e;
-  --lc-accent-hover: #129082;
-  --lc-accent-pressed: #0b5f5a;
-  --lc-accent-soft: rgba(15, 118, 110, 0.12);
-  --lc-accent-soft-strong: rgba(15, 118, 110, 0.18);
-  --lc-accent-faint: rgba(15, 118, 110, 0.06);
-  --lc-accent-border: rgba(15, 118, 110, 0.18);
-  --lc-accent-shadow: rgba(15, 118, 110, 0.18);
-  --lc-grid-line: rgba(148, 163, 184, 0.16);
-  --lc-backdrop: blur(18px);
-}
-
-html.dark {
-  --lc-page-bg:
-    radial-gradient(circle at top left, rgba(45, 212, 191, 0.08), transparent 24%),
-    radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 24%),
-    linear-gradient(180deg, #09111f 0%, #0b1220 44%, #0f172a 100%);
-  --lc-surface: rgba(15, 23, 42, 0.78);
-  --lc-surface-strong: rgba(15, 23, 42, 0.92);
-  --lc-surface-muted: rgba(30, 41, 59, 0.88);
-  --lc-border: rgba(148, 163, 184, 0.18);
-  --lc-border-strong: rgba(148, 163, 184, 0.24);
-  --lc-shadow-sm: 0 12px 24px rgba(2, 6, 23, 0.24);
-  --lc-shadow-md: 0 18px 44px rgba(2, 6, 23, 0.3);
-  --lc-shadow-lg: 0 28px 72px rgba(2, 6, 23, 0.4);
-  --lc-text-strong: #e2e8f0;
-  --lc-text-soft: #cbd5e1;
-  --lc-text-muted: #94a3b8;
-  --lc-accent-soft: rgba(45, 212, 191, 0.16);
-  --lc-accent-soft-strong: rgba(45, 212, 191, 0.24);
-  --lc-accent-faint: rgba(45, 212, 191, 0.12);
-  --lc-accent-border: rgba(45, 212, 191, 0.24);
-  --lc-accent-shadow: rgba(45, 212, 191, 0.24);
-  --lc-grid-line: rgba(148, 163, 184, 0.18);
 }
 
 #app.app-gray-mode {
